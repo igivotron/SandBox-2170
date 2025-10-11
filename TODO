@@ -1,0 +1,6 @@
+# TODO
+- Supprimer les HalfEdges avec les triangles lorsqu'on rempli la cavité dans BowyerWatson.py
+- Classer les points en C en fonction de leurs coordonnées de Hilbert
+- Classer les points avant de faire BowyerWatson
+- Robustesse
+- Traduire BowyerWatson en C

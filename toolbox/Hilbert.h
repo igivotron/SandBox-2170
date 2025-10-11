@@ -3,12 +3,9 @@
 #include "stdio.h"
 #include "stdlib.h"
 
-
+#define DEPTH 12
 
 void HilbertCoord(double x, double y, double x0, double y0, double xRed, double yRed, double xBlue, double yBlue, int depth, int* bits);
-
-
-
 
 
 

@@ -56,32 +56,39 @@ void HilbertCoord(double x, double y, double x0, double y0, double xRed, double 
     }
     return;
 }
-// open ../inputs/100pts.txt
-int main() {
-    int N = 100;
-    FILE *file = fopen("../inputs/100pts", "r");
+
+int main(int argc,char *argv[]){ 
+    int N = 0;
+    char inputFileName[256];
+    char outputFileName[256];
+    snprintf(inputFileName, sizeof(inputFileName), "../inputs/%s", argv[1]);
+    snprintf(outputFileName, sizeof(outputFileName), "../outputs/%s", argv[2]);
+
+    FILE *file = fopen(inputFileName, "r");
+    
+    if (fscanf(file, "%d", &N) != 1) {
+        fclose(file);
+        return EXIT_FAILURE;
+    }
+
     double points[N][2];
     for (int i = 0; i < N; i++) {
         if (fscanf(file, "%lf %lf", &points[i][0], &points[i][1]) != 2) {
-            perror("Error reading point");
             fclose(file);
             return EXIT_FAILURE;
         }
     }
     fclose(file);
 
-    const int depth = 100;
-    int hilbertCoords[N][depth];
-    for (int i = 0; i < N; i++) HilbertCoord(points[i][0], points[i][1], 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, depth, hilbertCoords[i]);
+    int hilbertCoords[N][DEPTH];
+    for (int i = 0; i < N; i++) HilbertCoord(points[i][0], points[i][1], 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, DEPTH, hilbertCoords[i]);
 
 
-    FILE *outputFile = fopen("../outputs/h100.txt", "w");
+    FILE *outputFile = fopen(outputFileName, "w");
     for (int i = 0; i < N; i++) {
-        for (int j = 0; j < depth; j++) {
-            fprintf(outputFile, "%d ", hilbertCoords[i][j]);
-        }
+        for (int j = 0; j < DEPTH; j++) fprintf(outputFile, "%d ", hilbertCoords[i][j]);
         fprintf(outputFile, "\n");
     }
     fclose(outputFile);
-
+    return 0;
 }
