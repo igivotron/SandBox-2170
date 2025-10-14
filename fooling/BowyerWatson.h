@@ -10,4 +10,6 @@ int freePoints(double** points, int numPoints);
 int** findSuperTriangle(double** points, int* numPoints, int L);
 int freeSuperTriangle(int** superTriangle);
 
+int inCircle(Vertex* v, Face* f);
+
 #endif // BOWYERWATSON_H

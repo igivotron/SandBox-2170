@@ -52,7 +52,7 @@ def plot_check(mesh):
     plt.axis('equal')
     
 
-def inCircle(v, face):
+def inCircle(v, face, mesh):
     he1 = mesh.halfedges[face.halfedge]
     he2 = mesh.halfedges[he1.next]
     he3 = mesh.halfedges[he2.next]
@@ -83,14 +83,15 @@ def isEdgeShared(he, Cavity, mesh):
 
 def BowyerWatson(mesh):
     n_vortices = len(mesh.vertices)-4
-    # n_vortices = 1
     for i in range(n_vortices):
         Cavity = []
         to_remove = []
+
         for j in range(len(mesh.faces)):
-            if inCircle(mesh.vertices[i], mesh.faces[j]):
+            if inCircle(mesh.vertices[i], mesh.faces[j], mesh):
                 Cavity.append(mesh.faces[j])
                 to_remove.append(j)
+        
 
         for index in sorted(to_remove, reverse=True):
             del mesh.faces[index]
@@ -111,7 +112,7 @@ def BowyerWatson(mesh):
 
 
 if __name__ == "__main__":
-    pts, n = import_pts("data/100pts")
+    pts, n = import_pts("inputs/10000pts")
     boundary = getBoundingBox(pts, 0.1)
     pts = pts + boundary
     SuperTriangles = [(n, n+1, n+2), (n, n+2, n+3)]

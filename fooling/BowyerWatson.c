@@ -55,6 +55,38 @@ int freeSuperTriangle(int** superTriangle){
     return 0;
 }
 
+int inCircle(Vertex* v, Face* f){
+    HalfEdge* he1 = f->halfEdge;
+    HalfEdge* he2 = he1->next;
+    HalfEdge* he3 = he2->next;
+    Vertex* v1 = he1->vertex;
+    Vertex* v2 = he2->vertex;
+    Vertex* v3 = he3->vertex;
+    double ax = v1->x - v->x;
+    double ay = v1->y - v->y;
+    double bx = v2->x - v->x;
+    double by = v2->y - v->y;
+    double cx = v3->x - v->x;
+    double cy = v3->y - v->y;
+    double det = (ax * ax + ay * ay) * (bx * cy - by * cx) -
+                 (bx * bx + by * by) * (ax * cy - ay * cx) +
+                 (cx * cx + cy * cy) * (ax * by - ay * bx);
+
+    return det > 0;
+}
+
+int triangleOrientation(Face* f){
+    HalfEdge* he1 = f->halfEdge;
+    HalfEdge* he2 = he1->next;
+    HalfEdge* he3 = he2->next;
+    Vertex* v1 = he1->vertex;
+    Vertex* v2 = he2->vertex;
+    Vertex* v3 = he3->vertex;
+    double det = (v2->x - v1->x) * (v3->y - v1->y) - (v3->x - v1->x) * (v2->y - v1->y);
+    return det > 0; // return 1 if counter-clockwise, 0 if clockwise
+}
+
+
 
 
 int main(){
@@ -64,8 +96,9 @@ int main(){
     int** superTriangles = findSuperTriangle(vertices, &numPoints, 1);
 
     TriangularMesh* mesh = createTriangularMesh(vertices, numPoints, superTriangles, 2);
-    freePoints(vertices, numPoints);
-    freeSuperTriangle(superTriangles);
+    // Cause des problèmes de mémoire environ 10% du temps
+    // freePoints(vertices, numPoints);
+    // freeSuperTriangle(superTriangles);
 
     saveMeshToOBJ(mesh, "output.obj");
     freeTriangularMesh(mesh);
