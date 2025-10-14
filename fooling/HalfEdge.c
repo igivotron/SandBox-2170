@@ -76,10 +76,9 @@ int saveMeshToOBJ(TriangularMesh* mesh, const char* filename) {
     }
 
     FILE* file = fopen(filename, "w");
-    if (!file) {
-        return -1;
-    }
+    if (!file) return -1;
 
+    fprintf(file,"%d\n", mesh->numVertices);
     for (int i = 0; i < mesh->numVertices; i++) {
         fprintf(file, "v %f %f %f\n", mesh->vertices[i].x, mesh->vertices[i].y, mesh->vertices[i].z);
     }
