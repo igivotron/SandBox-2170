@@ -6,8 +6,10 @@
 TriangularMesh* createTriangularMesh(double** verticies, int numVertices, int** triangles, int numTriangles){
     TriangularMesh* mesh = (TriangularMesh*)malloc(sizeof(TriangularMesh));
     mesh->vertices = (Vertex*) malloc(sizeof(Vertex) * numVertices);
-    mesh->halfEdges = (HalfEdge*) malloc(sizeof(HalfEdge) * numTriangles * 3);
-    mesh->faces = (Face*) malloc(sizeof(Face) * numTriangles);
+    // mesh->halfEdges = (HalfEdge*) malloc(sizeof(HalfEdge) * numTriangles * 3);
+    // mesh->faces = (Face*) malloc(sizeof(Face) * numTriangles);
+    mesh->halfEdges = (HalfEdge*) malloc(sizeof(HalfEdge) * numTriangles * 3 * 100); 
+    mesh->faces = (Face*) malloc(sizeof(Face) * numTriangles * 100);
     mesh->numVertices = numVertices;
 
     printf("Creating mesh with %d vertices, %d triangles\n", numVertices, numTriangles);
@@ -24,6 +26,7 @@ TriangularMesh* createTriangularMesh(double** verticies, int numVertices, int** 
     for (int i=0; i<numTriangles; i++){
         triangle = triangles[i];
         for (int j=0; j<3; j++){
+            mesh->halfEdges[i*3 + j].valid = 1;
             mesh->halfEdges[i*3 + j].index = i*3 + j;
             mesh->halfEdges[i*3 + j].vertex = &mesh->vertices[triangle[j]];
             mesh->halfEdges[i*3 + j].face = &mesh->faces[i];
@@ -33,8 +36,9 @@ TriangularMesh* createTriangularMesh(double** verticies, int numVertices, int** 
         }
         mesh->faces[i].index = i;
         mesh->faces[i].halfEdge = &mesh->halfEdges[i*3];
+        mesh->faces[i].valid = 1;
     }
-
+    // find opposite half-edges
     for (int i=0; i<mesh->numHalfEdges; i++){
         for (int j=0; j<mesh->numHalfEdges; j++){
             mesh->halfEdges[i].opposite = NULL;
@@ -84,20 +88,22 @@ int saveMeshToOBJ(TriangularMesh* mesh, const char* filename) {
     }
 
     for (int i = 0; i < mesh->numFaces; i++) {
+        if (!mesh->faces[i].valid) continue;
         HalfEdge* he = mesh->faces[i].halfEdge;
         fprintf(file, "f %d %d %d\n", he->vertex->index, he->next->vertex->index, he->next->next->vertex->index);
     }
 
     for (int i=0; i<mesh->numHalfEdges; i++){
+        if (!mesh->halfEdges[i].valid) continue;
         HalfEdge he = mesh->halfEdges[i];
         fprintf(file, "%d: %d to %d, Face %d, Next %d, Prev %d, Opposite %d\n", 
-               he.index, 
-               he.vertex ? he.vertex->index : -1,
+                he.index, 
+                he.vertex ? he.vertex->index : -1,
                 he.next ? he.next->vertex->index : -1, 
-               he.face ? he.face->index : -1, 
-               he.next ? he.next->index : -1, 
-               he.prev ? he.prev->index : -1, 
-               he.opposite ? he.opposite->index : -1);
+                he.face ? he.face->index : -1, 
+                he.next ? he.next->index : -1, 
+                he.prev ? he.prev->index : -1, 
+                he.opposite ? he.opposite->index : -1);
     }
 
     fclose(file);

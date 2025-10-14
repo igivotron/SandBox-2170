@@ -23,11 +23,13 @@ struct HalfEdge {
     Vertex* vertex;      
     Face* face;    
     int index;
+    int valid; // 1 if valid, 0 if removed
 };
 
 struct Face {
     HalfEdge* halfEdge;  
     int index;
+    int valid; // 1 if valid, 0 if removed
 };
 
 struct TriangularMesh {

@@ -86,6 +86,91 @@ int triangleOrientation(Face* f){
     return det > 0; // return 1 if counter-clockwise, 0 if clockwise
 }
 
+int sameEdge(Edge* e1, Edge* e2){
+    return ( (e1->v1 == e2->v1 && e1->v2 == e2->v2) || (e1->v1 == e2->v2 && e1->v2 == e2->v1) );
+}
+
+void addPointToMesh(TriangularMesh* TD, Vertex* v){
+    // Find cavity
+    Face** cavity = malloc(sizeof(Face*) * TD->numFaces);
+    int cavitySize = 0;
+    for (int i = 0; i < TD->numFaces; i++){
+        if (!TD->faces[i].valid) continue;
+        if (inCircle(v, &TD->faces[i])){
+            cavity[cavitySize++] = &TD->faces[i];
+        }
+    }
+
+    // Collect boundary edges
+    Edge* boundaryEdges = malloc(sizeof(Edge) * cavitySize * 3);
+    int boundarySize = 0;
+    for (int i = 0; i < cavitySize; i++){
+        HalfEdge* he = cavity[i]->halfEdge;
+        for (int k = 0; k < 3; k++){
+            Edge e = {he->vertex, he->next->vertex};
+            int shared = 0;
+            for (int j = 0; j < cavitySize; j++){
+                if (i == j) continue;
+                HalfEdge* he2 = cavity[j]->halfEdge;
+                for (int m = 0; m < 3; m++){
+                    Edge e2 = {he2->vertex, he2->next->vertex};
+                    if (sameEdge(&e, &e2)){
+                        shared = 1;
+                        break;
+                    }
+                    he2 = he2->next;
+                }
+                if (shared) break;
+            }
+            if (!shared){boundaryEdges[boundarySize++] = e;}
+            he = he->next;
+        }
+    }
+    // Remove faces in cavity
+    for (int i = 0; i < cavitySize; i++){
+        cavity[i]->valid = 0;
+        HalfEdge* he = cavity[i]->halfEdge;
+        for (int k = 0; k < 3; k++){
+            he->valid = 0;
+            he = he->next;
+        }
+    }
+
+    // Create new faces
+    for (int i=0; i<boundarySize; i++){
+        Vertex* v1 = boundaryEdges[i].v1;
+        Vertex* v2 = boundaryEdges[i].v2;
+
+        // TODO: PUT SIZE OF FACE AND HALFEDGE ARRAYS
+
+        HalfEdge* he1 = &TD->halfEdges[TD->numHalfEdges];
+        HalfEdge* he2 = &TD->halfEdges[TD->numHalfEdges + 1];
+        HalfEdge* he3 = &TD->halfEdges[TD->numHalfEdges + 2];
+        he1->index = TD->numHalfEdges;
+        he2->index = TD->numHalfEdges + 1;
+        he3->index = TD->numHalfEdges + 2;
+        he1->valid = 1; he2->valid = 1; he3->valid = 1;
+        he1->vertex = v1; he2->vertex = v2; he3->vertex = v;
+        he1->next = he2; he2->next = he3; he3->next = he1;
+        he1->prev = he3; he2->prev = he1; he3->prev = he2;
+        he1->face = &TD->faces[TD->numFaces];
+        he2->face = &TD->faces[TD->numFaces];
+        he3->face = &TD->faces[TD->numFaces];
+        v1->halfEdge = he1;
+        v2->halfEdge = he2;
+        v->halfEdge = he3;
+        TD->faces[TD->numFaces].index = TD->numFaces;
+        TD->faces[TD->numFaces].halfEdge = he1;
+        TD->faces[TD->numFaces].valid = 1;
+        TD->numHalfEdges += 3;
+        TD->numFaces += 1;
+
+    }
+
+    free(cavity);
+    free(boundaryEdges);
+}
+
 
 
 
@@ -99,6 +184,10 @@ int main(){
     // Cause des problèmes de mémoire environ 10% du temps
     // freePoints(vertices, numPoints);
     // freeSuperTriangle(superTriangles);
+
+    for (int i = 0; i < numPoints; i++){
+        addPointToMesh(mesh, &mesh->vertices[i]);
+    }
 
     saveMeshToOBJ(mesh, "output.obj");
     freeTriangularMesh(mesh);

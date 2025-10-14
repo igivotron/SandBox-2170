@@ -1,5 +1,5 @@
 14
-v 0.677613 0.157745 0.000000
+v 0.000000 0.000000 0.000000
 v 0.355577 0.758485 0.000000
 v 0.901435 0.353131 0.000000
 v 0.389659 0.919338 0.000000
@@ -13,11 +13,91 @@ v -0.989838 -0.958057 0.000000
 v 1.901435 -0.958057 0.000000
 v 1.901435 1.935959 0.000000
 v -0.989838 1.935959 0.000000
-f 10 11 13
-f 11 12 13
-0: 10 to 11, Face 0, Next 1, Prev 2, Opposite -1
-1: 11 to 13, Face 0, Next 2, Prev 0, Opposite 5
-2: 13 to 10, Face 0, Next 0, Prev 1, Opposite -1
-3: 11 to 12, Face 1, Next 4, Prev 5, Opposite -1
-4: 12 to 13, Face 1, Next 5, Prev 3, Opposite -1
-5: 13 to 11, Face 1, Next 3, Prev 4, Opposite 1
+f 11 12 2
+f 12 13 3
+f 2 12 3
+f 13 10 4
+f 10 0 4
+f 2 3 5
+f 3 1 5
+f 1 3 6
+f 3 13 6
+f 4 1 7
+f 1 6 7
+f 13 4 7
+f 6 13 7
+f 1 4 8
+f 4 0 8
+f 5 1 8
+f 10 11 9
+f 0 10 9
+f 11 2 9
+f 8 0 9
+f 2 5 9
+f 5 8 9
+30: 11 to 12, Face 10, Next 31, Prev 32, Opposite -1
+31: 12 to 2, Face 10, Next 32, Prev 30, Opposite -1
+32: 2 to 11, Face 10, Next 30, Prev 31, Opposite -1
+42: 12 to 13, Face 14, Next 43, Prev 44, Opposite -1
+43: 13 to 3, Face 14, Next 44, Prev 42, Opposite -1
+44: 3 to 12, Face 14, Next 42, Prev 43, Opposite -1
+51: 2 to 12, Face 17, Next 52, Prev 53, Opposite -1
+52: 12 to 3, Face 17, Next 53, Prev 51, Opposite -1
+53: 3 to 2, Face 17, Next 51, Prev 52, Opposite -1
+54: 13 to 10, Face 18, Next 55, Prev 56, Opposite -1
+55: 10 to 4, Face 18, Next 56, Prev 54, Opposite -1
+56: 4 to 13, Face 18, Next 54, Prev 55, Opposite -1
+57: 10 to 0, Face 19, Next 58, Prev 59, Opposite -1
+58: 0 to 4, Face 19, Next 59, Prev 57, Opposite -1
+59: 4 to 10, Face 19, Next 57, Prev 58, Opposite -1
+75: 2 to 3, Face 25, Next 76, Prev 77, Opposite -1
+76: 3 to 5, Face 25, Next 77, Prev 75, Opposite -1
+77: 5 to 2, Face 25, Next 75, Prev 76, Opposite -1
+78: 3 to 1, Face 26, Next 79, Prev 80, Opposite -1
+79: 1 to 5, Face 26, Next 80, Prev 78, Opposite -1
+80: 5 to 3, Face 26, Next 78, Prev 79, Opposite -1
+81: 1 to 3, Face 27, Next 82, Prev 83, Opposite -1
+82: 3 to 6, Face 27, Next 83, Prev 81, Opposite -1
+83: 6 to 1, Face 27, Next 81, Prev 82, Opposite -1
+87: 3 to 13, Face 29, Next 88, Prev 89, Opposite -1
+88: 13 to 6, Face 29, Next 89, Prev 87, Opposite -1
+89: 6 to 3, Face 29, Next 87, Prev 88, Opposite -1
+93: 4 to 1, Face 31, Next 94, Prev 95, Opposite -1
+94: 1 to 7, Face 31, Next 95, Prev 93, Opposite -1
+95: 7 to 4, Face 31, Next 93, Prev 94, Opposite -1
+96: 1 to 6, Face 32, Next 97, Prev 98, Opposite -1
+97: 6 to 7, Face 32, Next 98, Prev 96, Opposite -1
+98: 7 to 1, Face 32, Next 96, Prev 97, Opposite -1
+99: 13 to 4, Face 33, Next 100, Prev 101, Opposite -1
+100: 4 to 7, Face 33, Next 101, Prev 99, Opposite -1
+101: 7 to 13, Face 33, Next 99, Prev 100, Opposite -1
+102: 6 to 13, Face 34, Next 103, Prev 104, Opposite -1
+103: 13 to 7, Face 34, Next 104, Prev 102, Opposite -1
+104: 7 to 6, Face 34, Next 102, Prev 103, Opposite -1
+105: 1 to 4, Face 35, Next 106, Prev 107, Opposite -1
+106: 4 to 8, Face 35, Next 107, Prev 105, Opposite -1
+107: 8 to 1, Face 35, Next 105, Prev 106, Opposite -1
+108: 4 to 0, Face 36, Next 109, Prev 110, Opposite -1
+109: 0 to 8, Face 36, Next 110, Prev 108, Opposite -1
+110: 8 to 4, Face 36, Next 108, Prev 109, Opposite -1
+111: 5 to 1, Face 37, Next 112, Prev 113, Opposite -1
+112: 1 to 8, Face 37, Next 113, Prev 111, Opposite -1
+113: 8 to 5, Face 37, Next 111, Prev 112, Opposite -1
+120: 10 to 11, Face 40, Next 121, Prev 122, Opposite -1
+121: 11 to 9, Face 40, Next 122, Prev 120, Opposite -1
+122: 9 to 10, Face 40, Next 120, Prev 121, Opposite -1
+123: 0 to 10, Face 41, Next 124, Prev 125, Opposite -1
+124: 10 to 9, Face 41, Next 125, Prev 123, Opposite -1
+125: 9 to 0, Face 41, Next 123, Prev 124, Opposite -1
+126: 11 to 2, Face 42, Next 127, Prev 128, Opposite -1
+127: 2 to 9, Face 42, Next 128, Prev 126, Opposite -1
+128: 9 to 11, Face 42, Next 126, Prev 127, Opposite -1
+129: 8 to 0, Face 43, Next 130, Prev 131, Opposite -1
+130: 0 to 9, Face 43, Next 131, Prev 129, Opposite -1
+131: 9 to 8, Face 43, Next 129, Prev 130, Opposite -1
+132: 2 to 5, Face 44, Next 133, Prev 134, Opposite -1
+133: 5 to 9, Face 44, Next 134, Prev 132, Opposite -1
+134: 9 to 2, Face 44, Next 132, Prev 133, Opposite -1
+135: 5 to 8, Face 45, Next 136, Prev 137, Opposite -1
+136: 8 to 9, Face 45, Next 137, Prev 135, Opposite -1
+137: 9 to 5, Face 45, Next 135, Prev 136, Opposite -1

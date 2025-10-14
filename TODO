@@ -1,6 +1,6 @@
 # TODO
-- Supprimer les HalfEdges avec les triangles lorsqu'on rempli la cavité dans BowyerWatson.py
+- Supprimer les HalfEdges avec les triangles lorsqu'on rempli la cavité dans BowyerWatson.c
 - Classer les points en C en fonction de leurs coordonnées de Hilbert
 - Classer les points avant de faire BowyerWatson
 - Robustesse
-- Traduire BowyerWatson en C
+- Ajuster la mémoire pour les halfedges et faces dans Halfedges.c
