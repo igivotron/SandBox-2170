@@ -1,103 +1,913 @@
-14
-v 0.677613 0.157745 0.000000
-v 0.355577 0.758485 0.000000
-v 0.901435 0.353131 0.000000
-v 0.389659 0.919338 0.000000
-v 0.010162 0.791900 0.000000
-v 0.719254 0.443982 0.000000
-v 0.338509 0.921947 0.000000
-v 0.104871 0.935959 0.000000
-v 0.145262 0.267009 0.000000
-v 0.664092 0.041943 0.000000
-v -0.989838 -0.958057 0.000000
-v 1.901435 -0.958057 0.000000
-v 1.901435 1.935959 0.000000
-v -0.989838 1.935959 0.000000
-f 11 12 2
-f 12 13 3
-f 2 12 3
-f 13 10 4
-f 0 2 5
-f 2 3 5
-f 3 1 5
-f 1 3 6
-f 3 13 6
-f 4 1 7
-f 1 6 7
-f 13 4 7
-f 6 13 7
-f 4 10 8
-f 1 4 8
-f 0 5 8
-f 5 1 8
-f 10 11 9
-f 11 2 9
-f 2 0 9
+104
+v 0.492590 0.298280 0.000000
+v 0.113220 0.063428 0.000000
+v 0.014261 0.332912 0.000000
+v 0.249412 0.730879 0.000000
+v 0.816257 0.620935 0.000000
+v 0.694930 0.650963 0.000000
+v 0.255318 0.186416 0.000000
+v 0.258422 0.592371 0.000000
+v 0.337481 0.211503 0.000000
+v 0.502132 0.217153 0.000000
+v 0.738791 0.744915 0.000000
+v 0.200178 0.856524 0.000000
+v 0.258108 0.590527 0.000000
+v 0.970147 0.954768 0.000000
+v 0.261181 0.219967 0.000000
+v 0.536944 0.714963 0.000000
+v 0.949714 0.205417 0.000000
+v 0.000000 0.000000 0.000000
+v 0.814094 0.815403 0.000000
+v 0.501650 0.655841 0.000000
+v 0.322987 0.395788 0.000000
+v 0.897978 0.033412 0.000000
+v 0.600777 0.128222 0.000000
+v 0.472566 0.121632 0.000000
+v 0.661080 0.979443 0.000000
+v 0.576334 0.967056 0.000000
+v 0.627846 0.060375 0.000000
+v 0.432978 0.474929 0.000000
+v 0.709878 0.086661 0.000000
+v 0.659493 0.848756 0.000000
+v 0.472508 0.789967 0.000000
+v 0.252772 0.914755 0.000000
+v 0.139807 0.158887 0.000000
+v 0.463941 0.808947 0.000000
+v 0.230923 0.050612 0.000000
+v 0.291428 0.907698 0.000000
+v 0.632093 0.138662 0.000000
+v 0.926686 0.756959 0.000000
+v 0.980929 0.021135 0.000000
+v 0.760998 0.256482 0.000000
+v 0.794082 0.000070 0.000000
+v 0.929227 0.784074 0.000000
+v 0.287152 0.479772 0.000000
+v 0.586340 0.732032 0.000000
+v 0.866757 0.616764 0.000000
+v 0.755617 0.068941 0.000000
+v 0.850430 0.302493 0.000000
+v 0.760796 0.909099 0.000000
+v 0.026112 0.355404 0.000000
+v 0.361492 0.328118 0.000000
+v 0.393015 0.824652 0.000000
+v 0.209812 0.766697 0.000000
+v 0.359385 0.030930 0.000000
+v 0.086241 0.288840 0.000000
+v 0.249522 0.509167 0.000000
+v 0.680930 0.739755 0.000000
+v 0.553759 0.861885 0.000000
+v 0.550038 0.805352 0.000000
+v 0.030514 0.636640 0.000000
+v 0.811517 0.179195 0.000000
+v 0.522468 0.832672 0.000000
+v 0.703157 0.939502 0.000000
+v 0.518438 0.548642 0.000000
+v 0.980733 0.915343 0.000000
+v 0.103756 0.921048 0.000000
+v 0.446973 0.913962 0.000000
+v 0.307593 0.393484 0.000000
+v 0.655660 0.387684 0.000000
+v 0.210654 0.341085 0.000000
+v 0.309905 0.821533 0.000000
+v 0.386258 0.334273 0.000000
+v 0.095851 0.764961 0.000000
+v 0.579057 0.020293 0.000000
+v 0.575939 0.299953 0.000000
+v 0.658805 0.341297 0.000000
+v 0.696273 0.727499 0.000000
+v 0.262615 0.123206 0.000000
+v 0.939402 0.506464 0.000000
+v 0.630315 0.966846 0.000000
+v 0.461565 0.865842 0.000000
+v 0.962570 0.870517 0.000000
+v 0.437068 0.401708 0.000000
+v 0.249943 0.720603 0.000000
+v 0.910098 0.884364 0.000000
+v 0.724617 0.235847 0.000000
+v 0.224629 0.007484 0.000000
+v 0.252796 0.777550 0.000000
+v 0.823854 0.666002 0.000000
+v 0.444982 0.144559 0.000000
+v 0.779934 0.742648 0.000000
+v 0.734051 0.490361 0.000000
+v 0.432723 0.814266 0.000000
+v 0.635202 0.738722 0.000000
+v 0.840761 0.695976 0.000000
+v 0.861200 0.906929 0.000000
+v 0.588808 0.354513 0.000000
+v 0.165371 0.030407 0.000000
+v 0.730495 0.467468 0.000000
+v 0.737312 0.425411 0.000000
+v 0.547355 0.327113 0.000000
+v -0.085739 -0.099930 0.000000
+v 1.080929 -0.099930 0.000000
+v 1.080929 1.079443 0.000000
+v -0.085739 1.079443 0.000000
+f 103 100 2
 f 0 8 9
-f 8 10 9
-30: 11 to 12, Face 10, Next 31, Prev 32, Opposite -1
-31: 12 to 2, Face 10, Next 32, Prev 30, Opposite -1
-32: 2 to 11, Face 10, Next 30, Prev 31, Opposite -1
-42: 12 to 13, Face 14, Next 43, Prev 44, Opposite -1
-43: 13 to 3, Face 14, Next 44, Prev 42, Opposite -1
-44: 3 to 12, Face 14, Next 42, Prev 43, Opposite -1
-51: 2 to 12, Face 17, Next 52, Prev 53, Opposite -1
-52: 12 to 3, Face 17, Next 53, Prev 51, Opposite -1
-53: 3 to 2, Face 17, Next 51, Prev 52, Opposite -1
-54: 13 to 10, Face 18, Next 55, Prev 56, Opposite -1
-55: 10 to 4, Face 18, Next 56, Prev 54, Opposite -1
-56: 4 to 13, Face 18, Next 54, Prev 55, Opposite -1
-72: 0 to 2, Face 24, Next 73, Prev 74, Opposite -1
-73: 2 to 5, Face 24, Next 74, Prev 72, Opposite -1
-74: 5 to 0, Face 24, Next 72, Prev 73, Opposite -1
-75: 2 to 3, Face 25, Next 76, Prev 77, Opposite -1
-76: 3 to 5, Face 25, Next 77, Prev 75, Opposite -1
-77: 5 to 2, Face 25, Next 75, Prev 76, Opposite -1
-78: 3 to 1, Face 26, Next 79, Prev 80, Opposite -1
-79: 1 to 5, Face 26, Next 80, Prev 78, Opposite -1
-80: 5 to 3, Face 26, Next 78, Prev 79, Opposite -1
-81: 1 to 3, Face 27, Next 82, Prev 83, Opposite -1
-82: 3 to 6, Face 27, Next 83, Prev 81, Opposite -1
-83: 6 to 1, Face 27, Next 81, Prev 82, Opposite -1
-87: 3 to 13, Face 29, Next 88, Prev 89, Opposite -1
-88: 13 to 6, Face 29, Next 89, Prev 87, Opposite -1
-89: 6 to 3, Face 29, Next 87, Prev 88, Opposite -1
-93: 4 to 1, Face 31, Next 94, Prev 95, Opposite -1
-94: 1 to 7, Face 31, Next 95, Prev 93, Opposite -1
-95: 7 to 4, Face 31, Next 93, Prev 94, Opposite -1
-96: 1 to 6, Face 32, Next 97, Prev 98, Opposite -1
-97: 6 to 7, Face 32, Next 98, Prev 96, Opposite -1
-98: 7 to 1, Face 32, Next 96, Prev 97, Opposite -1
-99: 13 to 4, Face 33, Next 100, Prev 101, Opposite -1
-100: 4 to 7, Face 33, Next 101, Prev 99, Opposite -1
-101: 7 to 13, Face 33, Next 99, Prev 100, Opposite -1
-102: 6 to 13, Face 34, Next 103, Prev 104, Opposite -1
-103: 13 to 7, Face 34, Next 104, Prev 102, Opposite -1
-104: 7 to 6, Face 34, Next 102, Prev 103, Opposite -1
-108: 4 to 10, Face 36, Next 109, Prev 110, Opposite -1
-109: 10 to 8, Face 36, Next 110, Prev 108, Opposite -1
-110: 8 to 4, Face 36, Next 108, Prev 109, Opposite -1
-111: 1 to 4, Face 37, Next 112, Prev 113, Opposite -1
-112: 4 to 8, Face 37, Next 113, Prev 111, Opposite -1
-113: 8 to 1, Face 37, Next 111, Prev 112, Opposite -1
-114: 0 to 5, Face 38, Next 115, Prev 116, Opposite -1
-115: 5 to 8, Face 38, Next 116, Prev 114, Opposite -1
-116: 8 to 0, Face 38, Next 114, Prev 115, Opposite -1
-117: 5 to 1, Face 39, Next 118, Prev 119, Opposite -1
-118: 1 to 8, Face 39, Next 119, Prev 117, Opposite -1
-119: 8 to 5, Face 39, Next 117, Prev 118, Opposite -1
-120: 10 to 11, Face 40, Next 121, Prev 122, Opposite -1
-121: 11 to 9, Face 40, Next 122, Prev 120, Opposite -1
-122: 9 to 10, Face 40, Next 120, Prev 121, Opposite -1
-123: 11 to 2, Face 41, Next 124, Prev 125, Opposite -1
-124: 2 to 9, Face 41, Next 125, Prev 123, Opposite -1
-125: 9 to 11, Face 41, Next 123, Prev 124, Opposite -1
-126: 2 to 0, Face 42, Next 127, Prev 128, Opposite -1
-127: 0 to 9, Face 42, Next 128, Prev 126, Opposite -1
-128: 9 to 2, Face 42, Next 126, Prev 127, Opposite -1
+f 6 8 14
+f 2 100 17
+f 22 9 23
+f 102 103 24
+f 13 102 24
+f 24 103 25
+f 7 12 27
+f 19 7 27
+f 10 18 29
+f 19 15 30
+f 25 103 31
+f 6 14 32
+f 17 1 32
+f 25 31 35
+f 22 26 36
+f 26 28 36
+f 101 16 38
+f 16 21 38
+f 21 101 38
+f 101 21 40
+f 28 26 40
+f 18 37 41
+f 20 27 42
+f 27 12 42
+f 15 19 43
+f 19 5 43
+f 28 40 45
+f 40 21 45
+f 29 18 47
+f 14 8 49
+f 2 17 53
+f 17 32 53
+f 48 2 53
+f 32 14 53
+f 42 12 54
+f 10 29 55
+f 30 15 57
+f 15 43 57
+f 29 56 57
+f 103 2 58
+f 2 48 58
+f 12 7 58
+f 48 54 58
+f 54 12 58
+f 21 16 59
+f 45 21 59
+f 28 45 59
+f 16 46 59
+f 46 39 59
+f 33 30 60
+f 30 57 60
+f 57 56 60
+f 29 47 61
+f 5 19 62
+f 19 27 62
+f 102 13 63
+f 11 31 64
+f 31 103 64
+f 25 35 65
+f 35 50 65
+f 56 25 65
+f 49 20 66
+f 20 42 66
+f 48 53 68
+f 54 48 68
+f 14 49 68
+f 49 66 68
+f 53 14 68
+f 42 54 68
+f 66 42 68
+f 31 11 69
+f 35 31 69
+f 50 35 69
+f 8 0 70
+f 49 8 70
+f 20 49 70
+f 103 58 71
+f 64 103 71
+f 51 11 71
+f 11 64 71
+f 22 23 72
+f 26 22 72
+f 100 101 72
+f 101 40 72
+f 23 52 72
+f 40 26 72
+f 9 22 73
+f 22 36 73
+f 0 9 73
+f 5 10 75
+f 10 55 75
+f 6 32 76
+f 32 34 76
+f 8 6 76
+f 52 8 76
+f 34 52 76
+f 101 102 77
+f 16 101 77
+f 37 44 77
+f 46 16 77
+f 102 63 77
+f 24 25 78
+f 25 56 78
+f 56 29 78
+f 29 61 78
+f 61 24 78
+f 60 56 79
+f 56 65 79
+f 65 50 79
+f 33 60 79
+f 41 37 80
+f 37 77 80
+f 77 63 80
+f 70 0 81
+f 27 20 81
+f 20 70 81
+f 7 19 82
+f 19 50 82
+f 58 7 82
+f 50 69 82
+f 69 3 82
+f 3 51 82
+f 51 71 82
+f 71 58 82
+f 63 13 83
+f 80 63 83
+f 18 41 83
+f 41 80 83
+f 36 28 84
+f 28 59 84
+f 59 39 84
+f 39 74 84
+f 73 36 84
+f 74 73 84
+f 17 100 85
+f 52 34 85
+f 100 72 85
+f 72 52 85
+f 51 3 86
+f 3 69 86
+f 11 51 86
+f 69 11 86
+f 5 4 87
+f 4 44 87
+f 9 8 88
+f 23 9 88
+f 8 52 88
+f 52 23 88
+f 10 5 89
+f 5 87 89
+f 18 10 89
+f 4 5 90
+f 5 62 90
+f 44 4 90
+f 77 44 90
+f 19 30 91
+f 50 19 91
+f 30 33 91
+f 33 79 91
+f 79 50 91
+f 43 5 92
+f 55 29 92
+f 29 57 92
+f 57 43 92
+f 5 75 92
+f 75 55 92
+f 44 37 93
+f 87 44 93
+f 37 18 93
+f 18 89 93
+f 89 87 93
+f 13 24 94
+f 24 61 94
+f 61 47 94
+f 83 13 94
+f 47 18 94
+f 18 83 94
+f 73 74 95
+f 74 67 95
+f 62 27 95
+f 27 81 95
+f 67 62 95
+f 32 1 96
+f 34 32 96
+f 1 17 96
+f 17 85 96
+f 85 34 96
+f 62 67 97
+f 90 62 97
+f 39 46 98
+f 74 39 98
+f 67 74 98
+f 97 67 98
+f 46 77 98
+f 77 90 98
+f 90 97 98
+f 0 73 99
+f 73 95 99
+f 81 0 99
+f 95 81 99
+30: 103 to 100, Face 10, Next 31, Prev 32, Opposite -1
+31: 100 to 2, Face 10, Next 32, Prev 30, Opposite -1
+32: 2 to 103, Face 10, Next 30, Prev 31, Opposite -1
 129: 0 to 8, Face 43, Next 130, Prev 131, Opposite -1
 130: 8 to 9, Face 43, Next 131, Prev 129, Opposite -1
 131: 9 to 0, Face 43, Next 129, Prev 130, Opposite -1
-132: 8 to 10, Face 44, Next 133, Prev 134, Opposite -1
-133: 10 to 9, Face 44, Next 134, Prev 132, Opposite -1
-134: 9 to 8, Face 44, Next 132, Prev 133, Opposite -1
+210: 6 to 8, Face 70, Next 211, Prev 212, Opposite -1
+211: 8 to 14, Face 70, Next 212, Prev 210, Opposite -1
+212: 14 to 6, Face 70, Next 210, Prev 211, Opposite -1
+264: 2 to 100, Face 88, Next 265, Prev 266, Opposite -1
+265: 100 to 17, Face 88, Next 266, Prev 264, Opposite -1
+266: 17 to 2, Face 88, Next 264, Prev 265, Opposite -1
+369: 22 to 9, Face 123, Next 370, Prev 371, Opposite -1
+370: 9 to 23, Face 123, Next 371, Prev 369, Opposite -1
+371: 23 to 22, Face 123, Next 369, Prev 370, Opposite -1
+384: 102 to 103, Face 128, Next 385, Prev 386, Opposite -1
+385: 103 to 24, Face 128, Next 386, Prev 384, Opposite -1
+386: 24 to 102, Face 128, Next 384, Prev 385, Opposite -1
+390: 13 to 102, Face 130, Next 391, Prev 392, Opposite -1
+391: 102 to 24, Face 130, Next 392, Prev 390, Opposite -1
+392: 24 to 13, Face 130, Next 390, Prev 391, Opposite -1
+408: 24 to 103, Face 136, Next 409, Prev 410, Opposite -1
+409: 103 to 25, Face 136, Next 410, Prev 408, Opposite -1
+410: 25 to 24, Face 136, Next 408, Prev 409, Opposite -1
+444: 7 to 12, Face 148, Next 445, Prev 446, Opposite -1
+445: 12 to 27, Face 148, Next 446, Prev 444, Opposite -1
+446: 27 to 7, Face 148, Next 444, Prev 445, Opposite -1
+447: 19 to 7, Face 149, Next 448, Prev 449, Opposite -1
+448: 7 to 27, Face 149, Next 449, Prev 447, Opposite -1
+449: 27 to 19, Face 149, Next 447, Prev 448, Opposite -1
+468: 10 to 18, Face 156, Next 469, Prev 470, Opposite -1
+469: 18 to 29, Face 156, Next 470, Prev 468, Opposite -1
+470: 29 to 10, Face 156, Next 468, Prev 469, Opposite -1
+489: 19 to 15, Face 163, Next 490, Prev 491, Opposite -1
+490: 15 to 30, Face 163, Next 491, Prev 489, Opposite -1
+491: 30 to 19, Face 163, Next 489, Prev 490, Opposite -1
+504: 25 to 103, Face 168, Next 505, Prev 506, Opposite -1
+505: 103 to 31, Face 168, Next 506, Prev 504, Opposite -1
+506: 31 to 25, Face 168, Next 504, Prev 505, Opposite -1
+519: 6 to 14, Face 173, Next 520, Prev 521, Opposite -1
+520: 14 to 32, Face 173, Next 521, Prev 519, Opposite -1
+521: 32 to 6, Face 173, Next 519, Prev 520, Opposite -1
+528: 17 to 1, Face 176, Next 529, Prev 530, Opposite -1
+529: 1 to 32, Face 176, Next 530, Prev 528, Opposite -1
+530: 32 to 17, Face 176, Next 528, Prev 529, Opposite -1
+579: 25 to 31, Face 193, Next 580, Prev 581, Opposite -1
+580: 31 to 35, Face 193, Next 581, Prev 579, Opposite -1
+581: 35 to 25, Face 193, Next 579, Prev 580, Opposite -1
+600: 22 to 26, Face 200, Next 601, Prev 602, Opposite -1
+601: 26 to 36, Face 200, Next 602, Prev 600, Opposite -1
+602: 36 to 22, Face 200, Next 600, Prev 601, Opposite -1
+603: 26 to 28, Face 201, Next 604, Prev 605, Opposite -1
+604: 28 to 36, Face 201, Next 605, Prev 603, Opposite -1
+605: 36 to 26, Face 201, Next 603, Prev 604, Opposite -1
+621: 101 to 16, Face 207, Next 622, Prev 623, Opposite -1
+622: 16 to 38, Face 207, Next 623, Prev 621, Opposite -1
+623: 38 to 101, Face 207, Next 621, Prev 622, Opposite -1
+624: 16 to 21, Face 208, Next 625, Prev 626, Opposite -1
+625: 21 to 38, Face 208, Next 626, Prev 624, Opposite -1
+626: 38 to 16, Face 208, Next 624, Prev 625, Opposite -1
+627: 21 to 101, Face 209, Next 628, Prev 629, Opposite -1
+628: 101 to 38, Face 209, Next 629, Prev 627, Opposite -1
+629: 38 to 21, Face 209, Next 627, Prev 628, Opposite -1
+654: 101 to 21, Face 218, Next 655, Prev 656, Opposite -1
+655: 21 to 40, Face 218, Next 656, Prev 654, Opposite -1
+656: 40 to 101, Face 218, Next 654, Prev 655, Opposite -1
+660: 28 to 26, Face 220, Next 661, Prev 662, Opposite -1
+661: 26 to 40, Face 220, Next 662, Prev 660, Opposite -1
+662: 40 to 28, Face 220, Next 660, Prev 661, Opposite -1
+678: 18 to 37, Face 226, Next 679, Prev 680, Opposite -1
+679: 37 to 41, Face 226, Next 680, Prev 678, Opposite -1
+680: 41 to 18, Face 226, Next 678, Prev 679, Opposite -1
+687: 20 to 27, Face 229, Next 688, Prev 689, Opposite -1
+688: 27 to 42, Face 229, Next 689, Prev 687, Opposite -1
+689: 42 to 20, Face 229, Next 687, Prev 688, Opposite -1
+690: 27 to 12, Face 230, Next 691, Prev 692, Opposite -1
+691: 12 to 42, Face 230, Next 692, Prev 690, Opposite -1
+692: 42 to 27, Face 230, Next 690, Prev 691, Opposite -1
+696: 15 to 19, Face 232, Next 697, Prev 698, Opposite -1
+697: 19 to 43, Face 232, Next 698, Prev 696, Opposite -1
+698: 43 to 15, Face 232, Next 696, Prev 697, Opposite -1
+699: 19 to 5, Face 233, Next 700, Prev 701, Opposite -1
+700: 5 to 43, Face 233, Next 701, Prev 699, Opposite -1
+701: 43 to 19, Face 233, Next 699, Prev 700, Opposite -1
+732: 28 to 40, Face 244, Next 733, Prev 734, Opposite -1
+733: 40 to 45, Face 244, Next 734, Prev 732, Opposite -1
+734: 45 to 28, Face 244, Next 732, Prev 733, Opposite -1
+735: 40 to 21, Face 245, Next 736, Prev 737, Opposite -1
+736: 21 to 45, Face 245, Next 737, Prev 735, Opposite -1
+737: 45 to 40, Face 245, Next 735, Prev 736, Opposite -1
+759: 29 to 18, Face 253, Next 760, Prev 761, Opposite -1
+760: 18 to 47, Face 253, Next 761, Prev 759, Opposite -1
+761: 47 to 29, Face 253, Next 759, Prev 760, Opposite -1
+795: 14 to 8, Face 265, Next 796, Prev 797, Opposite -1
+796: 8 to 49, Face 265, Next 797, Prev 795, Opposite -1
+797: 49 to 14, Face 265, Next 795, Prev 796, Opposite -1
+867: 2 to 17, Face 289, Next 868, Prev 869, Opposite -1
+868: 17 to 53, Face 289, Next 869, Prev 867, Opposite -1
+869: 53 to 2, Face 289, Next 867, Prev 868, Opposite -1
+870: 17 to 32, Face 290, Next 871, Prev 872, Opposite -1
+871: 32 to 53, Face 290, Next 872, Prev 870, Opposite -1
+872: 53 to 17, Face 290, Next 870, Prev 871, Opposite -1
+876: 48 to 2, Face 292, Next 877, Prev 878, Opposite -1
+877: 2 to 53, Face 292, Next 878, Prev 876, Opposite -1
+878: 53 to 48, Face 292, Next 876, Prev 877, Opposite -1
+879: 32 to 14, Face 293, Next 880, Prev 881, Opposite -1
+880: 14 to 53, Face 293, Next 881, Prev 879, Opposite -1
+881: 53 to 32, Face 293, Next 879, Prev 880, Opposite -1
+888: 42 to 12, Face 296, Next 889, Prev 890, Opposite -1
+889: 12 to 54, Face 296, Next 890, Prev 888, Opposite -1
+890: 54 to 42, Face 296, Next 888, Prev 889, Opposite -1
+906: 10 to 29, Face 302, Next 907, Prev 908, Opposite -1
+907: 29 to 55, Face 302, Next 908, Prev 906, Opposite -1
+908: 55 to 10, Face 302, Next 906, Prev 907, Opposite -1
+930: 30 to 15, Face 310, Next 931, Prev 932, Opposite -1
+931: 15 to 57, Face 310, Next 932, Prev 930, Opposite -1
+932: 57 to 30, Face 310, Next 930, Prev 931, Opposite -1
+933: 15 to 43, Face 311, Next 934, Prev 935, Opposite -1
+934: 43 to 57, Face 311, Next 935, Prev 933, Opposite -1
+935: 57 to 15, Face 311, Next 933, Prev 934, Opposite -1
+945: 29 to 56, Face 315, Next 946, Prev 947, Opposite -1
+946: 56 to 57, Face 315, Next 947, Prev 945, Opposite -1
+947: 57 to 29, Face 315, Next 945, Prev 946, Opposite -1
+948: 103 to 2, Face 316, Next 949, Prev 950, Opposite -1
+949: 2 to 58, Face 316, Next 950, Prev 948, Opposite -1
+950: 58 to 103, Face 316, Next 948, Prev 949, Opposite -1
+951: 2 to 48, Face 317, Next 952, Prev 953, Opposite -1
+952: 48 to 58, Face 317, Next 953, Prev 951, Opposite -1
+953: 58 to 2, Face 317, Next 951, Prev 952, Opposite -1
+966: 12 to 7, Face 322, Next 967, Prev 968, Opposite -1
+967: 7 to 58, Face 322, Next 968, Prev 966, Opposite -1
+968: 58 to 12, Face 322, Next 966, Prev 967, Opposite -1
+969: 48 to 54, Face 323, Next 970, Prev 971, Opposite -1
+970: 54 to 58, Face 323, Next 971, Prev 969, Opposite -1
+971: 58 to 48, Face 323, Next 969, Prev 970, Opposite -1
+972: 54 to 12, Face 324, Next 973, Prev 974, Opposite -1
+973: 12 to 58, Face 324, Next 974, Prev 972, Opposite -1
+974: 58 to 54, Face 324, Next 972, Prev 973, Opposite -1
+975: 21 to 16, Face 325, Next 976, Prev 977, Opposite -1
+976: 16 to 59, Face 325, Next 977, Prev 975, Opposite -1
+977: 59 to 21, Face 325, Next 975, Prev 976, Opposite -1
+978: 45 to 21, Face 326, Next 979, Prev 980, Opposite -1
+979: 21 to 59, Face 326, Next 980, Prev 978, Opposite -1
+980: 59 to 45, Face 326, Next 978, Prev 979, Opposite -1
+984: 28 to 45, Face 328, Next 985, Prev 986, Opposite -1
+985: 45 to 59, Face 328, Next 986, Prev 984, Opposite -1
+986: 59 to 28, Face 328, Next 984, Prev 985, Opposite -1
+987: 16 to 46, Face 329, Next 988, Prev 989, Opposite -1
+988: 46 to 59, Face 329, Next 989, Prev 987, Opposite -1
+989: 59 to 16, Face 329, Next 987, Prev 988, Opposite -1
+990: 46 to 39, Face 330, Next 991, Prev 992, Opposite -1
+991: 39 to 59, Face 330, Next 992, Prev 990, Opposite -1
+992: 59 to 46, Face 330, Next 990, Prev 991, Opposite -1
+1002: 33 to 30, Face 334, Next 1003, Prev 1004, Opposite -1
+1003: 30 to 60, Face 334, Next 1004, Prev 1002, Opposite -1
+1004: 60 to 33, Face 334, Next 1002, Prev 1003, Opposite -1
+1005: 30 to 57, Face 335, Next 1006, Prev 1007, Opposite -1
+1006: 57 to 60, Face 335, Next 1007, Prev 1005, Opposite -1
+1007: 60 to 30, Face 335, Next 1005, Prev 1006, Opposite -1
+1008: 57 to 56, Face 336, Next 1009, Prev 1010, Opposite -1
+1009: 56 to 60, Face 336, Next 1010, Prev 1008, Opposite -1
+1010: 60 to 57, Face 336, Next 1008, Prev 1009, Opposite -1
+1020: 29 to 47, Face 340, Next 1021, Prev 1022, Opposite -1
+1021: 47 to 61, Face 340, Next 1022, Prev 1020, Opposite -1
+1022: 61 to 29, Face 340, Next 1020, Prev 1021, Opposite -1
+1026: 5 to 19, Face 342, Next 1027, Prev 1028, Opposite -1
+1027: 19 to 62, Face 342, Next 1028, Prev 1026, Opposite -1
+1028: 62 to 5, Face 342, Next 1026, Prev 1027, Opposite -1
+1029: 19 to 27, Face 343, Next 1030, Prev 1031, Opposite -1
+1030: 27 to 62, Face 343, Next 1031, Prev 1029, Opposite -1
+1031: 62 to 19, Face 343, Next 1029, Prev 1030, Opposite -1
+1038: 102 to 13, Face 346, Next 1039, Prev 1040, Opposite -1
+1039: 13 to 63, Face 346, Next 1040, Prev 1038, Opposite -1
+1040: 63 to 102, Face 346, Next 1038, Prev 1039, Opposite -1
+1053: 11 to 31, Face 351, Next 1054, Prev 1055, Opposite -1
+1054: 31 to 64, Face 351, Next 1055, Prev 1053, Opposite -1
+1055: 64 to 11, Face 351, Next 1053, Prev 1054, Opposite -1
+1056: 31 to 103, Face 352, Next 1057, Prev 1058, Opposite -1
+1057: 103 to 64, Face 352, Next 1058, Prev 1056, Opposite -1
+1058: 64 to 31, Face 352, Next 1056, Prev 1057, Opposite -1
+1068: 25 to 35, Face 356, Next 1069, Prev 1070, Opposite -1
+1069: 35 to 65, Face 356, Next 1070, Prev 1068, Opposite -1
+1070: 65 to 25, Face 356, Next 1068, Prev 1069, Opposite -1
+1071: 35 to 50, Face 357, Next 1072, Prev 1073, Opposite -1
+1072: 50 to 65, Face 357, Next 1073, Prev 1071, Opposite -1
+1073: 65 to 35, Face 357, Next 1071, Prev 1072, Opposite -1
+1074: 56 to 25, Face 358, Next 1075, Prev 1076, Opposite -1
+1075: 25 to 65, Face 358, Next 1076, Prev 1074, Opposite -1
+1076: 65 to 56, Face 358, Next 1074, Prev 1075, Opposite -1
+1089: 49 to 20, Face 363, Next 1090, Prev 1091, Opposite -1
+1090: 20 to 66, Face 363, Next 1091, Prev 1089, Opposite -1
+1091: 66 to 49, Face 363, Next 1089, Prev 1090, Opposite -1
+1095: 20 to 42, Face 365, Next 1096, Prev 1097, Opposite -1
+1096: 42 to 66, Face 365, Next 1097, Prev 1095, Opposite -1
+1097: 66 to 20, Face 365, Next 1095, Prev 1096, Opposite -1
+1131: 48 to 53, Face 377, Next 1132, Prev 1133, Opposite -1
+1132: 53 to 68, Face 377, Next 1133, Prev 1131, Opposite -1
+1133: 68 to 48, Face 377, Next 1131, Prev 1132, Opposite -1
+1134: 54 to 48, Face 378, Next 1135, Prev 1136, Opposite -1
+1135: 48 to 68, Face 378, Next 1136, Prev 1134, Opposite -1
+1136: 68 to 54, Face 378, Next 1134, Prev 1135, Opposite -1
+1137: 14 to 49, Face 379, Next 1138, Prev 1139, Opposite -1
+1138: 49 to 68, Face 379, Next 1139, Prev 1137, Opposite -1
+1139: 68 to 14, Face 379, Next 1137, Prev 1138, Opposite -1
+1140: 49 to 66, Face 380, Next 1141, Prev 1142, Opposite -1
+1141: 66 to 68, Face 380, Next 1142, Prev 1140, Opposite -1
+1142: 68 to 49, Face 380, Next 1140, Prev 1141, Opposite -1
+1143: 53 to 14, Face 381, Next 1144, Prev 1145, Opposite -1
+1144: 14 to 68, Face 381, Next 1145, Prev 1143, Opposite -1
+1145: 68 to 53, Face 381, Next 1143, Prev 1144, Opposite -1
+1146: 42 to 54, Face 382, Next 1147, Prev 1148, Opposite -1
+1147: 54 to 68, Face 382, Next 1148, Prev 1146, Opposite -1
+1148: 68 to 42, Face 382, Next 1146, Prev 1147, Opposite -1
+1149: 66 to 42, Face 383, Next 1150, Prev 1151, Opposite -1
+1150: 42 to 68, Face 383, Next 1151, Prev 1149, Opposite -1
+1151: 68 to 66, Face 383, Next 1149, Prev 1150, Opposite -1
+1152: 31 to 11, Face 384, Next 1153, Prev 1154, Opposite -1
+1153: 11 to 69, Face 384, Next 1154, Prev 1152, Opposite -1
+1154: 69 to 31, Face 384, Next 1152, Prev 1153, Opposite -1
+1155: 35 to 31, Face 385, Next 1156, Prev 1157, Opposite -1
+1156: 31 to 69, Face 385, Next 1157, Prev 1155, Opposite -1
+1157: 69 to 35, Face 385, Next 1155, Prev 1156, Opposite -1
+1161: 50 to 35, Face 387, Next 1162, Prev 1163, Opposite -1
+1162: 35 to 69, Face 387, Next 1163, Prev 1161, Opposite -1
+1163: 69 to 50, Face 387, Next 1161, Prev 1162, Opposite -1
+1170: 8 to 0, Face 390, Next 1171, Prev 1172, Opposite -1
+1171: 0 to 70, Face 390, Next 1172, Prev 1170, Opposite -1
+1172: 70 to 8, Face 390, Next 1170, Prev 1171, Opposite -1
+1173: 49 to 8, Face 391, Next 1174, Prev 1175, Opposite -1
+1174: 8 to 70, Face 391, Next 1175, Prev 1173, Opposite -1
+1175: 70 to 49, Face 391, Next 1173, Prev 1174, Opposite -1
+1182: 20 to 49, Face 394, Next 1183, Prev 1184, Opposite -1
+1183: 49 to 70, Face 394, Next 1184, Prev 1182, Opposite -1
+1184: 70 to 20, Face 394, Next 1182, Prev 1183, Opposite -1
+1191: 103 to 58, Face 397, Next 1192, Prev 1193, Opposite -1
+1192: 58 to 71, Face 397, Next 1193, Prev 1191, Opposite -1
+1193: 71 to 103, Face 397, Next 1191, Prev 1192, Opposite -1
+1194: 64 to 103, Face 398, Next 1195, Prev 1196, Opposite -1
+1195: 103 to 71, Face 398, Next 1196, Prev 1194, Opposite -1
+1196: 71 to 64, Face 398, Next 1194, Prev 1195, Opposite -1
+1197: 51 to 11, Face 399, Next 1198, Prev 1199, Opposite -1
+1198: 11 to 71, Face 399, Next 1199, Prev 1197, Opposite -1
+1199: 71 to 51, Face 399, Next 1197, Prev 1198, Opposite -1
+1200: 11 to 64, Face 400, Next 1201, Prev 1202, Opposite -1
+1201: 64 to 71, Face 400, Next 1202, Prev 1200, Opposite -1
+1202: 71 to 11, Face 400, Next 1200, Prev 1201, Opposite -1
+1203: 22 to 23, Face 401, Next 1204, Prev 1205, Opposite -1
+1204: 23 to 72, Face 401, Next 1205, Prev 1203, Opposite -1
+1205: 72 to 22, Face 401, Next 1203, Prev 1204, Opposite -1
+1206: 26 to 22, Face 402, Next 1207, Prev 1208, Opposite -1
+1207: 22 to 72, Face 402, Next 1208, Prev 1206, Opposite -1
+1208: 72 to 26, Face 402, Next 1206, Prev 1207, Opposite -1
+1209: 100 to 101, Face 403, Next 1210, Prev 1211, Opposite -1
+1210: 101 to 72, Face 403, Next 1211, Prev 1209, Opposite -1
+1211: 72 to 100, Face 403, Next 1209, Prev 1210, Opposite -1
+1212: 101 to 40, Face 404, Next 1213, Prev 1214, Opposite -1
+1213: 40 to 72, Face 404, Next 1214, Prev 1212, Opposite -1
+1214: 72 to 101, Face 404, Next 1212, Prev 1213, Opposite -1
+1215: 23 to 52, Face 405, Next 1216, Prev 1217, Opposite -1
+1216: 52 to 72, Face 405, Next 1217, Prev 1215, Opposite -1
+1217: 72 to 23, Face 405, Next 1215, Prev 1216, Opposite -1
+1218: 40 to 26, Face 406, Next 1219, Prev 1220, Opposite -1
+1219: 26 to 72, Face 406, Next 1220, Prev 1218, Opposite -1
+1220: 72 to 40, Face 406, Next 1218, Prev 1219, Opposite -1
+1224: 9 to 22, Face 408, Next 1225, Prev 1226, Opposite -1
+1225: 22 to 73, Face 408, Next 1226, Prev 1224, Opposite -1
+1226: 73 to 9, Face 408, Next 1224, Prev 1225, Opposite -1
+1227: 22 to 36, Face 409, Next 1228, Prev 1229, Opposite -1
+1228: 36 to 73, Face 409, Next 1229, Prev 1227, Opposite -1
+1229: 73 to 22, Face 409, Next 1227, Prev 1228, Opposite -1
+1230: 0 to 9, Face 410, Next 1231, Prev 1232, Opposite -1
+1231: 9 to 73, Face 410, Next 1232, Prev 1230, Opposite -1
+1232: 73 to 0, Face 410, Next 1230, Prev 1231, Opposite -1
+1260: 5 to 10, Face 420, Next 1261, Prev 1262, Opposite -1
+1261: 10 to 75, Face 420, Next 1262, Prev 1260, Opposite -1
+1262: 75 to 5, Face 420, Next 1260, Prev 1261, Opposite -1
+1263: 10 to 55, Face 421, Next 1264, Prev 1265, Opposite -1
+1264: 55 to 75, Face 421, Next 1265, Prev 1263, Opposite -1
+1265: 75 to 10, Face 421, Next 1263, Prev 1264, Opposite -1
+1269: 6 to 32, Face 423, Next 1270, Prev 1271, Opposite -1
+1270: 32 to 76, Face 423, Next 1271, Prev 1269, Opposite -1
+1271: 76 to 6, Face 423, Next 1269, Prev 1270, Opposite -1
+1272: 32 to 34, Face 424, Next 1273, Prev 1274, Opposite -1
+1273: 34 to 76, Face 424, Next 1274, Prev 1272, Opposite -1
+1274: 76 to 32, Face 424, Next 1272, Prev 1273, Opposite -1
+1275: 8 to 6, Face 425, Next 1276, Prev 1277, Opposite -1
+1276: 6 to 76, Face 425, Next 1277, Prev 1275, Opposite -1
+1277: 76 to 8, Face 425, Next 1275, Prev 1276, Opposite -1
+1278: 52 to 8, Face 426, Next 1279, Prev 1280, Opposite -1
+1279: 8 to 76, Face 426, Next 1280, Prev 1278, Opposite -1
+1280: 76 to 52, Face 426, Next 1278, Prev 1279, Opposite -1
+1281: 34 to 52, Face 427, Next 1282, Prev 1283, Opposite -1
+1282: 52 to 76, Face 427, Next 1283, Prev 1281, Opposite -1
+1283: 76 to 34, Face 427, Next 1281, Prev 1282, Opposite -1
+1284: 101 to 102, Face 428, Next 1285, Prev 1286, Opposite -1
+1285: 102 to 77, Face 428, Next 1286, Prev 1284, Opposite -1
+1286: 77 to 101, Face 428, Next 1284, Prev 1285, Opposite -1
+1287: 16 to 101, Face 429, Next 1288, Prev 1289, Opposite -1
+1288: 101 to 77, Face 429, Next 1289, Prev 1287, Opposite -1
+1289: 77 to 16, Face 429, Next 1287, Prev 1288, Opposite -1
+1290: 37 to 44, Face 430, Next 1291, Prev 1292, Opposite -1
+1291: 44 to 77, Face 430, Next 1292, Prev 1290, Opposite -1
+1292: 77 to 37, Face 430, Next 1290, Prev 1291, Opposite -1
+1296: 46 to 16, Face 432, Next 1297, Prev 1298, Opposite -1
+1297: 16 to 77, Face 432, Next 1298, Prev 1296, Opposite -1
+1298: 77 to 46, Face 432, Next 1296, Prev 1297, Opposite -1
+1299: 102 to 63, Face 433, Next 1300, Prev 1301, Opposite -1
+1300: 63 to 77, Face 433, Next 1301, Prev 1299, Opposite -1
+1301: 77 to 102, Face 433, Next 1299, Prev 1300, Opposite -1
+1311: 24 to 25, Face 437, Next 1312, Prev 1313, Opposite -1
+1312: 25 to 78, Face 437, Next 1313, Prev 1311, Opposite -1
+1313: 78 to 24, Face 437, Next 1311, Prev 1312, Opposite -1
+1314: 25 to 56, Face 438, Next 1315, Prev 1316, Opposite -1
+1315: 56 to 78, Face 438, Next 1316, Prev 1314, Opposite -1
+1316: 78 to 25, Face 438, Next 1314, Prev 1315, Opposite -1
+1317: 56 to 29, Face 439, Next 1318, Prev 1319, Opposite -1
+1318: 29 to 78, Face 439, Next 1319, Prev 1317, Opposite -1
+1319: 78 to 56, Face 439, Next 1317, Prev 1318, Opposite -1
+1320: 29 to 61, Face 440, Next 1321, Prev 1322, Opposite -1
+1321: 61 to 78, Face 440, Next 1322, Prev 1320, Opposite -1
+1322: 78 to 29, Face 440, Next 1320, Prev 1321, Opposite -1
+1323: 61 to 24, Face 441, Next 1324, Prev 1325, Opposite -1
+1324: 24 to 78, Face 441, Next 1325, Prev 1323, Opposite -1
+1325: 78 to 61, Face 441, Next 1323, Prev 1324, Opposite -1
+1326: 60 to 56, Face 442, Next 1327, Prev 1328, Opposite -1
+1327: 56 to 79, Face 442, Next 1328, Prev 1326, Opposite -1
+1328: 79 to 60, Face 442, Next 1326, Prev 1327, Opposite -1
+1329: 56 to 65, Face 443, Next 1330, Prev 1331, Opposite -1
+1330: 65 to 79, Face 443, Next 1331, Prev 1329, Opposite -1
+1331: 79 to 56, Face 443, Next 1329, Prev 1330, Opposite -1
+1335: 65 to 50, Face 445, Next 1336, Prev 1337, Opposite -1
+1336: 50 to 79, Face 445, Next 1337, Prev 1335, Opposite -1
+1337: 79 to 65, Face 445, Next 1335, Prev 1336, Opposite -1
+1338: 33 to 60, Face 446, Next 1339, Prev 1340, Opposite -1
+1339: 60 to 79, Face 446, Next 1340, Prev 1338, Opposite -1
+1340: 79 to 33, Face 446, Next 1338, Prev 1339, Opposite -1
+1347: 41 to 37, Face 449, Next 1348, Prev 1349, Opposite -1
+1348: 37 to 80, Face 449, Next 1349, Prev 1347, Opposite -1
+1349: 80 to 41, Face 449, Next 1347, Prev 1348, Opposite -1
+1356: 37 to 77, Face 452, Next 1357, Prev 1358, Opposite -1
+1357: 77 to 80, Face 452, Next 1358, Prev 1356, Opposite -1
+1358: 80 to 37, Face 452, Next 1356, Prev 1357, Opposite -1
+1359: 77 to 63, Face 453, Next 1360, Prev 1361, Opposite -1
+1360: 63 to 80, Face 453, Next 1361, Prev 1359, Opposite -1
+1361: 80 to 77, Face 453, Next 1359, Prev 1360, Opposite -1
+1368: 70 to 0, Face 456, Next 1369, Prev 1370, Opposite -1
+1369: 0 to 81, Face 456, Next 1370, Prev 1368, Opposite -1
+1370: 81 to 70, Face 456, Next 1368, Prev 1369, Opposite -1
+1371: 27 to 20, Face 457, Next 1372, Prev 1373, Opposite -1
+1372: 20 to 81, Face 457, Next 1373, Prev 1371, Opposite -1
+1373: 81 to 27, Face 457, Next 1371, Prev 1372, Opposite -1
+1374: 20 to 70, Face 458, Next 1375, Prev 1376, Opposite -1
+1375: 70 to 81, Face 458, Next 1376, Prev 1374, Opposite -1
+1376: 81 to 20, Face 458, Next 1374, Prev 1375, Opposite -1
+1383: 7 to 19, Face 461, Next 1384, Prev 1385, Opposite -1
+1384: 19 to 82, Face 461, Next 1385, Prev 1383, Opposite -1
+1385: 82 to 7, Face 461, Next 1383, Prev 1384, Opposite -1
+1386: 19 to 50, Face 462, Next 1387, Prev 1388, Opposite -1
+1387: 50 to 82, Face 462, Next 1388, Prev 1386, Opposite -1
+1388: 82 to 19, Face 462, Next 1386, Prev 1387, Opposite -1
+1389: 58 to 7, Face 463, Next 1390, Prev 1391, Opposite -1
+1390: 7 to 82, Face 463, Next 1391, Prev 1389, Opposite -1
+1391: 82 to 58, Face 463, Next 1389, Prev 1390, Opposite -1
+1392: 50 to 69, Face 464, Next 1393, Prev 1394, Opposite -1
+1393: 69 to 82, Face 464, Next 1394, Prev 1392, Opposite -1
+1394: 82 to 50, Face 464, Next 1392, Prev 1393, Opposite -1
+1395: 69 to 3, Face 465, Next 1396, Prev 1397, Opposite -1
+1396: 3 to 82, Face 465, Next 1397, Prev 1395, Opposite -1
+1397: 82 to 69, Face 465, Next 1395, Prev 1396, Opposite -1
+1398: 3 to 51, Face 466, Next 1399, Prev 1400, Opposite -1
+1399: 51 to 82, Face 466, Next 1400, Prev 1398, Opposite -1
+1400: 82 to 3, Face 466, Next 1398, Prev 1399, Opposite -1
+1401: 51 to 71, Face 467, Next 1402, Prev 1403, Opposite -1
+1402: 71 to 82, Face 467, Next 1403, Prev 1401, Opposite -1
+1403: 82 to 51, Face 467, Next 1401, Prev 1402, Opposite -1
+1404: 71 to 58, Face 468, Next 1405, Prev 1406, Opposite -1
+1405: 58 to 82, Face 468, Next 1406, Prev 1404, Opposite -1
+1406: 82 to 71, Face 468, Next 1404, Prev 1405, Opposite -1
+1413: 63 to 13, Face 471, Next 1414, Prev 1415, Opposite -1
+1414: 13 to 83, Face 471, Next 1415, Prev 1413, Opposite -1
+1415: 83 to 63, Face 471, Next 1413, Prev 1414, Opposite -1
+1416: 80 to 63, Face 472, Next 1417, Prev 1418, Opposite -1
+1417: 63 to 83, Face 472, Next 1418, Prev 1416, Opposite -1
+1418: 83 to 80, Face 472, Next 1416, Prev 1417, Opposite -1
+1419: 18 to 41, Face 473, Next 1420, Prev 1421, Opposite -1
+1420: 41 to 83, Face 473, Next 1421, Prev 1419, Opposite -1
+1421: 83 to 18, Face 473, Next 1419, Prev 1420, Opposite -1
+1422: 41 to 80, Face 474, Next 1423, Prev 1424, Opposite -1
+1423: 80 to 83, Face 474, Next 1424, Prev 1422, Opposite -1
+1424: 83 to 41, Face 474, Next 1422, Prev 1423, Opposite -1
+1425: 36 to 28, Face 475, Next 1426, Prev 1427, Opposite -1
+1426: 28 to 84, Face 475, Next 1427, Prev 1425, Opposite -1
+1427: 84 to 36, Face 475, Next 1425, Prev 1426, Opposite -1
+1428: 28 to 59, Face 476, Next 1429, Prev 1430, Opposite -1
+1429: 59 to 84, Face 476, Next 1430, Prev 1428, Opposite -1
+1430: 84 to 28, Face 476, Next 1428, Prev 1429, Opposite -1
+1431: 59 to 39, Face 477, Next 1432, Prev 1433, Opposite -1
+1432: 39 to 84, Face 477, Next 1433, Prev 1431, Opposite -1
+1433: 84 to 59, Face 477, Next 1431, Prev 1432, Opposite -1
+1434: 39 to 74, Face 478, Next 1435, Prev 1436, Opposite -1
+1435: 74 to 84, Face 478, Next 1436, Prev 1434, Opposite -1
+1436: 84 to 39, Face 478, Next 1434, Prev 1435, Opposite -1
+1437: 73 to 36, Face 479, Next 1438, Prev 1439, Opposite -1
+1438: 36 to 84, Face 479, Next 1439, Prev 1437, Opposite -1
+1439: 84 to 73, Face 479, Next 1437, Prev 1438, Opposite -1
+1440: 74 to 73, Face 480, Next 1441, Prev 1442, Opposite -1
+1441: 73 to 84, Face 480, Next 1442, Prev 1440, Opposite -1
+1442: 84 to 74, Face 480, Next 1440, Prev 1441, Opposite -1
+1449: 17 to 100, Face 483, Next 1450, Prev 1451, Opposite -1
+1450: 100 to 85, Face 483, Next 1451, Prev 1449, Opposite -1
+1451: 85 to 17, Face 483, Next 1449, Prev 1450, Opposite -1
+1452: 52 to 34, Face 484, Next 1453, Prev 1454, Opposite -1
+1453: 34 to 85, Face 484, Next 1454, Prev 1452, Opposite -1
+1454: 85 to 52, Face 484, Next 1452, Prev 1453, Opposite -1
+1455: 100 to 72, Face 485, Next 1456, Prev 1457, Opposite -1
+1456: 72 to 85, Face 485, Next 1457, Prev 1455, Opposite -1
+1457: 85 to 100, Face 485, Next 1455, Prev 1456, Opposite -1
+1458: 72 to 52, Face 486, Next 1459, Prev 1460, Opposite -1
+1459: 52 to 85, Face 486, Next 1460, Prev 1458, Opposite -1
+1460: 85 to 72, Face 486, Next 1458, Prev 1459, Opposite -1
+1461: 51 to 3, Face 487, Next 1462, Prev 1463, Opposite -1
+1462: 3 to 86, Face 487, Next 1463, Prev 1461, Opposite -1
+1463: 86 to 51, Face 487, Next 1461, Prev 1462, Opposite -1
+1464: 3 to 69, Face 488, Next 1465, Prev 1466, Opposite -1
+1465: 69 to 86, Face 488, Next 1466, Prev 1464, Opposite -1
+1466: 86 to 3, Face 488, Next 1464, Prev 1465, Opposite -1
+1467: 11 to 51, Face 489, Next 1468, Prev 1469, Opposite -1
+1468: 51 to 86, Face 489, Next 1469, Prev 1467, Opposite -1
+1469: 86 to 11, Face 489, Next 1467, Prev 1468, Opposite -1
+1470: 69 to 11, Face 490, Next 1471, Prev 1472, Opposite -1
+1471: 11 to 86, Face 490, Next 1472, Prev 1470, Opposite -1
+1472: 86 to 69, Face 490, Next 1470, Prev 1471, Opposite -1
+1473: 5 to 4, Face 491, Next 1474, Prev 1475, Opposite -1
+1474: 4 to 87, Face 491, Next 1475, Prev 1473, Opposite -1
+1475: 87 to 5, Face 491, Next 1473, Prev 1474, Opposite -1
+1485: 4 to 44, Face 495, Next 1486, Prev 1487, Opposite -1
+1486: 44 to 87, Face 495, Next 1487, Prev 1485, Opposite -1
+1487: 87 to 4, Face 495, Next 1485, Prev 1486, Opposite -1
+1491: 9 to 8, Face 497, Next 1492, Prev 1493, Opposite -1
+1492: 8 to 88, Face 497, Next 1493, Prev 1491, Opposite -1
+1493: 88 to 9, Face 497, Next 1491, Prev 1492, Opposite -1
+1494: 23 to 9, Face 498, Next 1495, Prev 1496, Opposite -1
+1495: 9 to 88, Face 498, Next 1496, Prev 1494, Opposite -1
+1496: 88 to 23, Face 498, Next 1494, Prev 1495, Opposite -1
+1497: 8 to 52, Face 499, Next 1498, Prev 1499, Opposite -1
+1498: 52 to 88, Face 499, Next 1499, Prev 1497, Opposite -1
+1499: 88 to 8, Face 499, Next 1497, Prev 1498, Opposite -1
+1500: 52 to 23, Face 500, Next 1501, Prev 1502, Opposite -1
+1501: 23 to 88, Face 500, Next 1502, Prev 1500, Opposite -1
+1502: 88 to 52, Face 500, Next 1500, Prev 1501, Opposite -1
+1503: 10 to 5, Face 501, Next 1504, Prev 1505, Opposite -1
+1504: 5 to 89, Face 501, Next 1505, Prev 1503, Opposite -1
+1505: 89 to 10, Face 501, Next 1503, Prev 1504, Opposite -1
+1506: 5 to 87, Face 502, Next 1507, Prev 1508, Opposite -1
+1507: 87 to 89, Face 502, Next 1508, Prev 1506, Opposite -1
+1508: 89 to 5, Face 502, Next 1506, Prev 1507, Opposite -1
+1509: 18 to 10, Face 503, Next 1510, Prev 1511, Opposite -1
+1510: 10 to 89, Face 503, Next 1511, Prev 1509, Opposite -1
+1511: 89 to 18, Face 503, Next 1509, Prev 1510, Opposite -1
+1518: 4 to 5, Face 506, Next 1519, Prev 1520, Opposite -1
+1519: 5 to 90, Face 506, Next 1520, Prev 1518, Opposite -1
+1520: 90 to 4, Face 506, Next 1518, Prev 1519, Opposite -1
+1521: 5 to 62, Face 507, Next 1522, Prev 1523, Opposite -1
+1522: 62 to 90, Face 507, Next 1523, Prev 1521, Opposite -1
+1523: 90 to 5, Face 507, Next 1521, Prev 1522, Opposite -1
+1527: 44 to 4, Face 509, Next 1528, Prev 1529, Opposite -1
+1528: 4 to 90, Face 509, Next 1529, Prev 1527, Opposite -1
+1529: 90 to 44, Face 509, Next 1527, Prev 1528, Opposite -1
+1530: 77 to 44, Face 510, Next 1531, Prev 1532, Opposite -1
+1531: 44 to 90, Face 510, Next 1532, Prev 1530, Opposite -1
+1532: 90 to 77, Face 510, Next 1530, Prev 1531, Opposite -1
+1539: 19 to 30, Face 513, Next 1540, Prev 1541, Opposite -1
+1540: 30 to 91, Face 513, Next 1541, Prev 1539, Opposite -1
+1541: 91 to 19, Face 513, Next 1539, Prev 1540, Opposite -1
+1542: 50 to 19, Face 514, Next 1543, Prev 1544, Opposite -1
+1543: 19 to 91, Face 514, Next 1544, Prev 1542, Opposite -1
+1544: 91 to 50, Face 514, Next 1542, Prev 1543, Opposite -1
+1545: 30 to 33, Face 515, Next 1546, Prev 1547, Opposite -1
+1546: 33 to 91, Face 515, Next 1547, Prev 1545, Opposite -1
+1547: 91 to 30, Face 515, Next 1545, Prev 1546, Opposite -1
+1548: 33 to 79, Face 516, Next 1549, Prev 1550, Opposite -1
+1549: 79 to 91, Face 516, Next 1550, Prev 1548, Opposite -1
+1550: 91 to 33, Face 516, Next 1548, Prev 1549, Opposite -1
+1551: 79 to 50, Face 517, Next 1552, Prev 1553, Opposite -1
+1552: 50 to 91, Face 517, Next 1553, Prev 1551, Opposite -1
+1553: 91 to 79, Face 517, Next 1551, Prev 1552, Opposite -1
+1554: 43 to 5, Face 518, Next 1555, Prev 1556, Opposite -1
+1555: 5 to 92, Face 518, Next 1556, Prev 1554, Opposite -1
+1556: 92 to 43, Face 518, Next 1554, Prev 1555, Opposite -1
+1557: 55 to 29, Face 519, Next 1558, Prev 1559, Opposite -1
+1558: 29 to 92, Face 519, Next 1559, Prev 1557, Opposite -1
+1559: 92 to 55, Face 519, Next 1557, Prev 1558, Opposite -1
+1560: 29 to 57, Face 520, Next 1561, Prev 1562, Opposite -1
+1561: 57 to 92, Face 520, Next 1562, Prev 1560, Opposite -1
+1562: 92 to 29, Face 520, Next 1560, Prev 1561, Opposite -1
+1563: 57 to 43, Face 521, Next 1564, Prev 1565, Opposite -1
+1564: 43 to 92, Face 521, Next 1565, Prev 1563, Opposite -1
+1565: 92 to 57, Face 521, Next 1563, Prev 1564, Opposite -1
+1566: 5 to 75, Face 522, Next 1567, Prev 1568, Opposite -1
+1567: 75 to 92, Face 522, Next 1568, Prev 1566, Opposite -1
+1568: 92 to 5, Face 522, Next 1566, Prev 1567, Opposite -1
+1569: 75 to 55, Face 523, Next 1570, Prev 1571, Opposite -1
+1570: 55 to 92, Face 523, Next 1571, Prev 1569, Opposite -1
+1571: 92 to 75, Face 523, Next 1569, Prev 1570, Opposite -1
+1572: 44 to 37, Face 524, Next 1573, Prev 1574, Opposite -1
+1573: 37 to 93, Face 524, Next 1574, Prev 1572, Opposite -1
+1574: 93 to 44, Face 524, Next 1572, Prev 1573, Opposite -1
+1575: 87 to 44, Face 525, Next 1576, Prev 1577, Opposite -1
+1576: 44 to 93, Face 525, Next 1577, Prev 1575, Opposite -1
+1577: 93 to 87, Face 525, Next 1575, Prev 1576, Opposite -1
+1578: 37 to 18, Face 526, Next 1579, Prev 1580, Opposite -1
+1579: 18 to 93, Face 526, Next 1580, Prev 1578, Opposite -1
+1580: 93 to 37, Face 526, Next 1578, Prev 1579, Opposite -1
+1581: 18 to 89, Face 527, Next 1582, Prev 1583, Opposite -1
+1582: 89 to 93, Face 527, Next 1583, Prev 1581, Opposite -1
+1583: 93 to 18, Face 527, Next 1581, Prev 1582, Opposite -1
+1584: 89 to 87, Face 528, Next 1585, Prev 1586, Opposite -1
+1585: 87 to 93, Face 528, Next 1586, Prev 1584, Opposite -1
+1586: 93 to 89, Face 528, Next 1584, Prev 1585, Opposite -1
+1587: 13 to 24, Face 529, Next 1588, Prev 1589, Opposite -1
+1588: 24 to 94, Face 529, Next 1589, Prev 1587, Opposite -1
+1589: 94 to 13, Face 529, Next 1587, Prev 1588, Opposite -1
+1590: 24 to 61, Face 530, Next 1591, Prev 1592, Opposite -1
+1591: 61 to 94, Face 530, Next 1592, Prev 1590, Opposite -1
+1592: 94 to 24, Face 530, Next 1590, Prev 1591, Opposite -1
+1593: 61 to 47, Face 531, Next 1594, Prev 1595, Opposite -1
+1594: 47 to 94, Face 531, Next 1595, Prev 1593, Opposite -1
+1595: 94 to 61, Face 531, Next 1593, Prev 1594, Opposite -1
+1596: 83 to 13, Face 532, Next 1597, Prev 1598, Opposite -1
+1597: 13 to 94, Face 532, Next 1598, Prev 1596, Opposite -1
+1598: 94 to 83, Face 532, Next 1596, Prev 1597, Opposite -1
+1599: 47 to 18, Face 533, Next 1600, Prev 1601, Opposite -1
+1600: 18 to 94, Face 533, Next 1601, Prev 1599, Opposite -1
+1601: 94 to 47, Face 533, Next 1599, Prev 1600, Opposite -1
+1602: 18 to 83, Face 534, Next 1603, Prev 1604, Opposite -1
+1603: 83 to 94, Face 534, Next 1604, Prev 1602, Opposite -1
+1604: 94 to 18, Face 534, Next 1602, Prev 1603, Opposite -1
+1605: 73 to 74, Face 535, Next 1606, Prev 1607, Opposite -1
+1606: 74 to 95, Face 535, Next 1607, Prev 1605, Opposite -1
+1607: 95 to 73, Face 535, Next 1605, Prev 1606, Opposite -1
+1608: 74 to 67, Face 536, Next 1609, Prev 1610, Opposite -1
+1609: 67 to 95, Face 536, Next 1610, Prev 1608, Opposite -1
+1610: 95 to 74, Face 536, Next 1608, Prev 1609, Opposite -1
+1611: 62 to 27, Face 537, Next 1612, Prev 1613, Opposite -1
+1612: 27 to 95, Face 537, Next 1613, Prev 1611, Opposite -1
+1613: 95 to 62, Face 537, Next 1611, Prev 1612, Opposite -1
+1614: 27 to 81, Face 538, Next 1615, Prev 1616, Opposite -1
+1615: 81 to 95, Face 538, Next 1616, Prev 1614, Opposite -1
+1616: 95 to 27, Face 538, Next 1614, Prev 1615, Opposite -1
+1617: 67 to 62, Face 539, Next 1618, Prev 1619, Opposite -1
+1618: 62 to 95, Face 539, Next 1619, Prev 1617, Opposite -1
+1619: 95 to 67, Face 539, Next 1617, Prev 1618, Opposite -1
+1626: 32 to 1, Face 542, Next 1627, Prev 1628, Opposite -1
+1627: 1 to 96, Face 542, Next 1628, Prev 1626, Opposite -1
+1628: 96 to 32, Face 542, Next 1626, Prev 1627, Opposite -1
+1629: 34 to 32, Face 543, Next 1630, Prev 1631, Opposite -1
+1630: 32 to 96, Face 543, Next 1631, Prev 1629, Opposite -1
+1631: 96 to 34, Face 543, Next 1629, Prev 1630, Opposite -1
+1632: 1 to 17, Face 544, Next 1633, Prev 1634, Opposite -1
+1633: 17 to 96, Face 544, Next 1634, Prev 1632, Opposite -1
+1634: 96 to 1, Face 544, Next 1632, Prev 1633, Opposite -1
+1635: 17 to 85, Face 545, Next 1636, Prev 1637, Opposite -1
+1636: 85 to 96, Face 545, Next 1637, Prev 1635, Opposite -1
+1637: 96 to 17, Face 545, Next 1635, Prev 1636, Opposite -1
+1638: 85 to 34, Face 546, Next 1639, Prev 1640, Opposite -1
+1639: 34 to 96, Face 546, Next 1640, Prev 1638, Opposite -1
+1640: 96 to 85, Face 546, Next 1638, Prev 1639, Opposite -1
+1647: 62 to 67, Face 549, Next 1648, Prev 1649, Opposite -1
+1648: 67 to 97, Face 549, Next 1649, Prev 1647, Opposite -1
+1649: 97 to 62, Face 549, Next 1647, Prev 1648, Opposite -1
+1650: 90 to 62, Face 550, Next 1651, Prev 1652, Opposite -1
+1651: 62 to 97, Face 550, Next 1652, Prev 1650, Opposite -1
+1652: 97 to 90, Face 550, Next 1650, Prev 1651, Opposite -1
+1659: 39 to 46, Face 553, Next 1660, Prev 1661, Opposite -1
+1660: 46 to 98, Face 553, Next 1661, Prev 1659, Opposite -1
+1661: 98 to 39, Face 553, Next 1659, Prev 1660, Opposite -1
+1662: 74 to 39, Face 554, Next 1663, Prev 1664, Opposite -1
+1663: 39 to 98, Face 554, Next 1664, Prev 1662, Opposite -1
+1664: 98 to 74, Face 554, Next 1662, Prev 1663, Opposite -1
+1665: 67 to 74, Face 555, Next 1666, Prev 1667, Opposite -1
+1666: 74 to 98, Face 555, Next 1667, Prev 1665, Opposite -1
+1667: 98 to 67, Face 555, Next 1665, Prev 1666, Opposite -1
+1668: 97 to 67, Face 556, Next 1669, Prev 1670, Opposite -1
+1669: 67 to 98, Face 556, Next 1670, Prev 1668, Opposite -1
+1670: 98 to 97, Face 556, Next 1668, Prev 1669, Opposite -1
+1671: 46 to 77, Face 557, Next 1672, Prev 1673, Opposite -1
+1672: 77 to 98, Face 557, Next 1673, Prev 1671, Opposite -1
+1673: 98 to 46, Face 557, Next 1671, Prev 1672, Opposite -1
+1674: 77 to 90, Face 558, Next 1675, Prev 1676, Opposite -1
+1675: 90 to 98, Face 558, Next 1676, Prev 1674, Opposite -1
+1676: 98 to 77, Face 558, Next 1674, Prev 1675, Opposite -1
+1677: 90 to 97, Face 559, Next 1678, Prev 1679, Opposite -1
+1678: 97 to 98, Face 559, Next 1679, Prev 1677, Opposite -1
+1679: 98 to 90, Face 559, Next 1677, Prev 1678, Opposite -1
+1680: 0 to 73, Face 560, Next 1681, Prev 1682, Opposite -1
+1681: 73 to 99, Face 560, Next 1682, Prev 1680, Opposite -1
+1682: 99 to 0, Face 560, Next 1680, Prev 1681, Opposite -1
+1683: 73 to 95, Face 561, Next 1684, Prev 1685, Opposite -1
+1684: 95 to 99, Face 561, Next 1685, Prev 1683, Opposite -1
+1685: 99 to 73, Face 561, Next 1683, Prev 1684, Opposite -1
+1686: 81 to 0, Face 562, Next 1687, Prev 1688, Opposite -1
+1687: 0 to 99, Face 562, Next 1688, Prev 1686, Opposite -1
+1688: 99 to 81, Face 562, Next 1686, Prev 1687, Opposite -1
+1689: 95 to 81, Face 563, Next 1690, Prev 1691, Opposite -1
+1690: 81 to 99, Face 563, Next 1691, Prev 1689, Opposite -1
+1691: 99 to 95, Face 563, Next 1689, Prev 1690, Opposite -1

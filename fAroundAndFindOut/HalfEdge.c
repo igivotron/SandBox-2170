@@ -1,4 +1,4 @@
-#include "HalfEdge.h"
+#include "headers/HalfEdge.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -8,8 +8,8 @@ TriangularMesh* createTriangularMesh(double** verticies, int numVertices, int** 
     mesh->vertices = (Vertex*) malloc(sizeof(Vertex) * numVertices);
     // mesh->halfEdges = (HalfEdge*) malloc(sizeof(HalfEdge) * numTriangles * 3);
     // mesh->faces = (Face*) malloc(sizeof(Face) * numTriangles);
-    mesh->halfEdges = (HalfEdge*) malloc(sizeof(HalfEdge) * numTriangles * 3 * 100); 
-    mesh->faces = (Face*) malloc(sizeof(Face) * numTriangles * 100);
+    mesh->halfEdges = (HalfEdge*) malloc(sizeof(HalfEdge) * numTriangles * 3 * 10000); 
+    mesh->faces = (Face*) malloc(sizeof(Face) * numTriangles * 10000);
     mesh->numVertices = numVertices;
 
     printf("Creating mesh with %d vertices, %d triangles\n", numVertices, numTriangles);

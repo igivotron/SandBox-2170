@@ -1,4 +1,4 @@
-#include "BowyerWatson.h"
+#include "headers/BowyerWatson.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -25,7 +25,7 @@ int freePoints(double** points, int numPoints){
     return 0;
 }
 
-int** findSuperTriangle(double** points, int* numPoints, int L){
+int** findSuperTriangle(double** points, int* numPoints, double L){
     double minX = points[0][0], minY = points[0][1];
     double maxX = points[0][0], maxY = points[0][1];
     for (int i = 1; i < *numPoints; i++){
@@ -141,7 +141,8 @@ void addPointToMesh(TriangularMesh* TD, Vertex* v){
         Vertex* v1 = boundaryEdges[i].v1;
         Vertex* v2 = boundaryEdges[i].v2;
 
-        // TODO: PUT SIZE OF FACE AND HALFEDGE ARRAYS
+        // TODO: PUT SIZE OF FACE AND HALFEDGE ARRAYS to allocate more memory if needed
+        // For now, we assume there is enough space mdr
 
         HalfEdge* he1 = &TD->halfEdges[TD->numHalfEdges];
         HalfEdge* he2 = &TD->halfEdges[TD->numHalfEdges + 1];
@@ -175,10 +176,10 @@ void addPointToMesh(TriangularMesh* TD, Vertex* v){
 
 
 int main(){
-    const char* filename = "../inputs/10pts";
+    const char* filename = "../inputs/100pts";
     int numPoints = 0;
     double** vertices = readPointsFromFile(filename, &numPoints);
-    int** superTriangles = findSuperTriangle(vertices, &numPoints, 1);
+    int** superTriangles = findSuperTriangle(vertices, &numPoints, 0.1);
 
     TriangularMesh* mesh = createTriangularMesh(vertices, numPoints, superTriangles, 2);
     // Cause des problèmes de mémoire environ 10% du temps
