@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "HalfEdge.h"
 
 
@@ -56,4 +57,29 @@ void initHalfEdge(HalfEdge* he, int index, HalfEdge* twin, HalfEdge* next, HalfE
     he->prev = prev;
     he->face = face;
     he->vertex = vertex;
+}
+
+int writeMeshToFile(const TriangularMesh *mesh, const char *filename) {
+    if (!mesh || !filename) return -1;
+    FILE *f = fopen(filename, "w");
+    if (!f) return -2;
+
+    // Header: counts
+    fprintf(f, "%zu\n", mesh->face_count);
+    // write for each face the coordinates of its vertices
+    for (size_t i = 0; i < mesh->face_count; ++i) {
+        const Face *face = &mesh->faces[i];
+        HalfEdge *he = face->half_edge;
+        for (int j = 0; j < 3; ++j) {
+            if (he) {
+                fprintf(f, "%g %g ", he->vertex->coord[0], he->vertex->coord[1]);
+                he = he->next;
+            }
+
+        }
+        fprintf(f, "\n");
+    }
+
+    fclose(f);
+    return 0;
 }

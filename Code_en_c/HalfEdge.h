@@ -44,4 +44,7 @@ void initVertex(Vertex *v, double x, double y, int index, HalfEdge *he);
 void initFace(Face *f, int index, HalfEdge *he);
 void initHalfEdge(HalfEdge *he, int index, HalfEdge *twin, HalfEdge *next, HalfEdge *prev, Face *face, Vertex *vertex);
 
+/* Write mesh to a text file. Returns 0 on success, non-zero on error. */
+int writeMeshToFile(const TriangularMesh *mesh, const char *filename);
+
 #endif // HALFEDGE_H
