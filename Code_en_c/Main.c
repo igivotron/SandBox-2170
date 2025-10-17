@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "HalfEdge.h"
-#include "robust_predicates_c.h"
+// #include "robust_predicates_c.h"
 
 double min(const double *arr, size_t n) {
     if (n == 0) return 0.0;
@@ -21,7 +21,19 @@ double max(const double *arr, size_t n) {
     return m;
 }
 
+int inCircle(double* a, double* b, double* c, double* d){
+    double ax = a[0] - d[0];
+    double ay = a[1] - d[1];
+    double bx = b[0] - d[0];
+    double by = b[1] - d[1];
+    double cx = c[0] - d[0];
+    double cy = c[1] - d[1];
+    double det = (ax * ax + ay * ay) * (bx * cy - by * cx) -
+                 (bx * bx + by * by) * (ax * cy - ay * cx) +
+                 (cx * cx + cy * cy) * (ax * by - ay * bx);
 
+    return det > 0;
+}
 
 TriangularMesh *del2d(double *x, double *y, size_t n) {
     TriangularMesh *mesh = allocMesh(n);
@@ -58,8 +70,8 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
     initHalfEdge(&half_edges[1], 1, NULL, &half_edges[2], &half_edges[5], &faces[1], &vertices[1]);
     initHalfEdge(&half_edges[2], 2, NULL, &half_edges[5], &half_edges[1], &faces[1], &vertices[2]);
     initHalfEdge(&half_edges[3], 3, NULL, &half_edges[0], &half_edges[4], &faces[0], &vertices[3]);
-    initHalfEdge(&half_edges[4], 1, &half_edges[5], &half_edges[3], &half_edges[0], &faces[0], &vertices[1]);
-    initHalfEdge(&half_edges[5], 2, &half_edges[4], &half_edges[1], &half_edges[2], &faces[1], &vertices[2]);
+    initHalfEdge(&half_edges[4], 4, &half_edges[5], &half_edges[3], &half_edges[0], &faces[0], &vertices[1]);
+    initHalfEdge(&half_edges[5], 5, &half_edges[4], &half_edges[1], &half_edges[2], &faces[1], &vertices[3]);
 
     // keep track of faces and half-edges to remove
     int *faces_to_remove = (int *)malloc(20 * sizeof(int));
@@ -69,6 +81,7 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
         return NULL;
     }
     int faces_to_remove_count = 0;
+
     int *half_edges_to_remove = (int *)malloc(100 * sizeof(int));
     if (!half_edges_to_remove) {
         fprintf(stderr, "Memory allocation failed\n");
@@ -78,68 +91,186 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
     }
     int half_edges_to_remove_count = 0;
 
-    int *edges_searching_their_twins = (int *)malloc(100 * sizeof(int));
-    if (!edges_searching_their_twins) {
+    int *triToCheck = (int *)malloc(100 * sizeof(int)); // contains index of the half-edges for which the twin is in the face we have to check
+    if (!triToCheck) {
         fprintf(stderr, "Memory allocation failed\n");
         free(half_edges_to_remove);
         free(faces_to_remove);
         free(mesh);
         return NULL;
     }
+    int triToCheck_count = 0;
+
+    printf("Starting Delaunay triangulation with %zu points\n", n);
 
     for (size_t i = 0; i < n; ++i) {
+        printf("new_point\n");
         initVertex(&vertices[nv], x[i], y[i], nv, &half_edges[0]);
         nv++;
         // parcours des triangles pour savoir pour lesquels le cercle circonscrit contient le point rajouté
-        double *d = vertices[nv].coord;
-        int cavite[20]; // indices des triangles dans la cavité
-        int cavite_count = 0;
+        double *d = vertices[nv-1].coord;
+        int cavite = -1; // index of the face that will be the cavity
         for (size_t j = 0; j < nf; ++j) {
             Face *cur_face = &faces[j];
             double *a = cur_face->half_edge->vertex->coord;
             double *b = cur_face->half_edge->next->vertex->coord;
             double *c = cur_face->half_edge->next->next->vertex->coord;
             if (inCircle(a, b, c, d)) {
-                // add to the cavity
-                cavite[cavite_count] = j;
-                cavite_count++;
+                cavite = j;
+                // add the half-edges to check
+                if (cur_face->half_edge->twin != NULL) {
+                    triToCheck[triToCheck_count++] = cur_face->half_edge->index;
+                }
+                if (cur_face->half_edge->next->twin != NULL) {
+                    triToCheck[triToCheck_count++] = cur_face->half_edge->next->index;
+                }
+                if (cur_face->half_edge->next->next->twin != NULL) {
+                    triToCheck[triToCheck_count++] = cur_face->half_edge->next->next->index;
+                }
+                break;
             }
         }
-        for (size_t j = 0; j < cavite_count; ++j) {
-            HalfEdge *v1 = faces[cavite[j]].half_edge;
-            HalfEdge *vTwin = v1->twin;
-            for (size_t l = 0; l < 3; ++l) {
-                int found = 0;
-                for (size_t k = 0; k < cavite_count; ++k) {
-                    HalfEdge *v2 = faces[cavite[k]].half_edge;
-                    if (k != j && (vTwin == v2 || vTwin == v2->next || vTwin == v2->next->next)) {
-                        found = 1;
-                        break;
-                    }
-                }
-                if (!found) {
-                    if (faces_to_remove_count != 0) {
-                        int face_idx = faces_to_remove[faces_to_remove_count - 1];
-                        initFace(&faces[face_idx], face_idx, v1);
-                        faces_to_remove_count--;
-                        if (half_edges_to_remove_count != 0) {
-                            int he_idx = half_edges_to_remove[half_edges_to_remove_count - 1];
-                            initHalfEdge(&half_edges[he_idx], he_idx, NULL, v1, v1->prev, &faces[face_idx], &vertices[nv - 1]);
-                            half_edges_to_remove_count--;
-                        } else {
-                            initHalfEdge(&half_edges[nh], nh, NULL, v1, v1->prev, &faces[face_idx], &vertices[nv - 1]);
-                            nh++;
+
+        printf("start of the cavity found\n");
+        
+        while (triToCheck_count > 0) {
+            int he_idx = triToCheck[--triToCheck_count];
+            HalfEdge *he = &half_edges[he_idx];
+            int twin_index = he->twin->index;
+            Face *cur_face = he->twin->face;
+            double *a = cur_face->half_edge->vertex->coord;
+            double *b = cur_face->half_edge->next->vertex->coord;
+            double *c = cur_face->half_edge->next->next->vertex->coord;
+            // print a b c d
+            printf("Checking triangle (%f, %f), (%f, %f), (%f, %f) with point (%f, %f)\n",
+                   a[0], a[1], b[0], b[1], c[0], c[1], d[0], d[1]);
+            if (inCircle(a, b, c, d)) {
+                printf("edge to add to the cavity found\n");
+                // mark the face for removal
+                faces_to_remove[faces_to_remove_count++] = cur_face->index;
+                
+                //update the cavity
+                he->prev->next = he->twin->next;
+                he->twin->next->prev = he->prev;
+                he->next->prev = he->twin->prev;
+                he->twin->prev->next = he->next;
+                // add he to the list of half-edges to remove
+                half_edges_to_remove[half_edges_to_remove_count++] = he->index;
+                // add the half-edges to check if they are not already in the list
+                if (he->twin->next->twin != NULL) {
+                    int already_in = 0;
+                    for (size_t k = 0; k < triToCheck_count; ++k) {
+                        if ((&half_edges[triToCheck[k]])->twin->face == he->twin->next->twin->face) {
+                            already_in = 1;
+                            break;
                         }
                     }
-                    triangles.append([v1, v2, len(vertices) - 1]);
+                    if (!already_in) {
+                        triToCheck[triToCheck_count] = he->twin->next->index;
+                    }
                 }
-                v1 = v1->next;
-                vTwin = v1->twin;
+                if (he->twin->next->next->twin != NULL) {
+                    int already_in = 0;
+                    for (size_t k = 0; k < triToCheck_count; ++k) {
+                        if ((&half_edges[triToCheck[k]])->twin->face == he->twin->next->next->twin->face) {
+                            already_in = 1;
+                            break;
+                        }
+                    }
+                    if (!already_in) {
+                        triToCheck[triToCheck_count] = he->twin->next->next->index;
+                    }
+                }
             }
-        for (size_t idx = 0; idx < cavite_count; ++idx) {
-            faces_to_remove[faces_to_remove_count] = cavite[idx];
-            faces_to_remove_count++;
+        }
+        printf("cavite created\n");
+        // print the vertices of the cavity
+        HalfEdge *he42 = faces[cavite].half_edge;
+        while(1){
+            printf("(%f, %f)\n", he42->vertex->coord[0], he42->vertex->coord[1]);
+            he42 = he42->next;
+            if (he42 == faces[cavite].half_edge) break;
+        }
+
+        // mark the face for removal
+        faces_to_remove[faces_to_remove_count++] = cavite;
+        HalfEdge *he = faces[cavite].half_edge;
+        while (1) {
+            printf("coucou\n");
+            // for every edge of the cavity, create a new triangle
+            int face_idx = nf;
+            if (faces_to_remove_count != 0) face_idx = faces_to_remove[--faces_to_remove_count];
+            else nf++;
+            initFace(&faces[face_idx], face_idx, he);
+
+            // create the half-edge
+            int he_idx1 = nh;
+            if (half_edges_to_remove_count != 0) he_idx1 = half_edges_to_remove[--half_edges_to_remove_count];
+            else nh++;
+            initHalfEdge(&half_edges[he_idx1], he_idx1, NULL, he, NULL, &faces[face_idx], &vertices[nv - 1]);
+
+            int he_idx2 = nh;
+            if (half_edges_to_remove_count != 0) he_idx2 = half_edges_to_remove[--half_edges_to_remove_count];
+            else nh++;
+            initHalfEdge(&half_edges[he_idx2], he_idx2, NULL, &half_edges[he_idx1], he, &faces[face_idx], he->next->vertex);
+            
+            half_edges[he_idx1].prev = &half_edges[he_idx2];
+            half_edges[he_idx1].twin = he->prev->next;
+            he->prev->next->twin = &half_edges[he_idx1];
+            int he_idx = he->index;
+            he = he->next;
+            half_edges[he_idx].next = &half_edges[he_idx2];
+            half_edges[he_idx].prev = &half_edges[he_idx1];
+            half_edges[he_idx].face = &faces[face_idx];
+
+            if (he == faces[cavite].half_edge) {
+                he->next->twin = half_edges[he_idx].prev;
+                half_edges[he_idx].prev->twin = he->next;
+                break;
+            }
+        }
+        printf("nf: %d\n", nf);
+        // print the vertices of each face
+        for (int f_idx = 0; f_idx < nf; ++f_idx) {
+            Face *f = &faces[f_idx];
+            HalfEdge *he = f->half_edge;
+            printf("Face %d: ", f_idx);
+            for (size_t k = 0; k < 3; ++k) {
+                printf("(%f, %f) ", he->vertex->coord[0], he->vertex->coord[1]);
+                he = he->next;
+            }
+            printf("\n");
         }
     }
+
+    free(triToCheck);
+    free(half_edges_to_remove);
+    free(faces_to_remove);
     return mesh;
+}
+
+int main(void) {
+    // Example usage
+    double x[] = {0.0, 1.0, 0.5};
+    double y[] = {0.0, 0.0, 1.0};
+
+    // double a[] = {1.1, -0.1};
+    // double b[] = {1.1, 1.1};
+    // double c[] = {-0.1, 1.1};
+    // double d[] = {0.0, 0.0};
+    // if (inCircle(a, b, c, d)) printf("%d\n", inCircle(a, b, c, d));
+
+
+    size_t n = sizeof(x) / sizeof(x[0]);
+
+    TriangularMesh *mesh = del2d(x, y, n);
+    if (mesh) {
+        printf("Mesh created with %zu vertices, %zu faces, and %zu half-edges.\n",
+               mesh->vertex_count, mesh->face_count, mesh->half_edge_count);
+        freeMesh(mesh);
+    } else {
+        printf("Failed to create mesh.\n");
+    }
+
+    return 0;
 }

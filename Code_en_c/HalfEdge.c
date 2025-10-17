@@ -6,9 +6,9 @@ TriangularMesh* allocMesh(size_t vertex_count) {
     TriangularMesh* mesh = (TriangularMesh*)malloc(sizeof(TriangularMesh));
     if (!mesh) return NULL;
 
-    mesh->half_edges = (HalfEdge*)calloc(6*vertex_count, sizeof(HalfEdge));
-    mesh->vertices = (Vertex*)calloc(vertex_count, sizeof(Vertex));
-    mesh->faces = (Face*)calloc(2*vertex_count, sizeof(Face));
+    mesh->half_edges = (HalfEdge*)calloc(6*vertex_count+24, sizeof(HalfEdge));
+    mesh->vertices = (Vertex*)calloc(vertex_count+4, sizeof(Vertex));
+    mesh->faces = (Face*)calloc(2*vertex_count+8, sizeof(Face));
 
     // if (!mesh->half_edges || !mesh->vertices || !mesh->faces) {
     //     free(mesh->half_edges);
