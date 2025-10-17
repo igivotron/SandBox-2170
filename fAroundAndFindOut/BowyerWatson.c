@@ -7,7 +7,7 @@ double** readPointsFromFile(const char* filename, int* numPoints){
     FILE* file = fopen(filename, "r");
     if (!file) {perror("Failed to open file"); return NULL;}
     fscanf(file, "%d", numPoints);
-    double ** vertices = (double**)malloc(*numPoints * sizeof(double*));
+    double ** vertices = (double**)malloc((*numPoints+4) * sizeof(double*));
     for (int i = 0; i < (*numPoints+4); i++) vertices[i] = (double*)malloc(3 * sizeof(double));
     for (int i = 0; i < *numPoints; i++) {
         fscanf(file, "%lf %lf", &vertices[i][0], &vertices[i][1]);
@@ -186,9 +186,9 @@ int main(){
     // freePoints(vertices, numPoints);
     // freeSuperTriangle(superTriangles);
 
-    for (int i = 0; i < numPoints; i++){
-        addPointToMesh(mesh, &mesh->vertices[i]);
-    }
+    // for (int i = 0; i < numPoints; i++){
+    //     addPointToMesh(mesh, &mesh->vertices[i]);
+    // }
 
     saveMeshToOBJ(mesh, "output.obj");
     freeTriangularMesh(mesh);

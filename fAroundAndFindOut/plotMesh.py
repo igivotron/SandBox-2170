@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-with open("output.obj", "r") as file:
+with open("outputbis.obj", "r") as file:
     lines = file.readlines()
 
 vertices = []
@@ -25,4 +25,5 @@ for face in faces:
     face_vertices = vertices[face ]
     plt.fill(face_vertices[:, 0], face_vertices[:, 1], edgecolor='k', fill=False)
 
+plt.savefig("mesh_plotbis.png")
 plt.show()
