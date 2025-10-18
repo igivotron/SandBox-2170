@@ -117,6 +117,8 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
             double *c = cur_face->half_edge->next->next->vertex->coord;
             if (inCircle(a, b, c, d)) {
                 cavite = j;
+                printf("found start of the cavity (%f, %f), (%f, %f), (%f, %f) with point (%f, %f)\n",
+                   a[0], a[1], b[0], b[1], c[0], c[1], d[0], d[1]);
                 // add the half-edges to check
                 if (cur_face->half_edge->twin != NULL) {
                     triToCheck[triToCheck_count++] = cur_face->half_edge->index;
@@ -132,6 +134,7 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
         }
 
         printf("start of the cavity found\n");
+
         
         while (triToCheck_count > 0) {
             int he_idx = triToCheck[--triToCheck_count];
@@ -156,6 +159,7 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
                 he->twin->prev->next = he->next;
                 // add he to the list of half-edges to remove
                 half_edges_to_remove[half_edges_to_remove_count++] = he->index;
+                half_edges_to_remove[half_edges_to_remove_count++] = twin_index;
                 // add the half-edges to check if they are not already in the list
                 if (he->twin->next->twin != NULL) {
                     int already_in = 0;
@@ -166,7 +170,7 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
                         }
                     }
                     if (!already_in) {
-                        triToCheck[triToCheck_count] = he->twin->next->index;
+                        triToCheck[triToCheck_count++] = he->twin->next->index;
                     }
                 }
                 if (he->twin->next->next->twin != NULL) {
@@ -178,19 +182,20 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
                         }
                     }
                     if (!already_in) {
-                        triToCheck[triToCheck_count] = he->twin->next->next->index;
+                        triToCheck[triToCheck_count++] = he->twin->next->next->index;
                     }
                 }
+                if (he == faces[cavite].half_edge) faces[cavite].half_edge = he->next;
             }
         }
-        printf("cavite created\n");
+        // printf("cavity created\n");
         // print the vertices of the cavity
-        HalfEdge *he42 = faces[cavite].half_edge;
-        while(1){
-            printf("(%f, %f)\n", he42->vertex->coord[0], he42->vertex->coord[1]);
-            he42 = he42->next;
-            if (he42 == faces[cavite].half_edge) break;
-        }
+        // HalfEdge *he42 = faces[cavite].half_edge;
+        // while(1){
+        //     printf("(%f, %f)\n", he42->vertex->coord[0], he42->vertex->coord[1]);
+        //     he42 = he42->next;
+        //     if (he42 == faces[cavite].half_edge) break;
+        // }
 
         // mark the face for removal
         faces_to_remove[faces_to_remove_count++] = cavite;
@@ -215,8 +220,10 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
             initHalfEdge(&half_edges[he_idx2], he_idx2, NULL, &half_edges[he_idx1], he, &faces[face_idx], he->next->vertex);
             
             half_edges[he_idx1].prev = &half_edges[he_idx2];
-            half_edges[he_idx1].twin = he->prev->next;
-            he->prev->next->twin = &half_edges[he_idx1];
+            if (he != faces[cavite].half_edge) {
+                half_edges[he_idx1].twin = he->prev->next;
+                he->prev->next->twin = &half_edges[he_idx1];
+            }
             int he_idx = he->index;
             he = he->next;
             half_edges[he_idx].next = &half_edges[he_idx2];
@@ -224,8 +231,8 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
             half_edges[he_idx].face = &faces[face_idx];
 
             if (he == faces[cavite].half_edge) {
-                he->next->twin = half_edges[he_idx].prev;
-                half_edges[he_idx].prev->twin = he->next;
+                he->prev->twin = half_edges[he_idx].next;
+                half_edges[he_idx].next->twin = he->prev;
                 break;
             }
         }

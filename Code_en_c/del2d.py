@@ -1,5 +1,6 @@
 import ctypes
 import os
+import random
 
 # read points in points_10k.txt
 points = []
@@ -12,8 +13,11 @@ with open("Code_en_c/points_10k.txt", "r") as f:
         x, y = map(float, line.split())
         points.append((x, y))
 
+# create a small test case with 10 points
+points = [(random.random(), random.random()) for _ in range(10)]
+
 # Load the shared library
-lib = ctypes.CDLL(os.path.abspath("Code_en_c/sheee.dll"))
+lib = ctypes.CDLL(os.path.abspath("Code_en_c/BowyerWatson.dll"))
 
 # Tell ctypes the function signature
 lib.del2d_py.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_size_t]
