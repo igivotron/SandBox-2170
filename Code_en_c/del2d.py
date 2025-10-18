@@ -13,9 +13,6 @@ with open("Code_en_c/points_10k.txt", "r") as f:
         x, y = map(float, line.split())
         points.append((x, y))
 
-# create a small test case with 10 points
-points = [(random.random(), random.random()) for _ in range(10)]
-
 # Load the shared library
 lib = ctypes.CDLL(os.path.abspath("Code_en_c/BowyerWatson.dll"))
 
@@ -29,3 +26,31 @@ y = (ctypes.c_double * len(points))(*[p[1] for p in points])
 n = ctypes.c_size_t(len(points))
 result = lib.del2d_py(x, y, n)
 print(f"C function returned: {result}")
+
+
+import matplotlib.pyplot as plt
+
+# Lire le fichier de triangles
+triangles = []
+with open("Code_en_c/output_mesh.txt") as f:
+    num_triangles = int(f.readline().strip())
+    for line in f:
+        vals = list(map(float, line.split()))
+        if len(vals) == 6:
+            triangles.append([(vals[0], vals[1]),
+                              (vals[2], vals[3]),
+                              (vals[4], vals[5])])
+
+# Tracé
+plt.figure(figsize=(8, 8))
+for tri in triangles:
+    xs, ys = zip(*tri)
+    # fermer le triangle en revenant au premier point
+    plt.plot([*xs, xs[0]], [*ys, ys[0]], color='black', linewidth=0.8)
+    plt.fill(xs, ys, alpha=0.3)
+
+plt.title("Delaunay Triangulation (from C output)")
+plt.xlabel("X")
+plt.ylabel("Y")
+plt.axis("equal")
+plt.show()

@@ -101,10 +101,10 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
     }
     int triToCheck_count = 0;
 
-    printf("Starting Delaunay triangulation with %zu points\n", n);
+    // printf("Starting Delaunay triangulation with %zu points\n", n);
 
     for (size_t i = 0; i < n; ++i) {
-        printf("new_point\n");
+        // printf("new_point\n");
         initVertex(&vertices[nv], x[i], y[i], nv, &half_edges[0]);
         nv++;
         // parcours des triangles pour savoir pour lesquels le cercle circonscrit contient le point rajouté
@@ -117,8 +117,8 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
             double *c = cur_face->half_edge->next->next->vertex->coord;
             if (inCircle(a, b, c, d)) {
                 cavite = j;
-                printf("found start of the cavity (%f, %f), (%f, %f), (%f, %f) with point (%f, %f)\n",
-                   a[0], a[1], b[0], b[1], c[0], c[1], d[0], d[1]);
+                // printf("found start of the cavity (%f, %f), (%f, %f), (%f, %f) with point (%f, %f)\n",
+                //    a[0], a[1], b[0], b[1], c[0], c[1], d[0], d[1]);
                 // add the half-edges to check
                 if (cur_face->half_edge->twin != NULL) {
                     triToCheck[triToCheck_count++] = cur_face->half_edge->index;
@@ -133,7 +133,7 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
             }
         }
 
-        printf("start of the cavity found\n");
+        // printf("start of the cavity found\n");
 
         
         while (triToCheck_count > 0) {
@@ -145,10 +145,10 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
             double *b = cur_face->half_edge->next->vertex->coord;
             double *c = cur_face->half_edge->next->next->vertex->coord;
             // print a b c d
-            printf("Checking triangle (%f, %f), (%f, %f), (%f, %f) with point (%f, %f)\n",
-                   a[0], a[1], b[0], b[1], c[0], c[1], d[0], d[1]);
+            // printf("Checking triangle (%f, %f), (%f, %f), (%f, %f) with point (%f, %f)\n",
+            //        a[0], a[1], b[0], b[1], c[0], c[1], d[0], d[1]);
             if (inCircle(a, b, c, d)) {
-                printf("edge to add to the cavity found\n");
+                // printf("edge to add to the cavity found\n");
                 // mark the face for removal
                 faces_to_remove[faces_to_remove_count++] = cur_face->index;
                 
@@ -201,7 +201,7 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
         faces_to_remove[faces_to_remove_count++] = cavite;
         HalfEdge *he = faces[cavite].half_edge;
         while (1) {
-            printf("coucou\n");
+            // printf("coucou\n");
             // for every edge of the cavity, create a new triangle
             int face_idx = nf;
             if (faces_to_remove_count != 0) face_idx = faces_to_remove[--faces_to_remove_count];
@@ -236,18 +236,18 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
                 break;
             }
         }
-        printf("nf: %d\n", nf);
+        // printf("nf: %d\n", nf);
         // print the vertices of each face
-        for (int f_idx = 0; f_idx < nf; ++f_idx) {
-            Face *f = &faces[f_idx];
-            HalfEdge *he = f->half_edge;
-            printf("Face %d: ", f_idx);
-            for (size_t k = 0; k < 3; ++k) {
-                printf("(%f, %f) ", he->vertex->coord[0], he->vertex->coord[1]);
-                he = he->next;
-            }
-            printf("\n");
-        }
+        // for (int f_idx = 0; f_idx < nf; ++f_idx) {
+        //     Face *f = &faces[f_idx];
+        //     HalfEdge *he = f->half_edge;
+        //     printf("Face %d: ", f_idx);
+        //     for (size_t k = 0; k < 3; ++k) {
+        //         printf("(%f, %f) ", he->vertex->coord[0], he->vertex->coord[1]);
+        //         he = he->next;
+        //     }
+        //     printf("\n");
+        // }
     }
 
     free(triToCheck);
@@ -264,7 +264,7 @@ int del2d_py(double *x, double *y, size_t n) {
     if (mesh) {
         printf("Mesh created with %zu vertices, %zu faces, and %zu half-edges.\n",
                mesh->vertex_count, mesh->face_count, mesh->half_edge_count);
-        writeMeshToFile(mesh, "output_mesh.txt");
+        writeMeshToFile(mesh, "Code_en_c/output_mesh.txt");
         freeMesh(mesh);
     } else {
         printf("Failed to create mesh.\n");
