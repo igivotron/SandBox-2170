@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "BowyerWatson.h"
+#include "headers/BowyerWatson.h"
 
 int main() {
     const size_t n = 10000;

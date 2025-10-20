@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "HalfEdge.h"
+#include "headers/HalfEdge.h"
 
 
 TriangularMesh* allocMesh(size_t vertex_count) {

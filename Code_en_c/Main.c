@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "BowyerWatson.h"
+#include "headers/BowyerWatson.h"
 
 int main(void) {
     // Example usage

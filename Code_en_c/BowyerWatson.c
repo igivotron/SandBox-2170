@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "BowyerWatson.h"
+#include "headers/BowyerWatson.h"
 // #include "robust_predicates_c.h"
 
 double min(const double *arr, size_t n) {

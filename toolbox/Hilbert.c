@@ -61,24 +61,38 @@ int Hilbert_py(char *inputFileName, char *outputFileName){
     int N = 0;
 
     FILE *file = fopen(inputFileName, "r");
+    if (!file) return EXIT_FAILURE;
     
     if (fscanf(file, "%d", &N) != 1) {
         fclose(file);
         return EXIT_FAILURE;
     }
 
-    double points[N][2];
+    // Allocation dynamique sur le tas
+    double (*points)[2] = malloc(N * sizeof *points);
+    int (*hilbertCoords)[DEPTH] = malloc(N * sizeof *hilbertCoords);
+
+    if (!points || !hilbertCoords) {
+        fclose(file);
+        fprintf(stderr, "Allocation memory error\n");
+        return EXIT_FAILURE;
+    }
+
     for (int i = 0; i < N; i++) {
         if (fscanf(file, "%lf %lf", &points[i][0], &points[i][1]) != 2) {
             fclose(file);
+            free(points);
+            free(hilbertCoords);
             return EXIT_FAILURE;
         }
     }
     fclose(file);
 
-    int hilbertCoords[N][DEPTH];
-    for (int i = 0; i < N; i++) HilbertCoord(points[i][0], points[i][1], 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, DEPTH, hilbertCoords[i]);
-
+    for (int i = 0; i < N; i++) {
+        HilbertCoord(points[i][0], points[i][1],
+                     0.0, 0.0, 0.0, 1.0, 1.0, 0.0,
+                     DEPTH, hilbertCoords[i]);
+    }
 
     FILE *outputFile = fopen(outputFileName, "w");
     for (int i = 0; i < N; i++) {
@@ -86,5 +100,8 @@ int Hilbert_py(char *inputFileName, char *outputFileName){
         fprintf(outputFile, "\n");
     }
     fclose(outputFile);
+
+    free(points);
+    free(hilbertCoords);
     return 0;
 }
