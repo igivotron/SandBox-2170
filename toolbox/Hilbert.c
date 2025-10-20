@@ -57,12 +57,8 @@ void HilbertCoord(double x, double y, double x0, double y0, double xRed, double 
     return;
 }
 
-int main(int argc,char *argv[]){ 
+int Hilbert_py(char *inputFileName, char *outputFileName){ 
     int N = 0;
-    char inputFileName[256];
-    char outputFileName[256];
-    snprintf(inputFileName, sizeof(inputFileName), "../inputs/%s", argv[1]);
-    snprintf(outputFileName, sizeof(outputFileName), "../outputs/%s", argv[2]);
 
     FILE *file = fopen(inputFileName, "r");
     

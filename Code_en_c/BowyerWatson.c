@@ -110,7 +110,7 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
         // parcours des triangles pour savoir pour lesquels le cercle circonscrit contient le point rajouté
         double *d = vertices[nv-1].coord;
         int cavite = -1; // index of the face that will be the cavity
-        for (size_t j = 0; j < nf; ++j) {
+        for (size_t j = nf-1; j >= 0; --j) {
             Face *cur_face = &faces[j];
             double *a = cur_face->half_edge->vertex->coord;
             double *b = cur_face->half_edge->next->vertex->coord;

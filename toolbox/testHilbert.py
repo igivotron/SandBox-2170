@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
 
-with open("../inputs/1e5pts", "r") as f:
+with open("../inputs/10pts", "r") as f:
     data = f.read().strip().split("\n")
 
 n = int(data[0])
@@ -11,7 +11,7 @@ y = np.zeros(n)
 for i in range(n):
     x[i], y[i] = map(float, data[i + 1].split())
 
-with open("../outputs/h1e5", "r") as f:
+with open("../outputs/h10.txt", "r") as f:
     data = f.read().strip().split("\n")
 
 
@@ -23,5 +23,5 @@ y = y[sorted_indices]
 
 plt.plot(x, y)
 
-plt.savefig("../figures/h1e5.png")
+plt.savefig("../figures/h10.png")
 plt.show()
