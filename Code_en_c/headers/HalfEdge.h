@@ -34,6 +34,14 @@ typedef struct {
     Face *faces;
     size_t half_edge_count;
     HalfEdge *half_edges; // Array of half-edges
+
+    int* faces_to_remove;
+    int faces_to_remove_count;
+    int* half_edges_to_remove;
+    int half_edges_to_remove_count;
+    int* triToCheck;
+    int triToCheck_count;
+    
 } TriangularMesh;
 
 TriangularMesh *allocMesh(size_t vertex_count);
