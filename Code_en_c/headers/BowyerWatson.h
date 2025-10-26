@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include "HalfEdge.h"
 #include "predicates.h"
+#include "Hilbert.h"
 
 
 
@@ -18,7 +19,7 @@ int isTriangleOrientedCCW(double* a, double* b, double* c);
 /* Delaunay triangulation entry points */
 TriangularMesh *del2d(double *x, double *y, size_t n);
 void superTriangle(TriangularMesh* mesh, double *x, double *y, size_t n);
-int del2d_py(double *x, double *y, size_t n);
+int del2d_py(const char* input_file, const char* output_file);
 int addPoint(TriangularMesh* mesh, double x, double y);
 
 double **readPointsFromFile(const char* filename, int* numPoints);

@@ -5,87 +5,36 @@ import random
 import time
 
 
-with_Hilbert = True
 
 # file names
-input_file = b"Code_en_c/input_file/points_100k.txt"
-hilbert_file = b"Code_en_c/Hilbert_file/points_100k_hilbert.txt"
-Output_file = b"Code_en_c/output_file/output_mesh.txt"
-
-# create the coordinates x, y
-if not with_Hilbert:
-    # read points in txt
-    points = []
-    with open(input_file, "r") as f:
-        # first line contains the number of points
-        first = f.readline().strip()
-        n = int(first)
-        for i in range(n):
-            line = f.readline()
-            x, y = map(float, line.split())
-            points.append((x, y))
-    
-    x = (ctypes.c_double * len(points))(*[p[0] for p in points])
-    y = (ctypes.c_double * len(points))(*[p[1] for p in points])
-    n = ctypes.c_size_t(len(points))
-
-if with_Hilbert:
-    lib2 = ctypes.CDLL(os.path.abspath("Code_en_c/shared_lib/Hilbert.dll"))
-    lib2.Hilbert_py.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
-    lib2.Hilbert_py.restype = ctypes.c_int
-    
-    # Call the Hilbert C function
-    print("Hilbert code launch")
-    result_hilbert = lib2.Hilbert_py(input_file, hilbert_file)
-    print(f"Hilbert C function returned: {result_hilbert}")
-
-    with open(input_file, "r") as f:
-        data = f.read().strip().split("\n")
-
-    n = int(data[0])
-    x = np.zeros(n)
-    y = np.zeros(n)
-    for i in range(n):
-        x[i], y[i] = map(float, data[i + 1].split())
-
-    with open(hilbert_file, "r") as f:
-        data = f.read().strip().split("\n")
-
-    for i in range(n): data[i] = ''.join(data[i].split())
-
-    sorted_indices = sorted(range(n), key=lambda i: data[i])
-    x = x[sorted_indices]
-    y = y[sorted_indices]
-
-    # Call the C function
-    x=x.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-    y=y.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-    n=ctypes.c_size_t(n)
-
+input_file = b"input_file/points_1k.txt"
+output_file = b"output_file/output_mesh.txt"
+save_plot_file = b"output_file/points_1k_plot.pdf"
 
 # Load the shared library
-lib = ctypes.CDLL(os.path.abspath("Code_en_c/shared_lib/BowyerWatson.dll"))
+lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.so"))   # For Linux/Mac ou wsl
+# lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.dll"))  # For Windows
 
 # Tell ctypes the function signature
-lib.del2d_py.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_size_t]
+lib.del2d_py.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
 lib.del2d_py.restype = ctypes.c_int
 
 # Call the C function
 print("code launch")
 start_time = time.time()
-result = lib.del2d_py(x, y, n)
+result = lib.del2d_py(input_file, output_file)
 end_time = time.time()
 print(f"C function returned: {result}")
 print(f"Execution time of del2d_py: {end_time - start_time:.6f} seconds")
 
 
-to_plot = False
+to_plot = True
 if to_plot:
     import matplotlib.pyplot as plt
 
     # Lire le fichier de triangles
     triangles = []
-    with open("Code_en_c/output_mesh.txt") as f:
+    with open("output_file/output_mesh.txt") as f:
         num_triangles = int(f.readline().strip())
         for line in f:
             vals = list(map(float, line.split()))
@@ -106,4 +55,5 @@ if to_plot:
     plt.xlabel("X")
     plt.ylabel("Y")
     plt.axis("equal")
-    plt.show()
+    plt.savefig(save_plot_file)
+    print(f"Graphique enregistré dans {save_plot_file.decode()}")

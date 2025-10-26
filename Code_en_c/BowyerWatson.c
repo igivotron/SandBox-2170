@@ -272,17 +272,25 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
     return mesh;
 }
 
-int del2d_py(double *x, double *y, size_t n) {
-    TriangularMesh *mesh = del2d(x, y, n);
-    if (mesh) {
-        printf("Mesh created with %zu vertices, %zu faces, and %zu half-edges.\n",
-               mesh->vertex_count, mesh->face_count, mesh->half_edge_count);
-        writeMeshToFile(mesh, "Code_en_c/output_mesh.txt");
-        freeMesh(mesh);
-    } else {
-        printf("Failed to create mesh.\n");
-        return -1;
-    }
+int del2d_py(const char* input_file, const char* output_file) {
+    exactinit();
+    int numPoints = 0;
+    double ** points = readPointsFromFile(input_file, &numPoints);
+    double *x = (double*)malloc(numPoints * sizeof(double));
+    double *y = (double*)malloc(numPoints * sizeof(double));
+    int* indexHilbert = sortHilbert(points, numPoints, 9);
 
+    for (int i =0; i < numPoints; i++){
+        int idx = indexHilbert[i];
+        x[i] = points[idx][0];
+        y[i] = points[idx][1];
+    }
+    TriangularMesh *mesh = del2d(x, y, numPoints);
+    writeMeshToFile(mesh, output_file);
+    freeMesh(mesh);
+    freePoints(points, numPoints);
+    free(x);
+    free(y);
+    free(indexHilbert);
     return 0;
 }
