@@ -10,7 +10,7 @@
 
 int main(void) {
     exactinit();
-    const char* input_file = "../inputs/1e5pts";
+    const char* input_file = "../inputs/100pts";
     int numPoints = 0;
     double ** points = readPointsFromFile(input_file, &numPoints);
     double *x = (double*)malloc(numPoints * sizeof(double));
@@ -23,6 +23,7 @@ int main(void) {
         y[i] = points[idx][1];
     }
     TriangularMesh *mesh = del2d(x, y, numPoints);
+    removeSuperTriangle(mesh);
     writeMeshToFile(mesh, "output_mesh.txt");
     freeMesh(mesh);
     freePoints(points, numPoints);

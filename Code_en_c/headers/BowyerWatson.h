@@ -18,6 +18,7 @@ int isTriangleOrientedCCW(double* a, double* b, double* c);
 /* Delaunay triangulation entry points */
 TriangularMesh *del2d(double *x, double *y, size_t n);
 void superTriangle(TriangularMesh* mesh, double *x, double *y, size_t n);
+int removeSuperTriangle(TriangularMesh* mesh);
 int del2d_py(double *x, double *y, size_t n);
 int addPoint(TriangularMesh* mesh, double x, double y);
 

@@ -25,6 +25,7 @@ struct HalfEdge {
     HalfEdge *prev;   // the previous half-edge in the face
     Face *face;   // face this half-edge belongs to
     Vertex *vertex; // Origin vertex of the half-edge
+    int valid;
 };
 
 typedef struct {
