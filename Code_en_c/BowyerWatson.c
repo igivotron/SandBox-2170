@@ -108,19 +108,25 @@ int removeSuperTriangle(TriangularMesh* mesh) {
     // Grosse fraude
     HalfEdge* he_start = &mesh->half_edges[0];
     HalfEdge* a = he_start->next;
-    int b;
 
     while (1) {
         Vertex* v1 = a->vertex;
         Vertex* v2 = a->twin->vertex;
         Vertex* v3 = a->next->twin->vertex;
         Vertex* v4 = a->twin->prev->vertex;
-        b = a->twin->next->index;
+
+        int he1 = a->index; // edge (v1, v2)
+        int he2 = a->next->index; // (v2, v3)
+        int he3 = a->prev->index; // (v3, v1)
+        int he4 = a->twin->index; // (v2, v1)
+        int he5 = a->twin->next->index; // (v1, v4)
+        int he6 = a->twin->prev->index; // (v4, v2)
+
         printf("Checking half-edge between vertices %d and %d\n", v1->index, v2->index);
         printf("Opposite vertices are %d and %d\n", v3->index, v4->index);
         printf("\n");
 
-        if (v3->index < 4 || v4->index <4){
+        if (v3->index < 4 || v4->index < 4){
             a->valid = 0;
             // suppress the face
             // Supress the half-edges
@@ -128,38 +134,35 @@ int removeSuperTriangle(TriangularMesh* mesh) {
         }
 
         else if (areTheLinesIntersecting(v1, v2, v3, v4)) {
-            // supress the half-edge
-            // supress the face
-            // flip the edge (v1,v2) to (v3,v4)
-            a->vertex = v4;
-            a->twin->vertex = v3;
             Face* face1 = a->face;
             Face* face2 = a->twin->face;
 
             // Face 1
-            a->prev->next = a->twin->next;
-            a->prev->prev = a;
-            a->prev->face = face1;
-            a->twin->next->next = a;
-            a->twin->next->prev = a->prev;
-            a->twin->next->face = face1;
+            mesh->half_edges[he3].next = &mesh->half_edges[he5];
+            mesh->half_edges[he3].prev = a;
+            mesh->half_edges[he3].face = face1;
+            mesh->half_edges[he5].next = a;
+            mesh->half_edges[he5].prev = &mesh->half_edges[he3];
+            mesh->half_edges[he5].face = face1;
             face1->half_edge = a;
 
             // Face 2
-            a->next->prev = a->twin->prev;
-            a->next->next = a->twin;
-            a->next->face = face2;
-            a->twin->prev->next = a->next;
-            a->twin->prev->prev = a->twin;
-            a->twin->prev->face = face2;
+            mesh->half_edges[he6].next = &mesh->half_edges[he2];
+            mesh->half_edges[he6].prev = a->twin;
+            mesh->half_edges[he6].face = face2;
+            mesh->half_edges[he2].next = a->twin;
+            mesh->half_edges[he2].prev = &mesh->half_edges[he6];
+            mesh->half_edges[he2].face = face2;
             face2->half_edge = a->twin;
 
-            HalfEdge* temp_next = a->next;
-            a->next = a->prev;
-            a->prev = a->twin->next;
+            // Update a and a->twin
+            a->vertex = v4;
+            a->twin->vertex = v3;
+            a->next = &mesh->half_edges[he3];
+            a->prev = &mesh->half_edges[he5];
             a->face = face1;
-            a->twin->next = a->twin->prev;
-            a->twin->prev = temp_next;
+            a->twin->next = &mesh->half_edges[he6];
+            a->twin->prev = &mesh->half_edges[he2];
             a->twin->face = face2;
 
             printf("Flipping edge between vertices %d and %d to edge between vertices %d and %d\n", v1->index, v2->index, v3->index, v4->index);
@@ -171,7 +174,7 @@ int removeSuperTriangle(TriangularMesh* mesh) {
             a->valid = 0;
         }
         
-        a = &mesh->half_edges[b];
+        a = &mesh->half_edges[he5];
         if (a->twin == NULL) {
             // supress the half-edge
             // supress the face
