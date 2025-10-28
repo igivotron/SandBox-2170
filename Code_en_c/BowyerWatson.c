@@ -124,16 +124,55 @@ int removeSuperTriangle(TriangularMesh* mesh) {
 
         printf("Checking half-edge between vertices %d and %d\n", v1->index, v2->index);
         printf("Opposite vertices are %d and %d\n", v3->index, v4->index);
-        printf("\n");
 
         if (v3->index < 4 || v4->index < 4){
             a->valid = 0;
-            // suppress the face
-            // Supress the half-edges
-            // Check other half-edges ?
         }
 
-        else if (areTheLinesIntersecting(v1, v2, v3, v4)) {
+        if (v4->index < 4){
+            int he7 = a->twin->prev->twin->next->index;
+            printf("Special case: v4 is a super triangle vertex\n");
+            v4 = a->twin->prev->twin->prev->vertex;
+            he6 = a->twin->prev->twin->prev->index;
+            if (areTheLinesIntersecting(v1 ,v2, v3, v4)){
+                a->valid = 1;
+                Face* face1 = a->face;
+
+                // Face 1
+                mesh->half_edges[he2].next = a;
+                mesh->half_edges[he2].prev = &mesh->half_edges[he6];
+                mesh->half_edges[he2].face = face1;
+
+                mesh->half_edges[he6].next = &mesh->half_edges[he2];
+                mesh->half_edges[he6].prev = a;
+                mesh->half_edges[he6].face = face1;
+                face1->half_edge = a;
+
+                // other half-edge wtf?
+                mesh->half_edges[he7].next = a->twin;
+                mesh->half_edges[he3].prev = a->twin;
+                mesh->half_edges[he3].next = &mesh->half_edges[he5];
+                mesh->half_edges[he5].prev = &mesh->half_edges[he3];
+                mesh->half_edges[he5].next = &mesh->half_edges[he7];
+                mesh->half_edges[he7].face = a->twin->face;
+                mesh->half_edges[he3].face = a->twin->face;
+                mesh->half_edges[he5].face = a->twin->face;
+                a->twin->face->half_edge = a->twin;
+
+
+                // Update a
+                a->vertex = v3;
+                a->next = &mesh->half_edges[he6];
+                a->prev = &mesh->half_edges[he2];
+                a->face = face1;
+                a->twin->next = &mesh->half_edges[he3];
+                a->twin->prev = &mesh->half_edges[he7];
+            }
+        }
+
+
+        else if (areTheLinesIntersecting(v1, v2, v3, v4) && (v3->index >=4) && (v4->index >=4)){
+            printf("Edges intersect. Flipping edge between vertices %d and %d to %d and %d\n", v1->index, v2->index, v3->index, v4->index);
             Face* face1 = a->face;
             Face* face2 = a->twin->face;
 
@@ -146,7 +185,7 @@ int removeSuperTriangle(TriangularMesh* mesh) {
             mesh->half_edges[he5].face = face1;
             face1->half_edge = a;
 
-            // Face 2
+            // Face 2 not useful because we will delete it -> face on the boundary
             mesh->half_edges[he6].next = &mesh->half_edges[he2];
             mesh->half_edges[he6].prev = a->twin;
             mesh->half_edges[he6].face = face2;
@@ -164,8 +203,6 @@ int removeSuperTriangle(TriangularMesh* mesh) {
             a->twin->next = &mesh->half_edges[he6];
             a->twin->prev = &mesh->half_edges[he2];
             a->twin->face = face2;
-
-            printf("Flipping edge between vertices %d and %d to edge between vertices %d and %d\n", v1->index, v2->index, v3->index, v4->index);
         }
 
         else{
@@ -181,8 +218,9 @@ int removeSuperTriangle(TriangularMesh* mesh) {
             a->valid = 0;
             if (a == he_start) break;
             a = a->next;
-        }
+        };
         // sleep(3);
+        printf("\n");
     }
 
     return 0;
