@@ -1,4 +1,3 @@
-import numpy as np
 import ctypes
 import os
 import random
@@ -9,11 +8,11 @@ import time
 # file names
 input_file = b"input_file/points_1k.txt"
 output_file = b"output_file/output_mesh.txt"
-save_plot_file = b"output_file/points_1k_plot.pdf"
+save_plot_file = b"output_file/points_1k_plot.png"
 
 # Load the shared library
-lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.so"))   # For Linux/Mac ou wsl
-# lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.dll"))  # For Windows
+# lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.so"))   # For Linux/Mac ou wsl
+lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.dll"))  # For Windows
 
 # Tell ctypes the function signature
 lib.del2d_py.argtypes = [ctypes.c_char_p, ctypes.c_char_p]

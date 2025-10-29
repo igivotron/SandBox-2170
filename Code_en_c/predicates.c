@@ -127,6 +127,14 @@
 /* To try this out, write "#define INEXACT volatile" below.  Normally,       */
 /*   however, INEXACT should be defined to be nothing.  ("#define INEXACT".) */
 
+/* \/ ça j'ai rajouté moi même  */
+#if defined(_WIN32) || defined(_WIN64)
+    #define random() rand()
+    #define srandom(x) srand(x)
+#endif
+/* /\ ça j'ai rajouté moi même  */
+
+
 #define INEXACT                          /* Nothing */
 /* #define INEXACT volatile */
 
