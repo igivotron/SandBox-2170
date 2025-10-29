@@ -108,6 +108,7 @@ int removeSuperTriangle(TriangularMesh* mesh) {
     // Grosse fraude
     HalfEdge* he_start = &mesh->half_edges[0];
     HalfEdge* a = he_start->next;
+    int no_flips_done = 1;
 
     while (1) {
         Vertex* v1 = a->vertex;
@@ -129,74 +130,11 @@ int removeSuperTriangle(TriangularMesh* mesh) {
             a->valid = 0;
         }
 
-        // if (v4->index < 4){
-        //     int he7 = a->twin->prev->twin->next->index;
-        //     v4 = a->twin->prev->twin->prev->vertex;
-        //     he6 = a->twin->prev->twin->prev->index;
-        //     if (areTheLinesIntersecting(v1 ,v2, v3, v4)){
-        //         a->valid = 1;
-        //         Face* face1 = a->face;
-
-        //         // Face 1
-        //         mesh->half_edges[he2].next = a;
-        //         mesh->half_edges[he2].prev = &mesh->half_edges[he6];
-        //         mesh->half_edges[he2].face = face1;
-
-        //         mesh->half_edges[he6].next = &mesh->half_edges[he2];
-        //         mesh->half_edges[he6].prev = a;
-        //         mesh->half_edges[he6].face = face1;
-        //         face1->half_edge = a;
-
-        //         // other half-edge wtf?
-        //         mesh->half_edges[he7].next = a->twin;
-        //         mesh->half_edges[he3].prev = a->twin;
-        //         mesh->half_edges[he3].next = &mesh->half_edges[he5];
-        //         mesh->half_edges[he5].prev = &mesh->half_edges[he3];
-        //         mesh->half_edges[he5].next = &mesh->half_edges[he7];
-        //         mesh->half_edges[he7].face = a->twin->face;
-        //         mesh->half_edges[he3].face = a->twin->face;
-        //         mesh->half_edges[he5].face = a->twin->face;
-        //         a->twin->face->half_edge = a->twin;
-
-
-        //         // Update a
-        //         a->vertex = v3;
-        //         a->next = &mesh->half_edges[he6];
-        //         a->prev = &mesh->half_edges[he2];
-        //         a->face = face1;
-        //         a->twin->next = &mesh->half_edges[he3];
-        //         a->twin->prev = &mesh->half_edges[he7];
-        //     }
-        // }
-
-    //     if (v3->index < 4){
-    //         v3 = a->next->twin->prev->vertex;
-    //         he2 = a->next->twin->next->index;
-    //         if (areTheLinesIntersecting(v1 ,v2, v3, v4)){
-    //             printf("hemmp\n");
-    //             a->valid = 1;
-    //             Face* face1 = a->face;
-    //             // Face 1
-    //             mesh->half_edges[he2].next = a;
-    //             mesh->half_edges[he2].prev = &mesh->half_edges[he6];
-    //             mesh->half_edges[he2].face = face1;
-
-    //             mesh->half_edges[he6].next = &mesh->half_edges[he2];
-    //             mesh->half_edges[he6].prev = a;
-    //             mesh->half_edges[he6].face = face1;
-    //             face1->half_edge = a;
-
-
-    //             a->vertex = v3;
-    //             a->twin->vertex = v4;
-    //             a->next = &mesh->half_edges[he6];
-    //             a->prev = &mesh->half_edges[he2];
-    //             a->face = face1;
-    //     }
-    // }
-
-        if (areTheLinesIntersecting(v1, v2, v3, v4) && (v3->index >=4) && (v4->index >=4)){
+        if (areTheLinesIntersecting(v1, v2, v3, v4) && (v3->index >= 4)) {
             printf("Edges intersect. Flipping edge between vertices %d and %d to %d and %d\n", v1->index, v2->index, v3->index, v4->index);
+            // if (v3->index >= 4 || v4->index >= 4)flips_done = 1;
+            no_flips_done = 0;
+            
             Face* face1 = a->face;
             Face* face2 = a->twin->face;
 
@@ -227,6 +165,9 @@ int removeSuperTriangle(TriangularMesh* mesh) {
             a->twin->next = &mesh->half_edges[he6];
             a->twin->prev = &mesh->half_edges[he2];
             a->twin->face = face2;
+
+            // make half-edge valid again
+            a->valid = 1;
         }
 
         else{
@@ -234,16 +175,20 @@ int removeSuperTriangle(TriangularMesh* mesh) {
             // supress the face
             a->valid = 0;
         }
-        
+
         a = &mesh->half_edges[he5];
+
         if (a->twin == NULL) {
             // supress the half-edge
             // supress the face
             a->valid = 0;
-            if (a == he_start) break;
-            a = a->next;
+            if (a == he_start) {
+                if (no_flips_done) break ;
+                else no_flips_done = 1;
+            }
+            a = &mesh->half_edges[he6];
         };
-        // sleep(3);
+        // sleep(1);
         printf("\n");
     }
 
