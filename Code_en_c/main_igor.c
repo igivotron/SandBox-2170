@@ -10,7 +10,7 @@
 
 int main(void) {
     exactinit();
-    const char* input_file = "../inputs/1e5pts";
+    const char* input_file = "../inputs/100pts";
     int numPoints = 0;
     double ** points = readPointsFromFile(input_file, &numPoints);
     double *x = (double*)malloc(numPoints * sizeof(double));
