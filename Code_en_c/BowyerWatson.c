@@ -75,7 +75,7 @@ void superTriangle(TriangularMesh* mesh , double *x, double *y, size_t n) {
     double ymax = max(y,n);
 
     // add the four points
-    double L = (xmax - xmin + ymax - ymin) / 20;
+    double L = (xmax - xmin + ymax - ymin)*1e6;
     mesh->vertex_count=4;
     initVertex(&vertices[0], xmin - L, ymin - L, 0, &half_edges[0]);
     initVertex(&vertices[1], xmax + L, ymin - L, 1, &half_edges[1]);
@@ -91,6 +91,108 @@ void superTriangle(TriangularMesh* mesh , double *x, double *y, size_t n) {
     initHalfEdge(&half_edges[3], 3, NULL, &half_edges[0], &half_edges[4], &faces[0], &vertices[3]);
     initHalfEdge(&half_edges[4], 4, &half_edges[5], &half_edges[3], &half_edges[0], &faces[0], &vertices[1]);
     initHalfEdge(&half_edges[5], 5, &half_edges[4], &half_edges[1], &half_edges[2], &faces[1], &vertices[3]);
+}
+
+int areTheLinesIntersecting(Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4) {
+    double o1 = orient2d(v1->coord, v2->coord, v3->coord);
+    double o2 = orient2d(v1->coord, v2->coord, v4->coord);
+    double o3 = orient2d(v3->coord, v4->coord, v1->coord);
+    double o4 = orient2d(v3->coord, v4->coord, v2->coord);
+
+    if (o1 * o2 < 0 && o3 * o4 < 0) return 1; // General case
+
+    return 0;
+}
+
+int removeSuperTriangle(TriangularMesh* mesh) {
+    // Grosse fraude
+    HalfEdge* he_start = &mesh->half_edges[0];
+    HalfEdge* a = he_start->next;
+    int no_flips_done = 1;
+
+    while (1) {
+        Vertex* v1 = a->vertex;
+        Vertex* v2 = a->twin->vertex;
+        Vertex* v3 = a->next->twin->vertex;
+        Vertex* v4 = a->twin->prev->vertex;
+
+        int he1 = a->index; // edge (v1, v2)
+        int he2 = a->next->index; // (v2, v3)
+        int he3 = a->prev->index; // (v3, v1)
+        int he4 = a->twin->index; // (v2, v1)
+        int he5 = a->twin->next->index; // (v1, v4)
+        int he6 = a->twin->prev->index; // (v4, v2)
+
+        printf("Checking half-edge between vertices %d and %d\n", v1->index, v2->index);
+        printf("Opposite vertices are %d and %d\n", v3->index, v4->index);
+
+        if (v3->index < 4 || v4->index < 4){
+            a->valid = 0;
+        }
+
+        if (areTheLinesIntersecting(v1, v2, v3, v4) && (v3->index >= 4)) {
+            printf("Edges intersect. Flipping edge between vertices %d and %d to %d and %d\n", v1->index, v2->index, v3->index, v4->index);
+            // if (v3->index >= 4 || v4->index >= 4)flips_done = 1;
+            no_flips_done = 0;
+            
+            Face* face1 = a->face;
+            Face* face2 = a->twin->face;
+
+            // Face 1
+            mesh->half_edges[he3].next = &mesh->half_edges[he5];
+            mesh->half_edges[he3].prev = a;
+            mesh->half_edges[he3].face = face1;
+            mesh->half_edges[he5].next = a;
+            mesh->half_edges[he5].prev = &mesh->half_edges[he3];
+            mesh->half_edges[he5].face = face1;
+            face1->half_edge = a;
+
+            // Face 2 not useful because we will delete it -> face on the boundary
+            mesh->half_edges[he6].next = &mesh->half_edges[he2];
+            mesh->half_edges[he6].prev = a->twin;
+            mesh->half_edges[he6].face = face2;
+            mesh->half_edges[he2].next = a->twin;
+            mesh->half_edges[he2].prev = &mesh->half_edges[he6];
+            mesh->half_edges[he2].face = face2;
+            face2->half_edge = a->twin;
+
+            // Update a and a->twin
+            a->vertex = v4;
+            a->twin->vertex = v3;
+            a->next = &mesh->half_edges[he3];
+            a->prev = &mesh->half_edges[he5];
+            a->face = face1;
+            a->twin->next = &mesh->half_edges[he6];
+            a->twin->prev = &mesh->half_edges[he2];
+            a->twin->face = face2;
+
+            // make half-edge valid again
+            a->valid = 1;
+        }
+
+        else{
+            // supress the half-edge
+            // supress the face
+            a->valid = 0;
+        }
+
+        a = &mesh->half_edges[he5];
+
+        if (a->twin == NULL) {
+            // supress the half-edge
+            // supress the face
+            a->valid = 0;
+            if (a == he_start) {
+                if (no_flips_done) break ;
+                else no_flips_done = 1;
+            }
+            a = &mesh->half_edges[he6];
+        };
+        // sleep(1);
+        printf("\n");
+    }
+
+    return 0;
 }
 
 int addPoint(TriangularMesh* mesh, double x, double y) {

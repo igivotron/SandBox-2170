@@ -57,6 +57,7 @@ void initHalfEdge(HalfEdge* he, int index, HalfEdge* twin, HalfEdge* next, HalfE
     he->prev = prev;
     he->face = face;
     he->vertex = vertex;
+    he->valid = 1;
 }
 
 int writeMeshToFile(const TriangularMesh *mesh, const char *filename) {
@@ -71,7 +72,7 @@ int writeMeshToFile(const TriangularMesh *mesh, const char *filename) {
         const Face *face = &mesh->faces[i];
         HalfEdge *he = face->half_edge;
         for (int j = 0; j < 3; ++j) {
-            if (he) {
+            if (he && he->valid) {
                 fprintf(f, "%g %g ", he->vertex->coord[0], he->vertex->coord[1]);
                 he = he->next;
             }

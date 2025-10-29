@@ -20,6 +20,7 @@ int isTriangleOrientedCCW(double* a, double* b, double* c);
 TriangularMesh *del2d(double *x, double *y, size_t n);
 void superTriangle(TriangularMesh* mesh, double *x, double *y, size_t n);
 int del2d_py(const char* input_file, const char* output_file);
+int removeSuperTriangle(TriangularMesh* mesh);
 int addPoint(TriangularMesh* mesh, double x, double y);
 
 double **readPointsFromFile(const char* filename, int* numPoints);

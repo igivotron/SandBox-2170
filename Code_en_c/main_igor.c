@@ -23,6 +23,7 @@ int main(void) {
         y[i] = points[idx][1];
     }
     TriangularMesh *mesh = del2d(x, y, numPoints);
+    removeSuperTriangle(mesh);
     writeMeshToFile(mesh, "output_mesh.txt");
     freeMesh(mesh);
     freePoints(points, numPoints);
