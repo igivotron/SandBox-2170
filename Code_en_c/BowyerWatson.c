@@ -388,6 +388,7 @@ int del2d_py(const char* input_file, const char* output_file) {
         y[i] = points[idx][1];
     }
     TriangularMesh *mesh = del2d(x, y, numPoints);
+    removeSuperTriangle(mesh);
     writeMeshToFile(mesh, output_file);
     freeMesh(mesh);
     freePoints(points, numPoints);

@@ -19,8 +19,8 @@ save_plot_file = b"output_file/points_1k_plot.png"
 # Load the shared library
 # Recompile the so file if necessary
 # lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.so"))   # For Linux/wsl
-lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatsonMACOS.so"))   # For Mac
-# lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.dll"))  # For Windows
+# lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatsonMACOS.so"))   # For Mac
+lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.dll"))  # For Windows
 
 # Tell ctypes the function signature
 lib.del2d_py.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
@@ -41,7 +41,7 @@ if to_plot:
 
     # Lire le fichier de triangles
     triangles = []
-    with open("output_file/output_mesh.txt") as f:
+    with open(output_file) as f:
         num_triangles = int(f.readline().strip())
         for line in f:
             vals = list(map(float, line.split()))
