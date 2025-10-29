@@ -17,7 +17,7 @@ plt.figure(figsize=(8, 8))
 for tri in triangles:
     xs, ys = zip(*tri)
     # fermer le triangle en revenant au premier point
-    plt.plot([*xs, xs[0]], [*ys, ys[0]], color='black', linewidth=0.8)
+    plt.plot([*xs, xs[0]], [*ys, ys[0]], color='black', linewidth=0.1)
     plt.fill(xs, ys, alpha=0.3)
 
 
@@ -40,7 +40,7 @@ if test:
     
     plt.scatter(x, y, color='red', s=10)
     mtriang = mtri.Triangulation(x, y)
-    plt.triplot(mtriang, color='red', linewidth=2, alpha=0.5)
+    plt.triplot(mtriang, color='red', linewidth=0.5, alpha=0.5)
 
 
 plt.title("Delaunay Triangulation (from C output)")
@@ -48,5 +48,5 @@ plt.xlabel("X")
 plt.ylabel("Y")
 plt.axis("equal")
 plt.tight_layout()
-plt.savefig("output_mesh.png", dpi=300)
+plt.savefig("output_mesh.png", dpi=600)
 plt.show()
