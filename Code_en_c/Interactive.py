@@ -3,8 +3,8 @@ import numpy as np
 import ctypes
 import os
 
-input_file = b"temp/temp_input.txt"
-output_file = b"temp/temp_output.txt"
+input_file = b"temp_input.txt"
+output_file = b"temp_output.txt"
 
 def find_closest_index(vx, vy, xs, ys, tol=1e-6):
     if len(xs) == 0:
@@ -42,8 +42,8 @@ ax.set_ylim(0, 10)
 ax.set_title("Cliquez pour ajouter des points")
 
 # lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.so"))   # Linux
-lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatsonMACOS.so"))   # Mac
-# lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.dll"))  # Windows
+# lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatsonMACOS.so"))   # Mac
+lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.dll"))  # Windows
 lib.del2d_py.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
 lib.del2d_py.restype = ctypes.c_int
 
@@ -95,3 +95,9 @@ def onclick(event):
 fig.canvas.mpl_connect("button_press_event", onclick)
 
 plt.show()
+
+# delete temp files
+if os.path.exists(input_file.decode()):
+    os.remove(input_file.decode())
+if os.path.exists(output_file.decode()):
+    os.remove(output_file.decode())

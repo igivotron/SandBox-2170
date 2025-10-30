@@ -189,7 +189,7 @@ int removeSuperTriangle(TriangularMesh* mesh) {
             a = &mesh->half_edges[he6];
         };
         // sleep(1);
-        printf("\n");
+        // printf("\n");
     }
 
     return 0;
@@ -363,7 +363,7 @@ TriangularMesh *del2d(double *x, double *y, size_t n) {
     }
     mesh->triToCheck_count = 0;
 
-    printf("Starting Bowyer-Watson with %zu points...\n", n);
+    // printf("Starting Bowyer-Watson with %zu points...\n", n);
     for (size_t i = 0; i < n; ++i) {
         addPoint(mesh, x[i], y[i]);
     }
