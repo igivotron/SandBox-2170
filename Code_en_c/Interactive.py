@@ -3,8 +3,8 @@ import numpy as np
 import ctypes
 import os
 
-input_file = b"temp_input.txt"
-output_file = b"temp_output.txt"
+input_file = b"temp/temp_input.txt"
+output_file = b"temp/temp_output.txt"
 
 def find_closest_index(vx, vy, xs, ys, tol=1e-6):
     if len(xs) == 0:
@@ -12,8 +12,8 @@ def find_closest_index(vx, vy, xs, ys, tol=1e-6):
     arr = np.column_stack((xs, ys))
     dists = np.hypot(arr[:, 0] - vx, arr[:, 1] - vy)
     idx = int(np.argmin(dists))
-    if dists[idx] > tol:
-        print(f"Warning: closest distance {dists[idx]:.3e} > tol ({tol}) for vertex ({vx:.6f}, {vy:.6f})")
+    # if dists[idx] > tol:
+    #     print(f"Warning: closest distance {dists[idx]:.3e} > tol ({tol}) for vertex ({vx:.6f}, {vy:.6f})")
     return idx
 
 def write_points_to_file(x_points, y_points, filename):
@@ -39,7 +39,7 @@ def read_triangles_from_file(filename):
 fig, ax = plt.subplots()
 ax.set_xlim(0, 10)
 ax.set_ylim(0, 10)
-ax.set_title("Cliquez pour ajouter des points (mise à jour sur clic)")
+ax.set_title("Cliquez pour ajouter des points")
 
 # lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.so"))   # Linux
 lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatsonMACOS.so"))   # Mac

@@ -123,15 +123,15 @@ int removeSuperTriangle(TriangularMesh* mesh) {
         int he5 = a->twin->next->index; // (v1, v4)
         int he6 = a->twin->prev->index; // (v4, v2)
 
-        printf("Checking half-edge between vertices %d and %d\n", v1->index, v2->index);
-        printf("Opposite vertices are %d and %d\n", v3->index, v4->index);
+        // printf("Checking half-edge between vertices %d and %d\n", v1->index, v2->index);
+        // printf("Opposite vertices are %d and %d\n", v3->index, v4->index);
 
         if (v3->index < 4 || v4->index < 4){
             a->valid = 0;
         }
 
         if (areTheLinesIntersecting(v1, v2, v3, v4) && (v3->index >= 4)) {
-            printf("Edges intersect. Flipping edge between vertices %d and %d to %d and %d\n", v1->index, v2->index, v3->index, v4->index);
+            // printf("Edges intersect. Flipping edge between vertices %d and %d to %d and %d\n", v1->index, v2->index, v3->index, v4->index);
             // if (v3->index >= 4 || v4->index >= 4)flips_done = 1;
             no_flips_done = 0;
             
