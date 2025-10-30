@@ -49,7 +49,9 @@ ax.set_xlim(0, 10)
 ax.set_ylim(0, 10)
 ax.set_title("Cliquez pour ajouter des points (animation + Delaunay)")
 
-lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.dll"))  
+# lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.so"))   # For Linux/wsl
+lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatsonMACOS.so"))   # For Mac
+# lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.dll"))  # For Windows
 lib.del2d_py.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
 lib.del2d_py.restype = ctypes.c_int
 
