@@ -5,7 +5,7 @@
 
 ## Overview
 
-This project implements 2D Delaunay triangulation using a robust Bowyer Watson algorithm with optimized point ordering via Hilbert Curve combining C implementations with Python bindings for performance and ease to use. 
+This project implements 2D Delaunay triangulation using a robust Bowyer Watson algorithm with optimized point ordering via Hilbert Curve combining C implementations with Python bindings for performance and ease to use. Using Delaunay triangulation, we are also capable of implementing its dual graph, the Voronoi Cells Algorithm.
 
 ## Project Structure
 
@@ -30,7 +30,7 @@ This project implements 2D Delaunay triangulation using a robust Bowyer Watson a
 ## Usage
 ### ⚠️ Important Note for Cross-Platform Usage
 
-**<span style="color: red;">If you use different Operating Systems, you need to change line 22 in `del2d.py` and line 53 in `Interactive.py`</span>**
+**<span style="color: red;">If you use different Operating Systems, you need to change line 23 in `del2d.py` and line 154 in `voronoi.py`</span>**
 
 ### Binding the C-files
 Bind the C-files with python to execute the code.
@@ -68,10 +68,13 @@ The visualization will display your triangulation and compare it with scipy's De
 ### Interactive Triangulation
 
 ```python
-python Interactive.py
+python voronoi.py
 ```
-Interactive visualization of the triangulation
+Interactive visualization of the Voronoi Algorithm. 
 
+`r` : Switch between Voronoï and Delaunay visualisation
+
+`e` : Relax the graph using Lloyd
 
 
 ## Input/Output
@@ -100,6 +103,23 @@ The implementation uses the Bowyer-Watson incremental algorithm:
 We've implemented the following improvements:
 
 1. Removing infinite points
-2. Robustnes
+2. Robustness
 3. An implementation in O(n log n)
 4. Go Interactive
+
+## Task's done by members
+- **Igor** :
+    - Implementation of the Hilbert curve
+    - Robustness
+    - Bowyer Watson algorithm
+    - Removing infinite points
+    - Lloyd relaxation 
+
+- **Myrine** : 
+    - Removing infinite points
+    - Voronoï algorithm
+    - Interactiveness of the plot
+
+- **Lionel** : 
+    - Bowyer Watson algorithm in $\mathcal{O}(n\log(n))$
+    - Binding C-files with python files

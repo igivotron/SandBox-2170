@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from Structure import Triangle, Voronoi_cell, Point
-from scipy.spatial import Delaunay
+from Structure import Triangle, Point, Voronoi_cell
 import ctypes
 import os
 
@@ -82,6 +81,43 @@ def Delaunay_triangulation(pts):
         triangles.append(triangle)
     return triangles
 
+def voronoi_cells(triangles, pts):
+    cells = {}
+    for i, pt in enumerate(pts):
+        cells[i] = Voronoi_cell(center=pt, corners=[])
+    edge_dict = find_neighbors(triangles)
+    for edge, tris in edge_dict.items():
+        if len(tris) == 2:
+            t1, t2 = tris
+            cells[edge[0]].add_corner(t1.center)
+            cells[edge[0]].add_corner(t2.center)
+            cells[edge[1]].add_corner(t1.center)
+            cells[edge[1]].add_corner(t2.center)
+        else:
+            t = tris[0]
+            A = pts[edge[0]]
+            B = pts[edge[1]]
+            AB = np.array([B[0] - A[0], B[1] - A[1]])
+            n = np.array([A[1] - B[1], B[0] - A[0]])
+            norm = np.linalg.norm(n)
+            if norm < 1e-12:
+                continue
+            n = n / norm
+            C = np.array([(A[0] + B[0])/2, (A[1] + B[1])/2])
+            D = np.array(t.center)
+
+            # Sens du vecteur normal
+            barycenter = np.mean(pts, axis=0)
+            to_center = barycenter - C
+            if np.dot(n, to_center) > 0:
+                n = -n
+            far_point = None # point lointain dans la direction normale
+            cells[edge[0]].add_corner(t.center)
+            cells[edge[0]].add_corner(far_point)
+            cells[edge[1]].add_corner(t.center)
+            cells[edge[1]].add_corner(far_point)
+    return cells
+
 
 def find_neighbors(triangles):
     """
@@ -113,10 +149,11 @@ def find_neighbors(triangles):
 
 
 # --- C setup ---
-input_file = b"temp_input.txt"
-output_file = b"temp_output.txt"
-lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.dll"))  # Windows
-lib.del2d_py.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+input_file = b"temp/temp_input.txt"
+output_file = b"temp/temp_output.txt"
+# lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.so"))   # For Linux/wsl
+lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatsonMACOS.so"))   # For Mac
+# lib = ctypes.CDLL(os.path.abspath("shared_lib/BowyerWatson.dll"))  # For Windowslib.del2d_py.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
 lib.del2d_py.restype = ctypes.c_int
 
 # --- Setup figure ---
@@ -209,6 +246,31 @@ def plot(triangles, pts, ax, mode, extend_length=1000):
     # pts
     ax.plot(pts[:, 0], pts[:, 1], 'ko')
 
+def Lloyd_relaxation(pts, iterations=10):
+    triangle = Delaunay_triangulation(pts)
+    cells = voronoi_cells(triangle, pts)
+    for it in range(iterations):
+        new_pts = []
+        for i in range(len(pts)):            
+            cell = cells[i]
+            
+            if len(cell.corners) == 0:
+                new_pts.append(pts[i])
+                continue
+
+            if None in cell.corners:
+                new_pts.append(pts[i])
+                continue
+
+            corners = np.array(cell.corners)
+            centroid = np.mean(corners, axis=0)
+            new_pts.append(centroid)
+        pts = np.array(new_pts)
+        triangle = Delaunay_triangulation(pts)
+        cells = voronoi_cells(triangle, pts)
+    return pts
+
+
 
 def switch_mode(event):
     if event.key == 'r':
@@ -219,9 +281,20 @@ def switch_mode(event):
             print("Mode Delaunay Triangulation")
         update(ax, data)
 
+def relax(event):
+    if event.key == 'e':
+        if len(data['pts']) < 3:
+            print("Pas assez de points pour relaxer")
+            return
+        print("Relaxation des points (Lloyd's algorithm)")
+        data['pts'] = Lloyd_relaxation(data['pts'])
+        print("Relaxation terminée")
+        update(ax, data)
+
 
 cid = fig.canvas.mpl_connect('button_press_event', onclick)
 kid = fig.canvas.mpl_connect('key_press_event', switch_mode)
+eid = fig.canvas.mpl_connect('key_press_event', relax)
 
 if len(data['pts'])>0:
     update(ax, data)
