@@ -210,7 +210,7 @@ def plot(triangles, pts, ax, mode, extend_length=1000):
         n = np.array([-v[1], v[0]])
         ax.scatter([p[0] for p in pts], [p[1] for p in pts], color='red')  # cell centers
         plt.plot([M[0]-n[0] * 12, M[0] + n[0] * 12], [M[1]-n[1] * 12, M[1] + n[1] * 12], 'g--')
-    else : 
+    if mode == 1 and len(pts) >= 3: 
         # Segments de Voronoï (fini + infini)
         edge_dict = find_neighbors(triangles)
         for edge, tris in edge_dict.items():

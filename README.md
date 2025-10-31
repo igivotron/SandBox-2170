@@ -1,3 +1,6 @@
+
+
+
 # Delaunay Triangulation
 
 **Authors:** Lionel Peduzzi, Myrine Msallem, Igor Grégoire
@@ -76,6 +79,14 @@ Interactive visualization of the Voronoi Algorithm.
 
 `e` : Relax the graph using Lloyd
 
+- <span style="color: green;"> Green lines</span> are finite Voronoï boundaries
+- <span style="color: red;"> Red doted lines</span> are infinite Voronoï boundaries
+- <span style="color: lightblue;"> blue lines</span> are the triangles edges
+- <span style="color: white;"> Black dots</span> are vertices
+- <span style="color: red;"> Red dots</span> are the circumcenter of the triangles
+
+
+
 
 ## Input/Output
 
@@ -123,3 +134,4 @@ We've implemented the following improvements:
 - **Lionel** : 
     - Bowyer Watson algorithm in $\mathcal{O}(n\log(n))$
     - Binding C-files with python files
+
