@@ -1,0 +1,5 @@
+glfw==2.10.0
+imgui-bundle==1.92.4
+numpy==2.3.4
+rendercanvas==2.3.0
+wgpu==0.27.0
