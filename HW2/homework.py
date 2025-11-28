@@ -3,6 +3,9 @@
 from simulator import Simulator, Contact, copy_buffer
 import wgpu
 import numpy as np
+import bvh
+
+i=0
 
 class Homework:
     def __init__(self):
@@ -53,6 +56,69 @@ class Homework:
                 contact = simulator.intersect(i, j)
                 if contact:
                     contacts.append(contact)
+
+        return contacts
+
+
+    def find_intersections(self, simulator) -> list[Contact]:
+        """Return all contacts using the BVH."""
+        global i
+        i+=1
+        if i==100 or i==0:
+            #if first time or every 100 frames, rebuild the BVH
+            bvh_tree = bvh.BVH(simulator.positions, simulator.radii)
+            bvh_tree.build()
+            i=0
+        else:
+            #otherwise, just update the positions/radii
+            bvh_tree.update(simulator.positions, simulator.radii)
+        
+        contacts = []
+
+        # Stack of node pairs to test
+        stack = [(bvh_tree.root, bvh_tree.root)]
+
+        def bbox_intersect(bb1, bb2):
+            """AABB vs AABB intersection test."""
+            return not (
+                bb1[1][0] < bb2[0][0] or bb1[0][0] > bb2[1][0] or
+                bb1[1][1] < bb2[0][1] or bb1[0][1] > bb2[1][1] or
+                bb1[1][2] < bb2[0][2] or bb1[0][2] > bb2[1][2]
+            )
+
+        while stack:
+            A, B = stack.pop()
+
+            # Avoid duplicate (A,B) symmetric checks
+            if id(A) > id(B):
+                A, B = B, A
+
+            # Test bounding boxes
+            if not bbox_intersect(A.bbox, B.bbox):
+                continue
+
+            if A.is_leaf() and B.is_leaf():
+                contact = simulator.intersect(A.item, B.item)
+                if contact:
+                    contacts.append(contact)
+                        
+                continue
+
+            # Expand children
+            if A.is_leaf():
+                # A leaf vs B internal: test A vs B.left and A vs B.right
+                stack.append((A, B.left))
+                stack.append((A, B.right))
+            elif B.is_leaf():
+                # B leaf vs A internal
+                stack.append((A.left, B))
+                stack.append((A.right, B))
+            else:
+                # Both internal → 4 combinations
+                stack.append((A.left,  B.left))
+                stack.append((A.left,  B.right))
+                stack.append((A.right, B.left))
+                stack.append((A.right, B.right))
 
         return contacts
 

@@ -23,7 +23,6 @@ class Nodes:
         self.bbox = np.array([bbox_min, bbox_max])
         return
 
-
 class BVH:
     def __init__(self, positions, radii, NperLeaf=1):
         self.positions = positions
