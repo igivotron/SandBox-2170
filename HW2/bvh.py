@@ -41,6 +41,15 @@ class BVH:
         z_max = np.max(self.positions[items, 2] + self.radii[items])
         bbox = np.array([[x_min, y_min, z_min], [x_max, y_max, z_max]])
         return bbox
+    def combine_bbox(left_box, right_box):
+        x_min = np.min(left_box[0][0], right_box[0][0])
+        y_min = np.min(left_box[0][1], right_box[0][1])
+        z_min = np.min(left_box[0][2], right_box[0][2])
+        x_max = np.min(left_box[1][0], right_box[1][0])
+        y_max = np.min(left_box[1][1], right_box[1][1])
+        z_max = np.min(left_box[1][2], right_box[1][2])
+        return np.array([[x_min, y_min, z_min], [x_max, y_max, z_max]])
+
 
     def build_recursive(self, node, k):
         axis = k % 3
@@ -130,7 +139,7 @@ class BVH:
         # 2. If it's a leaf → compute its bbox
         # ---------------------------------------------------------
         if is_leaf(current):
-            current.bbox = compute_bbox(current.item)
+            current.bbox = current.update_bbox()
             current.state = True
 
             if current.parent:
