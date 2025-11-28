@@ -116,6 +116,7 @@ class BVH:
         d = bbox[1] - bbox[0]
         return 2 * (d[0]*d[1] + d[1]*d[2] + d[2]*d[0])
 
+
     def update(self, current=None):
 
         # On first call, start from the root
