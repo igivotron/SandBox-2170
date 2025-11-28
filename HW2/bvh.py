@@ -12,6 +12,7 @@ class Nodes:
         self.bbox = bbox
         self.index = index
         self.item = item
+        self.state = False #updated or not
    
     def is_leaf(self):
         return self.left is None and self.right is None
@@ -44,7 +45,7 @@ class BVH:
             node.bbox = self.compute_bbox(items)
             return
         
-                # Find the best split using SAH
+        # Find the best split using SAH
         best_cost = float('inf')
         best_split = None
         for i in range(len(pts)):
@@ -99,6 +100,56 @@ class BVH:
     def surface_area(self, bbox):
         d = bbox[1] - bbox[0]
         return 2 * (d[0]*d[1] + d[1]*d[2] + d[2]*d[0])
+
+    def update(self, current=None):
+
+        # On first call, start from the root
+        if current is None:
+            current = self.root
+            
+        # ---------------------------------------------------------
+        # 1. Descend until we reach a node that needs updating
+        # ---------------------------------------------------------
+        if not current.state:  
+
+            # If left child exists and is not computed → go left
+            if current.left and not current.left.state:
+                return self.update(current.left)
+
+            # If left is done, and right exists and not computed → go right
+            if current.left and current.left.state and current.right and not current.right.state:
+                return self.update(current.right)
+
+        # ---------------------------------------------------------
+        # 2. If it's a leaf → compute its bbox
+        # ---------------------------------------------------------
+        if is_leaf(current):
+            current.bbox = compute_bbox(current.item)
+            current.state = True
+
+            if current.parent:
+                return self.update(current.parent)
+            return
+
+        # ---------------------------------------------------------
+        # 3. If both children done → compute internal bbox
+        # ---------------------------------------------------------
+        if (current.left and current.left.state) and (current.right and current.right.state):
+            current.bbox = combine_bbox(current.left.bbox, current.right.bbox)
+            current.state = True
+
+            if current.parent:
+                return self.update(current.parent)
+            return
+
+
+
+        
+
+
+
+
+
     
 
 ### pts ###
@@ -125,6 +176,8 @@ def plot_bbox(ax, bbox, color='r'):
     for edge in edges:
         ax.plot3D(*zip(corners[edge[0]], corners[edge[1]]), color=color)
 
+
+
 def plot_sphere(ax, center, radius, color='g'):
     u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
     x = center[0] + radius * np.cos(u) * np.sin(v)
@@ -150,4 +203,5 @@ for i in range(len(pts)):
 
 
 plot_bvh(bvh.root)
+plt.savefig('BVH')
 plt.show()
