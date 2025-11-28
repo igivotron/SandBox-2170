@@ -9,13 +9,20 @@ class Nodes:
         self.left = left
         self.right = right
         self.parent = None
-        self.bbox = bbox
+        self.bbox = bbox #[[x_min, y_min, z_min], [x_max, y_max, z_max]]
         self.index = index
-        self.item = item
+        self.item = item #contain the index of the item if leaf
         self.state = False #updated or not
    
     def is_leaf(self):
         return self.left is None and self.right is None
+        
+    def update_bbox(self):
+        bbox_min = np.min([self.left.bbox[0], self.right.bbox[0]], axis=0)
+        bbox_max = np.max([self.left.bbox[1], self.right.bbox[1]], axis=0)
+        self.bbox = np.array([bbox_min, bbox_max])
+        return
+
 
 class BVH:
     def __init__(self, positions, radii, NperLeaf=1):
@@ -106,7 +113,7 @@ class BVH:
         # On first call, start from the root
         if current is None:
             current = self.root
-            
+
         # ---------------------------------------------------------
         # 1. Descend until we reach a node that needs updating
         # ---------------------------------------------------------
