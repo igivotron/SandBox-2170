@@ -27,7 +27,7 @@ class Homework:
         You may use all of these attributes throughout the homework.
         """
 
-        self.data_structure_staging = None
+        self.data_structure_staging = bvh.BVH(simulator.positions, simulator.radii)
         self.data_structure_gpu = None
 
     def on_size_changed(self, simulator):
@@ -36,42 +36,24 @@ class Homework:
         This can be used to update the data structures you use, if they change
         significantly when new objects are added to the simulation.
         """
-        pass
-
-    def find_intersections(self, simulator) -> list[Contact]:
-        """Return all contacts between objects in the simulation.
-
-        simulator.intersect(i, j) returns:
-          - None if the objects don't intersect, or
-          - a Contact object if they do. This object contains all information the
-            simulator needs to resolve the contact.
-
-        The default implementation works, but is not efficient. You should use a
-        spatial datastructure to reduce the computational complexity of this method.
-        """
-        contacts = []
-
-        for i in range(len(simulator.radii)):
-            for j in range(i + 1, len(simulator.radii)):
-                contact = simulator.intersect(i, j)
-                if contact:
-                    contacts.append(contact)
-
-        return contacts
-
+        self.data_structure_staging = bvh.BVH(simulator.positions, simulator.radii)
+        return
 
     def find_intersections(self, simulator) -> list[Contact]:
         """Return all contacts using the BVH."""
         global i
         i+=1
+        bvh_tree = self.data_structure_staging
+        bvh_tree.positions = simulator.positions
+        bvh_tree.radii = simulator.radii
+
         if i==100 or i==0:
             #if first time or every 100 frames, rebuild the BVH
-            bvh_tree = bvh.BVH(simulator.positions, simulator.radii)
             bvh_tree.build()
             i=0
         else:
             #otherwise, just update the positions/radii
-            bvh_tree.update(simulator.positions, simulator.radii)
+            bvh_tree.update()
         
         contacts = []
 
@@ -90,7 +72,7 @@ class Homework:
             A, B = stack.pop()
 
             # Avoid duplicate (A,B) symmetric checks
-            if id(A) > id(B):
+            if A.index > B.index:
                 A, B = B, A
 
             # Test bounding boxes
@@ -101,7 +83,6 @@ class Homework:
                 contact = simulator.intersect(A.item, B.item)
                 if contact:
                     contacts.append(contact)
-                        
                 continue
 
             # Expand children
