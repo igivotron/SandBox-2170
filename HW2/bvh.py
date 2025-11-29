@@ -1,7 +1,6 @@
 import numpy as np
 # from simulator import Simulator, Contact, copy_buffer
 # from homework import *
-import matplotlib.pyplot as plt
 
 
 class Nodes:
@@ -157,6 +156,7 @@ def print_bvh(node, depth=0):
 
     
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
     ### pts ###
     pts = np.random.rand(10, 3) * 10
     radii = np.random.rand(100) * 0.5 + 0.1
