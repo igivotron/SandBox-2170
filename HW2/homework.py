@@ -4,6 +4,7 @@ from simulator import Simulator, Contact, copy_buffer
 import wgpu
 import numpy as np
 import bvh
+import time
 
 i=0
 
@@ -27,7 +28,7 @@ class Homework:
         You may use all of these attributes throughout the homework.
         """
 
-        self.data_structure_staging = bvh.BVH(simulator.positions, simulator.radii)
+        self.data_structure_staging = None
         self.data_structure_gpu = None
 
     def on_size_changed(self, simulator):
@@ -36,7 +37,15 @@ class Homework:
         This can be used to update the data structures you use, if they change
         significantly when new objects are added to the simulation.
         """
-        self.data_structure_staging = bvh.BVH(simulator.positions, simulator.radii)
+        if len(simulator.positions)==0:
+            self.data_structure_staging = None
+            return
+        bvh_tree = bvh.BVH(simulator.positions, simulator.radii)
+        bvh_tree.build()
+        # bvh.print_bvh(bvh_tree.root)
+        self.data_structure_staging = bvh_tree
+        global i
+        i=0
         return
 
     def find_intersections(self, simulator) -> list[Contact]:
@@ -44,15 +53,16 @@ class Homework:
         global i
         i+=1
         bvh_tree = self.data_structure_staging
+        if bvh_tree is None:
+            return []
         bvh_tree.positions = simulator.positions
-        bvh_tree.radii = simulator.radii
 
-        if i==100 or i==0:
-            #if first time or every 100 frames, rebuild the BVH
+        if i==100:
+            #every 100 frames, rebuild the BVH
             bvh_tree.build()
             i=0
         else:
-            #otherwise, just update the positions/radii
+            #otherwise, just update the positions
             bvh_tree.update()
         
         contacts = []
@@ -70,37 +80,39 @@ class Homework:
 
         while stack:
             A, B = stack.pop()
-
-            # Avoid duplicate (A,B) symmetric checks
-            if A.index > B.index:
-                A, B = B, A
-
-            # Test bounding boxes
-            if not bbox_intersect(A.bbox, B.bbox):
-                continue
-
+            if A is B:
+                if A.is_leaf():
+                    continue
+                else:
+                    stack.append((A.left, A.right))
+                    stack.append((A.left, A.left))
+                    stack.append((A.right, A.right))
+                    continue
+            #Then A != B
             if A.is_leaf() and B.is_leaf():
-                contact = simulator.intersect(A.item, B.item)
+                contact = simulator.intersect(A.item[0], B.item[0])
                 if contact:
                     contacts.append(contact)
                 continue
-
-            # Expand children
-            if A.is_leaf():
-                # A leaf vs B internal: test A vs B.left and A vs B.right
-                stack.append((A, B.left))
-                stack.append((A, B.right))
-            elif B.is_leaf():
-                # B leaf vs A internal
-                stack.append((A.left, B))
-                stack.append((A.right, B))
-            else:
-                # Both internal → 4 combinations
-                stack.append((A.left,  B.left))
-                stack.append((A.left,  B.right))
-                stack.append((A.right, B.left))
-                stack.append((A.right, B.right))
-
+            
+            if bbox_intersect(A.bbox, B.bbox):
+                # Expand children
+                if A.is_leaf():
+                    # A leaf vs B internal
+                    stack.append((A, B.left))
+                    stack.append((A, B.right))
+                elif B.is_leaf():
+                    # B leaf vs A internal
+                    stack.append((A.left, B))
+                    stack.append((A.right, B))
+                else:
+                    # Both internal → 4 combinations
+                    stack.append((A.left,  B.left))
+                    stack.append((A.left,  B.right))
+                    stack.append((A.right, B.left))
+                    stack.append((A.right, B.right))
+        # time.sleep(0.05)
+        # print(contacts)
         return contacts
 
     def gpu_bind_group_layouts(self, device: wgpu.GPUDevice) -> list[wgpu.GPUBindGroupLayout]:

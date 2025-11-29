@@ -13,10 +13,10 @@ class Nodes:
         self.index = index
         self.item = item #contain the index of the item if leaf
         self.state = False #updated or not
-   
+        
     def is_leaf(self):
         return self.left is None and self.right is None
-        
+
     def update_bbox(self):
         bbox_min = np.min([self.left.bbox[0], self.right.bbox[0]], axis=0)
         bbox_max = np.max([self.left.bbox[1], self.right.bbox[1]], axis=0)
@@ -116,7 +116,6 @@ class BVH:
         d = bbox[1] - bbox[0]
         return 2 * (d[0]*d[1] + d[1]*d[2] + d[2]*d[0])
 
-
     def update(self, current=None):
 
         # On first call, start from the root
@@ -124,45 +123,35 @@ class BVH:
             current = self.root
 
         # ---------------------------------------------------------
-        # 1. Descend until we reach a node that needs updating
+        # 1. If current is a leaf → compute its bbox
         # ---------------------------------------------------------
-        if not current.state:  
-
-            # If left child exists and is not computed → go left
-            if current.left and not current.left.state:
-                return self.update(current.left)
-
-            # If left is done, and right exists and not computed → go right
-            if current.left and current.left.state and current.right and not current.right.state:
-                return self.update(current.right)
-
-        # ---------------------------------------------------------
-        # 2. If it's a leaf → compute its bbox
-        # ---------------------------------------------------------
-        if is_leaf(current):
-            current.bbox = current.update_bbox()
-            current.state = True
-
-            if current.parent:
-                return self.update(current.parent)
+        if current.is_leaf():
+            pos=self.positions[current.item[0]]
+            rad=self.radii[current.item[0]]
+            current.bbox = np.array([pos - rad, pos + rad])
             return
 
         # ---------------------------------------------------------
-        # 3. If both children done → compute internal bbox
+        # 2. Descend until we reach a leaf
         # ---------------------------------------------------------
-        if (current.left and current.left.state) and (current.right and current.right.state):
-            current.bbox = combine_bbox(current.left.bbox, current.right.bbox)
-            current.state = True
+        self.update(current.left)
+        self.update(current.right)
 
-            if current.parent:
-                return self.update(current.parent)
-            return
-
+        # ---------------------------------------------------------
+        # 3. When both children done → compute internal bbox
+        # ---------------------------------------------------------
+        current.update_bbox()
+        return
 
 
         
 
-
+def print_bvh(node, depth=0):
+        if node is None:
+            return
+        print("  " * depth + f"Node(depth={depth}, bbox=[[{node.bbox[0][0]:.2f}, {node.bbox[0][1]:.2f}, {node.bbox[0][2]:.2f}], [{node.bbox[1][0]:.2f}, {node.bbox[1][1]:.2f}, {node.bbox[1][2]:.2f}]], item={node.item})")
+        print_bvh(node.left, depth + 1)
+        print_bvh(node.right, depth + 1)
 
 
 
@@ -171,8 +160,10 @@ if __name__ == "__main__":
     ### pts ###
     pts = np.random.rand(10, 3) * 10
     radii = np.random.rand(100) * 0.5 + 0.1
-    bvh = BVH(pts, radii, NperLeaf=2)
+    bvh = BVH(pts, radii, NperLeaf=1)
     bvh.build()
+    
+    print_bvh(bvh.root)
 
     #plot points and bounding boxes
     def plot_bbox(ax, bbox, color='r'):
