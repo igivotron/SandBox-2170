@@ -17,6 +17,7 @@ BVH* create_bvh(double* positions, double* radii, int n_points, int NperLeaf) {
     root_node.bbox = compute_bbox(&root_node, positions, radii);
     bvh->nodes[bvh->n_nodes++] = root_node;
     bvh->root = root_node.index;
+    free(all_items);
 
 
 
@@ -29,17 +30,32 @@ BVHNode create_node(int index, double* bbox, int* items, int n_items, int parent
     BVHNode node;
     node.index = index;
     node.bbox = bbox;
-    node.items = items;
     node.n_items = n_items;
     node.parent = parent;
-    node.left = -1;  // No children initially
-    node.right = -1; // No children initially
-    node.state = 0;  // Not updated
+    node.left = -1;
+    node.right = -1;
+    node.state = 0;
+
+    if (n_items > 0) {
+        node.items = (int*)malloc(sizeof(int) * n_items);
+        memcpy(node.items, items, sizeof(int) * n_items);
+    } else {
+        node.items = NULL;
+    }
+
     return node;
 }
 
 int is_leaf(BVHNode* node, int NperLeaf) {
     return node->n_items <= NperLeaf;
+}
+
+void update_positions(BVH* bvh, double* new_positions) {
+    bvh->positions = new_positions;
+}
+
+void update_bbox(BVH* bvh, BVHNode* node) {
+    return;
 }
 
 double* compute_bbox(BVHNode* node, double* positions, double* radii) {
@@ -95,30 +111,32 @@ double surface_area(double* bbox) {
     return 2.0 * (dx * dy + dy * dz + dz * dx);
 }
 
-void split_items(BVHNode* node, double* positions, double* radii, int axis, int split_index, int* left_items, int* right_items, int* n_left, int* n_right) {
+void split_items(BVHNode* node, double* positions, double* radii, int axis, int split_index,
+                 int* left_items, int* right_items, int* n_left, int* n_right) {
     *n_left = 0;
     *n_right = 0;
-    double tresh = positions[3 * node->items[split_index] + axis];
+    double threshold = positions[3 * node->items[split_index] + axis];
 
     for (int i = 0; i < node->n_items; i++) {
         int idx = node->items[i];
         double coord = positions[3*idx + axis];
 
-        if (coord < tresh) {left_items[(*n_left)++] = idx;}
-        else {right_items[(*n_right)++] = idx;}
+        if (coord < threshold) left_items[(*n_left)++] = idx;
+        else right_items[(*n_right)++] = idx;
     }
 }
-
-int best_split_axis(BVHNode* node, double* positions, double* radii, int axis, int* left_items, int* right_items, int* n_left, int* n_right) {
+int best_split_axis(BVHNode* node, double* positions, double* radii, int axis,
+                    int* left_items, int* right_items, int* n_left, int* n_right) {
     double best_cost = INFINITY;
     int best_index = -1;
     int n_items = node->n_items;
+
     int* temp_left = (int*)malloc(sizeof(int) * n_items);
     int* temp_right = (int*)malloc(sizeof(int) * n_items);
     if (!temp_left || !temp_right) return -1;
 
     for (int i = 1; i < n_items; i++) {
-        int l=0, r=0;
+        int l = 0, r = 0;
         split_items(node, positions, radii, axis, i, temp_left, temp_right, &l, &r);
         if (l == 0 || r == 0) continue;
 
@@ -138,6 +156,7 @@ int best_split_axis(BVHNode* node, double* positions, double* radii, int axis, i
         free(left_bbox);
         free(right_bbox);
     }
+
     free(temp_left);
     free(temp_right);
     return best_index;
@@ -148,13 +167,14 @@ void build_recursion(BVH* bvh, int node_index, int k){
     BVHNode* node = &bvh->nodes[node_index];
     if (is_leaf(node, bvh->NperLeaf)) return;
 
-    int * items = node->items;
+    // int * items = node->items;
     int n_items = node->n_items;
     double* positions = bvh->positions;
     double* radii = bvh->radii;
     int* left_items = malloc(sizeof(int) * n_items);
     int* right_items = malloc(sizeof(int) * n_items);
-    int n_left, n_right;
+    int n_left = 0;
+    int n_right = 0;
     int split_index = best_split_axis(node, positions, radii, axis, left_items, right_items, &n_left, &n_right);
     if (n_left == 0 || n_right == 0 || split_index == -1) {
         free(left_items);
@@ -171,6 +191,8 @@ void build_recursion(BVH* bvh, int node_index, int k){
     bvh->nodes[right_index] = right_node;
     node->left = left_index;
     node->right = right_index;
+    free(left_items);
+    free(right_items);
     build_recursion(bvh, left_index, k + 1);
     build_recursion(bvh, right_index, k + 1);
 }
@@ -189,14 +211,17 @@ void update(BVH* bvh, BVHNode* current) {
         return;
     }
 
-    // 2. Descend until we reach a leaf
+    // // 2. Descend until we reach a leaf
     if (current->left != -1) {update(bvh, &bvh->nodes[current->left]);}
     if (current->right != -1) {update(bvh, &bvh->nodes[current->right]);}
 
     double* left_bbox = (current->left != -1) ? bvh->nodes[current->left].bbox : NULL;
     double* right_bbox = (current->right != -1) ? bvh->nodes[current->right].bbox : NULL;
 
-    if (current->bbox) free(current->bbox);
+    if (current->bbox) {
+        free(current->bbox);
+        current->bbox = NULL;
+    }
 
     if (left_bbox && right_bbox) {
         current->bbox = combine_bboxes(left_bbox, right_bbox); // Already malloc'ed
@@ -215,7 +240,8 @@ void free_bvh(BVH* bvh) {
     if (bvh) {
         if (bvh->nodes) {
             for (int i = 0; i < bvh->n_nodes; i++) {
-                free(bvh->nodes[i].bbox);
+                if (bvh->nodes[i].bbox) free(bvh->nodes[i].bbox);
+                // free(bvh->nodes[i].bbox);
                 free(bvh->nodes[i].items);
             }
             free(bvh->nodes);
@@ -233,17 +259,13 @@ void free_node(BVHNode* node) {
 
 void printBVH(BVH* bvh, BVHNode* node, int depth) {
     if (node == NULL) return;
-    for (int i = 0; i < depth; i++) printf("  ");
-    printf("Node %d: n_items=%d, bbox=[%.2f, %.2f, %.2f, %.2f, %.2f, %.2f]\n", 
-           node->index, node->n_items, 
-           node->bbox[0], node->bbox[1], node->bbox[2], 
-           node->bbox[3], node->bbox[4], node->bbox[5]);
-    if (node->left != -1) {
-        printBVH(bvh, &bvh->nodes[node->left], depth + 1);
-    }
-    if (node->right != -1) {
-        printBVH(bvh, &bvh->nodes[node->right], depth + 1);
-    }
+    printf("%*sNode(depth=%d, bbox=[[%.2f, %.2f, %.2f], [%.2f, %.2f, %.2f]], n_items=%d)\n", depth * 2, "", depth,
+           node->bbox[0], node->bbox[1], node->bbox[2],
+           node->bbox[3], node->bbox[4], node->bbox[5],
+           node->n_items);
+    if (node->left != -1) {printBVH(bvh, &bvh->nodes[node->left], depth + 1);}
+    if (node->right != -1) {printBVH(bvh, &bvh->nodes[node->right], depth + 1);}
+
 }
 
 int main() {
@@ -258,9 +280,23 @@ int main() {
         radii[i] = (rand() % 10) + 1;
     }
 
-    BVH* bvh = create_bvh(positions, radii, n_points, 5);
+    // double positions_array[] = {1.0, 1.0, 1.0,
+    //                             2.0, 2.0, 2.0,
+    //                             3.0, 3.0, 3.0,
+    //                             4.0, 4.0, 4.0,
+    //                             5.0, 5.0, 5.0};
+    // double radii_array[] = {0.5, 0.5, 0.5, 0.5, 0.5};
+    // int n_points = 5;
+    // double* positions = (double*)malloc(sizeof(double) * n_points * 3);
+    // double* radii = (double*)malloc(sizeof(double) * n_points);
+    // memcpy(positions, positions_array, sizeof(double) * n_points * 3);
+    // memcpy(radii, radii_array, sizeof(double) * n_points);
+
+
+    BVH* bvh = create_bvh(positions, radii, n_points, 1);
     build_bvh(bvh);
     printBVH(bvh, &bvh->nodes[bvh->root], 0);
+    update(bvh, NULL);
     // Clean up
     free_bvh(bvh);
     free(positions);

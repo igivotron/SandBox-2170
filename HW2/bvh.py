@@ -156,59 +156,61 @@ def print_bvh(node, depth=0):
 
     
 if __name__ == "__main__":
-    import matplotlib.pyplot as plt
+    # import matplotlib.pyplot as plt
     ### pts ###
-    pts = np.random.rand(10, 3) * 10
-    radii = np.random.rand(100) * 0.5 + 0.1
+    # pts = np.random.rand(10, 3) * 10
+    pts = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4], [5, 5, 5],])
+    radii = np.array([0.5, 0.5, 0.5, 0.5, 0.5])
+    # radii = np.random.rand(100) * 0.5 + 0.1
     bvh = BVH(pts, radii, NperLeaf=1)
     bvh.build()
     
     print_bvh(bvh.root)
 
     #plot points and bounding boxes
-    def plot_bbox(ax, bbox, color='r'):
-        x_min, y_min, z_min = bbox[0]
-        x_max, y_max, z_max = bbox[1]
-        corners = np.array([[x_min, y_min, z_min],
-                            [x_max, y_min, z_min],
-                            [x_max, y_max, z_min],
-                            [x_min, y_max, z_min],
-                            [x_min, y_min, z_max],
-                            [x_max, y_min, z_max],
-                            [x_max, y_max, z_max],
-                            [x_min, y_max, z_max]])
-        edges = [(0, 1), (1, 2), (2, 3), (3, 0),
-                (4, 5), (5, 6), (6, 7), (7, 4),
-                (0, 4), (1, 5), (2, 6), (3, 7)]
-        for edge in edges:
-            ax.plot3D(*zip(corners[edge[0]], corners[edge[1]]), color=color)
+    # def plot_bbox(ax, bbox, color='r'):
+    #     x_min, y_min, z_min = bbox[0]
+    #     x_max, y_max, z_max = bbox[1]
+    #     corners = np.array([[x_min, y_min, z_min],
+    #                         [x_max, y_min, z_min],
+    #                         [x_max, y_max, z_min],
+    #                         [x_min, y_max, z_min],
+    #                         [x_min, y_min, z_max],
+    #                         [x_max, y_min, z_max],
+    #                         [x_max, y_max, z_max],
+    #                         [x_min, y_max, z_max]])
+    #     edges = [(0, 1), (1, 2), (2, 3), (3, 0),
+    #             (4, 5), (5, 6), (6, 7), (7, 4),
+    #             (0, 4), (1, 5), (2, 6), (3, 7)]
+    #     for edge in edges:
+    #         ax.plot3D(*zip(corners[edge[0]], corners[edge[1]]), color=color)
 
 
 
-    def plot_sphere(ax, center, radius, color='g'):
-        u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
-        x = center[0] + radius * np.cos(u) * np.sin(v)
-        y = center[1] + radius * np.sin(u) * np.sin(v)
-        z = center[2] + radius * np.cos(v)
-        ax.plot_wireframe(x, y, z, color=color, alpha=0.3)
+    # def plot_sphere(ax, center, radius, color='g'):
+    #     u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
+    #     x = center[0] + radius * np.cos(u) * np.sin(v)
+    #     y = center[1] + radius * np.sin(u) * np.sin(v)
+    #     z = center[2] + radius * np.cos(v)
+    #     ax.plot_wireframe(x, y, z, color=color, alpha=0.3)
 
 
-    def plot_bvh(node):
-        if node is None:
-            return
-        plot_bbox(ax, node.bbox)
-        plot_bvh(node.left)
-        plot_bvh(node.right)
+    # def plot_bvh(node):
+        # if node is None:
+            # return
+        # plot_bbox(ax, node.bbox)
+        # plot_bvh(node.left)
+        # plot_bvh(node.right)
+# 
+
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # # ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2], color='b')
+    # for i in range(len(pts)):
+    #     plot_sphere(ax, pts[i], radii[i], color='b')
 
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    # ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2], color='b')
-    for i in range(len(pts)):
-        plot_sphere(ax, pts[i], radii[i], color='b')
 
-
-
-    plot_bvh(bvh.root)
-    plt.savefig('BVH')
-    plt.show()
+    # plot_bvh(bvh.root)
+    # plt.savefig('BVH')
+    # plt.show()

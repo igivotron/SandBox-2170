@@ -5,8 +5,51 @@ import wgpu
 import numpy as np
 import bvh
 import time
+import ctypes
+import os
 
 i=0
+
+# Machin qui fait le lien entre python et C
+lib = ctypes.CDLL(os.path.abspath("bvh_C.so"))
+
+class BVHNode(ctypes.Structure):
+    _fields_ = [
+        ("left", ctypes.c_int),                         # int
+        ("right", ctypes.c_int),                        # int
+        ("parent", ctypes.c_int),                       # int
+        ("bbox", ctypes.POINTER(ctypes.c_double)),      # double*
+        ("items", ctypes.POINTER(ctypes.c_int)),        # int*
+        ("n_items", ctypes.c_int),                      # int
+        ("index", ctypes.c_int),                        # int
+        ("state", ctypes.c_int),                        # int
+    ]
+
+class bvh_C(ctypes.Structure):
+    _fields_ = [
+        ("nodes", ctypes.POINTER(BVHNode)),     # BVHNode*
+        ("n_nodes", ctypes.c_int),              # int
+        ("positions", ctypes.POINTER(ctypes.c_double)),  # double*
+        ("radii", ctypes.POINTER(ctypes.c_double)),      # double*
+        ("NperLeaf", ctypes.c_int),             # int
+        ("root", ctypes.c_int),                 # int
+    ]
+
+
+lib.create_bvh.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_int]
+lib.create_bvh.restype = ctypes.POINTER(bvh_C)
+lib.update.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(BVHNode)]
+lib.update.restype = None
+lib.free_bvh.argtypes = [ctypes.POINTER(bvh_C)]
+lib.free_bvh.restype = None
+lib.update_positions.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(ctypes.c_double)]
+lib.update_positions.restype = None
+lib.build_bvh.argtypes = [ctypes.POINTER(bvh_C)]
+lib.build_bvh.restype = None
+lib.is_leaf.argtypes = [ctypes.POINTER(BVHNode), ctypes.c_int]
+lib.is_leaf.restype = ctypes.c_bool
+
+
 
 class Homework:
     def __init__(self):
@@ -40,10 +83,25 @@ class Homework:
         if len(simulator.positions)==0:
             self.data_structure_staging = None
             return
-        bvh_tree = bvh.BVH(simulator.positions, simulator.radii)
-        bvh_tree.build()
-        # bvh.print_bvh(bvh_tree.root)
-        self.data_structure_staging = bvh_tree
+        
+        if self.data_structure_staging is not None:
+            lib.free_bvh(self.data_structure_staging)
+            self.data_structure_staging = None
+        
+        # flatten positions and radii for C compatibility
+        pos = simulator.positions.astype(np.float64).flatten()
+        radii = simulator.radii.astype(np.float64).flatten()
+        pos_c = pos.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        radii_c = radii.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        N = len(simulator.positions)
+        bvh_tree_c = lib.create_bvh(pos_c, radii_c, N, 1)
+        lib.build_bvh(bvh_tree_c)
+        self.data_structure_staging = bvh_tree_c
+
+        # bvh_tree = bvh.BVH(simulator.positions, simulator.radii)
+        # bvh_tree.build()
+        # # bvh.print_bvh(bvh_tree.root)
+        # self.data_structure_staging = bvh_tree
         global i
         i=0
         return
@@ -55,62 +113,112 @@ class Homework:
         bvh_tree = self.data_structure_staging
         if bvh_tree is None:
             return []
-        bvh_tree.positions = simulator.positions
+        # bvh_tree.positions = simulator.positions
+        pos = simulator.positions.astype(np.float64).flatten()
+        pos_c = pos.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        radii = simulator.radii.astype(np.float64).flatten()
+        radii_c = radii.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        lib.update_positions(bvh_tree, pos_c)
 
         if i==100:
             #every 100 frames, rebuild the BVH
-            bvh_tree.build()
+            lib.free_bvh(bvh_tree)
+            bvh_tree = lib.create_bvh(pos_c, radii_c, len(simulator.positions), 1)
+            self.data_structure_staging = bvh_tree
+            lib.build_bvh(bvh_tree)
+            # bvh_tree.build()
             i=0
         else:
             #otherwise, just update the positions
-            bvh_tree.update()
+            # bvh_tree.update()
+            current = ctypes.pointer(bvh_tree.contents.nodes[bvh_tree.contents.root])
+            lib.update(bvh_tree, current)
         
         contacts = []
 
         # Stack of node pairs to test
-        stack = [(bvh_tree.root, bvh_tree.root)]
+        # stack = [(bvh_tree.root, bvh_tree.root)]
+        stack = [(bvh_tree.contents.root, bvh_tree.contents.root)] # Ce sont des indices
 
         def bbox_intersect(bb1, bb2):
             """AABB vs AABB intersection test."""
+            a = np.ctypeslib.as_array(bb1, shape=(6,))
+            b = np.ctypeslib.as_array(bb2, shape=(6,))
             return not (
-                bb1[1][0] < bb2[0][0] or bb1[0][0] > bb2[1][0] or
-                bb1[1][1] < bb2[0][1] or bb1[0][1] > bb2[1][1] or
-                bb1[1][2] < bb2[0][2] or bb1[0][2] > bb2[1][2]
+                a[3] < b[0] or a[0] > b[3] or
+                a[4] < b[1] or a[1] > b[4] or
+                a[5] < b[2] or a[2] > b[5]
             )
+            # return not (
+            #     bb1[1][0] < bb2[0][0] or bb1[0][0] > bb2[1][0] or
+            #     bb1[1][1] < bb2[0][1] or bb1[0][1] > bb2[1][1] or
+            #     bb1[1][2] < bb2[0][2] or bb1[0][2] > bb2[1][2]
+            # )
 
         while stack:
             A, B = stack.pop()
-            if A is B:
-                if A.is_leaf():
+            if A == B:
+                if lib.is_leaf(ctypes.pointer(bvh_tree.contents.nodes[A]), bvh_tree.contents.NperLeaf):
+                # if A.is_leaf():
                     continue
                 else:
-                    stack.append((A.left, A.right))
-                    stack.append((A.left, A.left))
-                    stack.append((A.right, A.right))
+                    Aleft = bvh_tree.contents.nodes[A].left
+                    Aright = bvh_tree.contents.nodes[A].right
+                    stack.append((Aleft, Aright))
+                    stack.append((Aleft, Aleft))
+                    stack.append((Aright, Aright))
+
+                    # stack.append((A.left, A.right))
+                    # stack.append((A.left, A.left))
+                    # stack.append((A.right, A.right))
                     continue
             #Then A != B
-            if A.is_leaf() and B.is_leaf():
-                contact = simulator.intersect(A.item[0], B.item[0])
+            if lib.is_leaf(ctypes.pointer(bvh_tree.contents.nodes[A]), bvh_tree.contents.NperLeaf) and lib.is_leaf(ctypes.pointer(bvh_tree.contents.nodes[B]), bvh_tree.contents.NperLeaf):
+            # if A.is_leaf() and B.is_leaf():
+                # contact = simulator.intersect(A.item[0], B.item[0])
+                contact = simulator.intersect(bvh_tree.contents.nodes[A].items[0], bvh_tree.contents.nodes[B].items[0])
                 if contact:
                     contacts.append(contact)
                 continue
-            
-            if bbox_intersect(A.bbox, B.bbox):
+            Abbox = bvh_tree.contents.nodes[A].bbox
+            Bbbox = bvh_tree.contents.nodes[B].bbox
+
+            # if bbox_intersect(A.bbox, B.bbox):
+            if bbox_intersect(Abbox, Bbbox):
                 # Expand children
-                if A.is_leaf():
+                if lib.is_leaf(ctypes.pointer(bvh_tree.contents.nodes[A]), bvh_tree.contents.NperLeaf):
+                # if A.is_leaf():
                     # A leaf vs B internal
-                    stack.append((A, B.left))
-                    stack.append((A, B.right))
-                elif B.is_leaf():
+                    Bleft = bvh_tree.contents.nodes[B].left
+                    Bright = bvh_tree.contents.nodes[B].right
+                    stack.append((A, Bleft))
+                    stack.append((A, Bright))
+                    
+                    # stack.append((A, B.left))
+                    # stack.append((A, B.right))
+                # elif B.is_leaf():
+                elif lib.is_leaf(ctypes.pointer(bvh_tree.contents.nodes[B]), bvh_tree.contents.NperLeaf):
                     # B leaf vs A internal
-                    stack.append((A.left, B))
-                    stack.append((A.right, B))
+                    Aleft = bvh_tree.contents.nodes[A].left
+                    Aright = bvh_tree.contents.nodes[A].right
+                    stack.append((Aleft, B))
+                    stack.append((Aright, B))
+                    # stack.append((A.left, B))
+                    # stack.append((A.right, B))
                 else:
                     # Both internal → 4 combinations
-                    stack.append((A.left,  B.left))
-                    stack.append((A.left,  B.right))
-                    stack.append((A.right, B.left))
-                    stack.append((A.right, B.right))
+                    Aleft = bvh_tree.contents.nodes[A].left
+                    Aright = bvh_tree.contents.nodes[A].right
+                    Bleft = bvh_tree.contents.nodes[B].left
+                    Bright = bvh_tree.contents.nodes[B].right
+                    # stack.append((A.left,  B.left))
+                    # stack.append((A.left,  B.right))
+                    # stack.append((A.right, B.left))
+                    # stack.append((A.right, B.right))
+                    stack.append((Aleft,  Bleft))
+                    stack.append((Aleft,  Bright))
+                    stack.append((Aright, Bleft))
+                    stack.append((Aright, Bright))
         # time.sleep(0.05)
         # print(contacts)
         return contacts
