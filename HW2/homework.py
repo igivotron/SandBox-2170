@@ -50,6 +50,8 @@ lib.build_bvh.argtypes = [ctypes.POINTER(bvh_C)]
 lib.build_bvh.restype = None
 lib.is_leaf.argtypes = [ctypes.POINTER(BVHNode), ctypes.c_int]
 lib.is_leaf.restype = ctypes.c_bool
+lib.find_pot_inter.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(ctypes.c_int)]
+lib.find_pot_inter.restype = ctypes.c_int
 
 
 
@@ -118,13 +120,13 @@ class Homework:
         # bvh_tree.positions = simulator.positions
         pos = simulator.positions.astype(np.float64).flatten()
         pos_c = pos.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-        radii = simulator.radii.astype(np.float64).flatten()
-        radii_c = radii.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
         lib.update_positions(bvh_tree, pos_c)
 
         if i==100:
             #every 100 frames, rebuild the BVH
             lib.free_bvh(bvh_tree)
+            radii = simulator.radii.astype(np.float64).flatten()
+            radii_c = radii.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
             bvh_tree = lib.create_bvh(pos_c, radii_c, len(simulator.positions), 1)
             self.bvh_tree = bvh_tree
             lib.build_bvh(bvh_tree)
@@ -136,93 +138,16 @@ class Homework:
             current = ctypes.pointer(bvh_tree.contents.nodes[bvh_tree.contents.root])
             lib.update(bvh_tree, current)
         
+        potential_intersections = np.zeros((len(simulator.positions)**2), dtype=np.int32)
+        potential_intersections_c = potential_intersections.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+        n=lib.find_pot_inter(bvh_tree, potential_intersections_c)
         contacts = []
-
-        # Stack of node pairs to test
-        # stack = [(bvh_tree.root, bvh_tree.root)]
-        stack = [(bvh_tree.contents.root, bvh_tree.contents.root)] # Ce sont des indices
-
-        def bbox_intersect(bb1, bb2):
-            """AABB vs AABB intersection test."""
-            a = np.ctypeslib.as_array(bb1, shape=(6,))
-            b = np.ctypeslib.as_array(bb2, shape=(6,))
-            return not (
-                a[3] < b[0] or a[0] > b[3] or
-                a[4] < b[1] or a[1] > b[4] or
-                a[5] < b[2] or a[2] > b[5]
-            )
-            # return not (
-            #     bb1[1][0] < bb2[0][0] or bb1[0][0] > bb2[1][0] or
-            #     bb1[1][1] < bb2[0][1] or bb1[0][1] > bb2[1][1] or
-            #     bb1[1][2] < bb2[0][2] or bb1[0][2] > bb2[1][2]
-            # )
-
-        while stack:
-            A, B = stack.pop()
-            if A == B:
-                if lib.is_leaf(ctypes.pointer(bvh_tree.contents.nodes[A]), bvh_tree.contents.NperLeaf):
-                # if A.is_leaf():
-                    continue
-                else:
-                    Aleft = bvh_tree.contents.nodes[A].left
-                    Aright = bvh_tree.contents.nodes[A].right
-                    stack.append((Aleft, Aright))
-                    stack.append((Aleft, Aleft))
-                    stack.append((Aright, Aright))
-
-                    # stack.append((A.left, A.right))
-                    # stack.append((A.left, A.left))
-                    # stack.append((A.right, A.right))
-                    continue
-            #Then A != B
-            if lib.is_leaf(ctypes.pointer(bvh_tree.contents.nodes[A]), bvh_tree.contents.NperLeaf) and lib.is_leaf(ctypes.pointer(bvh_tree.contents.nodes[B]), bvh_tree.contents.NperLeaf):
-            # if A.is_leaf() and B.is_leaf():
-                # contact = simulator.intersect(A.item[0], B.item[0])
-                contact = simulator.intersect(bvh_tree.contents.nodes[A].items[0], bvh_tree.contents.nodes[B].items[0])
-                if contact:
-                    contacts.append(contact)
-                continue
-            Abbox = bvh_tree.contents.nodes[A].bbox
-            Bbbox = bvh_tree.contents.nodes[B].bbox
-
-            # if bbox_intersect(A.bbox, B.bbox):
-            if bbox_intersect(Abbox, Bbbox):
-                # Expand children
-                if lib.is_leaf(ctypes.pointer(bvh_tree.contents.nodes[A]), bvh_tree.contents.NperLeaf):
-                # if A.is_leaf():
-                    # A leaf vs B internal
-                    Bleft = bvh_tree.contents.nodes[B].left
-                    Bright = bvh_tree.contents.nodes[B].right
-                    stack.append((A, Bleft))
-                    stack.append((A, Bright))
-                    
-                    # stack.append((A, B.left))
-                    # stack.append((A, B.right))
-                # elif B.is_leaf():
-                elif lib.is_leaf(ctypes.pointer(bvh_tree.contents.nodes[B]), bvh_tree.contents.NperLeaf):
-                    # B leaf vs A internal
-                    Aleft = bvh_tree.contents.nodes[A].left
-                    Aright = bvh_tree.contents.nodes[A].right
-                    stack.append((Aleft, B))
-                    stack.append((Aright, B))
-                    # stack.append((A.left, B))
-                    # stack.append((A.right, B))
-                else:
-                    # Both internal → 4 combinations
-                    Aleft = bvh_tree.contents.nodes[A].left
-                    Aright = bvh_tree.contents.nodes[A].right
-                    Bleft = bvh_tree.contents.nodes[B].left
-                    Bright = bvh_tree.contents.nodes[B].right
-                    # stack.append((A.left,  B.left))
-                    # stack.append((A.left,  B.right))
-                    # stack.append((A.right, B.left))
-                    # stack.append((A.right, B.right))
-                    stack.append((Aleft,  Bleft))
-                    stack.append((Aleft,  Bright))
-                    stack.append((Aright, Bleft))
-                    stack.append((Aright, Bright))
-        # time.sleep(0.05)
-        # print(contacts)
+        for i in range(n//2):
+            a = potential_intersections[2*i]
+            b = potential_intersections[2*i+1]
+            contact = simulator.intersect(a, b)
+            if contact:
+                contacts.append(contact)
         return contacts
 
     def gpu_bind_group_layouts(self, device: wgpu.GPUDevice) -> list[wgpu.GPUBindGroupLayout]:

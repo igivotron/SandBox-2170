@@ -123,6 +123,13 @@ void split_items(BVHNode* node, double* positions, double* radii, int axis, int 
 }
 int best_split_axis(BVHNode* node, double* positions, double* radii, int axis,
                     int* left_items, int* right_items, int* n_left, int* n_right) {
+    if (node->n_items == 2){
+        left_items[0] = node->items[0];
+        right_items[0] = node->items[1];
+        *n_left = 1;
+        *n_right = 1;
+        return 0;
+    }
     double best_cost = INFINITY;
     int best_index = -1;
     int n_items = node->n_items;
@@ -161,7 +168,10 @@ int best_split_axis(BVHNode* node, double* positions, double* radii, int axis,
 void build_recursion(BVH* bvh, int node_index, int k){
     int axis = k % 3;
     BVHNode* node = &bvh->nodes[node_index];
-    if (is_leaf(node, bvh->NperLeaf)) return;
+    if (is_leaf(node, bvh->NperLeaf)){
+        node->bbox = compute_bbox(node, bvh->positions, bvh->radii);
+        return;
+    }
 
     // int * items = node->items;
     int n_items = node->n_items;
@@ -228,6 +238,73 @@ void update(BVH* bvh, BVHNode* current) {
     update(bvh, &bvh->nodes[current->left]);
     update(bvh, &bvh->nodes[current->right]);
     update_bbox(bvh, current);
+}
+
+int bbox_intersect(double *bb1, double *bb2){
+    //box intersection test
+    return !(bb1[3] < bb2[0] || bb1[0] > bb2[3] || bb1[4] < bb2[1] || bb1[1] > bb2[4] || bb1[5] < bb2[2] || bb1[2] > bb2[5]);
+}
+
+int find_pot_inter(BVH* bvh, int* pot_cont){
+    // find potential contacts and store them in pot_cont as pair of indices
+    int pcs = 0; // potential contact size
+    int* stack; // Ce sont des indices par pair
+    int stack_size = 0;
+    stack = (int*)malloc(sizeof(int) * bvh->n_nodes * bvh->n_nodes);
+    stack[stack_size++] = bvh->root;
+    stack[stack_size++] = bvh->root;
+    while (stack_size > 0) {
+        int A = stack[--stack_size];
+        int B = stack[--stack_size];
+        if (A == B) {
+            BVHNode* node = &bvh->nodes[A];
+            if (!is_leaf(node, bvh->NperLeaf)) {
+                stack[stack_size++] = node->left;
+                stack[stack_size++] = node->left;
+                stack[stack_size++] = node->right;
+                stack[stack_size++] = node->right;
+                stack[stack_size++] = node->left;
+                stack[stack_size++] = node->right;
+            }
+            continue;
+        }
+        //then A != B
+        BVHNode* nodeA = &bvh->nodes[A];
+        BVHNode* nodeB = &bvh->nodes[B];
+        if (is_leaf(nodeA, bvh->NperLeaf) && is_leaf(nodeB, bvh->NperLeaf)) {
+            //both are leaves, add to potential contacts
+            pot_cont[pcs++] = nodeA->items[0];
+            pot_cont[pcs++] = nodeB->items[0];
+            continue;
+        }
+        if (bbox_intersect(nodeA->bbox, nodeB->bbox)) {
+            //boxes intersect, descend
+            if (is_leaf(nodeA, bvh->NperLeaf)) {
+                stack[stack_size++] = A;
+                stack[stack_size++] = nodeB->left;
+                stack[stack_size++] = A;
+                stack[stack_size++] = nodeB->right;
+            }
+            else if (is_leaf(nodeB, bvh->NperLeaf)) {
+                stack[stack_size++] = B;
+                stack[stack_size++] = nodeA->left;
+                stack[stack_size++] = B;
+                stack[stack_size++] = nodeA->right;
+            }
+            else {
+                stack[stack_size++] = nodeA->left;
+                stack[stack_size++] = nodeB->left;
+                stack[stack_size++] = nodeA->left;
+                stack[stack_size++] = nodeB->right;
+                stack[stack_size++] = nodeA->right;
+                stack[stack_size++] = nodeB->left;
+                stack[stack_size++] = nodeA->right;
+                stack[stack_size++] = nodeB->right;
+            }
+        }
+    }
+    free(stack);
+    return pcs;
 }
 
 void free_bvh(BVH* bvh) {

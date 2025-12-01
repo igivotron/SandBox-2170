@@ -41,6 +41,8 @@ int best_split_axis(BVHNode* node, double* positions, double* radii, int axis, i
 void update_bbox(BVH* bvh, BVHNode* node);
 void update(BVH* bvh, BVHNode* current);
 void update_positions(BVH* bvh, double* new_positions);
+int bbox_intersect(double *bb1, double *bb2);
+int find_pot_inter(BVH* bvh, int* pot_cont);
 
 void printBVH(BVH* bvh, BVHNode* node, int depth);
 void free_bvh(BVH* bvh);
