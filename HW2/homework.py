@@ -149,6 +149,38 @@ class Homework:
             if contact:
                 contacts.append(contact)
         return contacts
+    
+    def flatten_bvh(self):
+        bvh_tree = self.bvh_tree
+        n_nodes = bvh_tree.contents.n_nodes
+
+        bvh_flatten = np.zeros((n_nodes, 16), dtype=np.float32)
+
+        for i in range(n_nodes):
+            node = bvh_tree.contents.nodes[i]
+
+            # 0-3: left, right, parent, pad0
+            bvh_flatten[i, 0] = float(node.left)
+            bvh_flatten[i, 1] = float(node.right)
+            bvh_flatten[i, 2] = float(node.parent)
+            bvh_flatten[i, 3] = 0.0  # pad0
+
+            # 4-7: bbox_min
+            bvh_flatten[i, 4:7] = node.bbox[:3]
+            bvh_flatten[i, 7] = 0.0  # unused
+
+            # 8-11: bbox_max
+            bvh_flatten[i, 8:11] = node.bbox[3:6]
+            bvh_flatten[i, 11] = 0.0  # unused
+
+            # 12-15: n_items, item, index, pad1
+            bvh_flatten[i, 12] = float(node.n_items)
+            bvh_flatten[i, 13] = float(node.items[0] if node.n_items == 1 else -1)
+            bvh_flatten[i, 14] = float(node.index)
+            bvh_flatten[i, 15] = 0.0  # pad1
+
+        # Flatten to 1D array for GPU
+        return bvh_flatten.flatten().astype(np.float32)
 
     def gpu_bind_group_layouts(self, device: wgpu.GPUDevice) -> list[wgpu.GPUBindGroupLayout]:
         """For the GPU part of the project. This allows you to describe the memory resources you'll access from your GPU implementation.
@@ -156,7 +188,7 @@ class Homework:
         The first binding group returned will have correspond to descriptor set
         2 in your GPU code, the second to descriptor set 3, and so on.
         """
-        return []
+        # return []
 
         # This example code lets you access one buffer (at descriptor set 2, binding 0) in your GPU code
         self.example_layout = device.create_bind_group_layout(
@@ -178,7 +210,7 @@ class Homework:
         If the number of accumulation frames is greater than 1, this is only called
         when the simulation has actually being updated.
         """
-        return
+        # return
 
         # 0. Make sure to do nothing if the simulation is empty, otherwise you
         #    will get errors due to the empty buffers.
@@ -188,7 +220,9 @@ class Homework:
         # 1. For the purposes of the example, an array of random numbers (This
         # could be a numpy array containing the data structure you used for the
         # first part).
-        data_structure_cpu = np.random.rand(len(simulator.radii), 2).astype(np.float32)
+        # data_structure_cpu = np.random.rand(len(simulator.radii), 2).astype(np.float32)
+        bvh_flatten = self.flatten_bvh()
+        data_structure_cpu = bvh_flatten
 
         # 2. Make sure we have a GPUBuffer to send the data from the CPU to the
         #    GPU We use a buffer that's double the size that we need, so that
@@ -239,7 +273,7 @@ class Homework:
 
         The array returned should match the one returned by gpu_bind_group_layouts.
         """
-        return []
+        # return []
 
         # Return the bind group created when we created the GPU buffer
         return [self.data_structure_binding]
