@@ -11,7 +11,9 @@ import os
 i=0
 
 # Machin qui fait le lien entre python et C
-lib = ctypes.CDLL(os.path.abspath("bvh_C.so"))
+# lib = ctypes.CDLL(os.path.abspath("bvh_C.so"))
+
+lib = ctypes.CDLL(os.path.abspath("bvh_C.dll"))
 
 class BVHNode(ctypes.Structure):
     _fields_ = [
@@ -70,7 +72,7 @@ class Homework:
 
         You may use all of these attributes throughout the homework.
         """
-
+        self.bvh_tree = None
         self.data_structure_staging = None
         self.data_structure_gpu = None
 
@@ -81,12 +83,12 @@ class Homework:
         significantly when new objects are added to the simulation.
         """
         if len(simulator.positions)==0:
-            self.data_structure_staging = None
+            self.bvh_tree = None
             return
         
-        if self.data_structure_staging is not None:
-            lib.free_bvh(self.data_structure_staging)
-            self.data_structure_staging = None
+        if self.bvh_tree is not None:
+            lib.free_bvh(self.bvh_tree)
+            self.bvh_tree = None
         
         # flatten positions and radii for C compatibility
         pos = simulator.positions.astype(np.float64).flatten()
@@ -96,7 +98,7 @@ class Homework:
         N = len(simulator.positions)
         bvh_tree_c = lib.create_bvh(pos_c, radii_c, N, 1)
         lib.build_bvh(bvh_tree_c)
-        self.data_structure_staging = bvh_tree_c
+        self.bvh_tree = bvh_tree_c
 
         # bvh_tree = bvh.BVH(simulator.positions, simulator.radii)
         # bvh_tree.build()
@@ -110,7 +112,7 @@ class Homework:
         """Return all contacts using the BVH."""
         global i
         i+=1
-        bvh_tree = self.data_structure_staging
+        bvh_tree = self.bvh_tree
         if bvh_tree is None:
             return []
         # bvh_tree.positions = simulator.positions
@@ -124,7 +126,7 @@ class Homework:
             #every 100 frames, rebuild the BVH
             lib.free_bvh(bvh_tree)
             bvh_tree = lib.create_bvh(pos_c, radii_c, len(simulator.positions), 1)
-            self.data_structure_staging = bvh_tree
+            self.bvh_tree = bvh_tree
             lib.build_bvh(bvh_tree)
             # bvh_tree.build()
             i=0

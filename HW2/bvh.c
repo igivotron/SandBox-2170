@@ -54,10 +54,6 @@ void update_positions(BVH* bvh, double* new_positions) {
     bvh->positions = new_positions;
 }
 
-void update_bbox(BVH* bvh, BVHNode* node) {
-    return;
-}
-
 double* compute_bbox(BVHNode* node, double* positions, double* radii) {
     // Compute bounding box for the node based on its items positions and radii
     // Take the min and max in each dimension to form the bounding box
@@ -135,7 +131,7 @@ int best_split_axis(BVHNode* node, double* positions, double* radii, int axis,
     int* temp_right = (int*)malloc(sizeof(int) * n_items);
     if (!temp_left || !temp_right) return -1;
 
-    for (int i = 1; i < n_items; i++) {
+    for (int i = 0; i < n_items; i++) {
         int l = 0, r = 0;
         split_items(node, positions, radii, axis, i, temp_left, temp_right, &l, &r);
         if (l == 0 || r == 0) continue;
@@ -201,39 +197,37 @@ void build_bvh(BVH* bvh) {
     build_recursion(bvh, bvh->root, 0);
 }
 
+void update_bbox(BVH* bvh, BVHNode* node){
+    double* left_bbox = bvh->nodes[node->left].bbox;
+    double* right_bbox = bvh->nodes[node->right].bbox;
+    double* bbox = node->bbox;
+    bbox[0] = fmin(left_bbox[0], right_bbox[0]);
+    bbox[1] = fmin(left_bbox[1], right_bbox[1]);
+    bbox[2] = fmin(left_bbox[2], right_bbox[2]);
+    bbox[3] = fmax(left_bbox[3], right_bbox[3]);
+    bbox[4] = fmax(left_bbox[4], right_bbox[4]);
+    bbox[5] = fmax(left_bbox[5], right_bbox[5]);
+}
+
 void update(BVH* bvh, BVHNode* current) {
     if (current == NULL) current = &bvh->nodes[bvh->root];
 
     // 1. If current is a leaf → compute its bbox
     if (is_leaf(current, bvh->NperLeaf)) {
-        if (current->bbox) free(current->bbox);
-        current->bbox = compute_bbox(current, bvh->positions, bvh->radii);
+        int idx = current->items[0];
+        current->bbox[0] = bvh->positions[3 * idx] - bvh->radii[idx];
+        current->bbox[1] = bvh->positions[3 * idx + 1] - bvh->radii[idx];
+        current->bbox[2] = bvh->positions[3 * idx + 2] - bvh->radii[idx];
+        current->bbox[3] = bvh->positions[3 * idx] + bvh->radii[idx];
+        current->bbox[4] = bvh->positions[3 * idx + 1] + bvh->radii[idx];
+        current->bbox[5] = bvh->positions[3 * idx + 2] + bvh->radii[idx];
         return;
     }
 
     // // 2. Descend until we reach a leaf
-    if (current->left != -1) {update(bvh, &bvh->nodes[current->left]);}
-    if (current->right != -1) {update(bvh, &bvh->nodes[current->right]);}
-
-    double* left_bbox = (current->left != -1) ? bvh->nodes[current->left].bbox : NULL;
-    double* right_bbox = (current->right != -1) ? bvh->nodes[current->right].bbox : NULL;
-
-    if (current->bbox) {
-        free(current->bbox);
-        current->bbox = NULL;
-    }
-
-    if (left_bbox && right_bbox) {
-        current->bbox = combine_bboxes(left_bbox, right_bbox); // Already malloc'ed
-    } 
-    else if (left_bbox) {
-        current->bbox = (double*)malloc(6 * sizeof(double));
-        memcpy(current->bbox, left_bbox, 6 * sizeof(double));
-    } 
-    else if (right_bbox) {
-        current->bbox = (double*)malloc(6 * sizeof(double));
-        memcpy(current->bbox, right_bbox, 6 * sizeof(double));
-    }
+    update(bvh, &bvh->nodes[current->left]);
+    update(bvh, &bvh->nodes[current->right]);
+    update_bbox(bvh, current);
 }
 
 void free_bvh(BVH* bvh) {

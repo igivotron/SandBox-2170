@@ -38,6 +38,7 @@ void build_bvh(BVH* bvh);
 void build_recursion(BVH* bvh, int node_index, int k);
 void split_items(BVHNode* node, double* positions, double* radii, int axis, int split_index, int* left_items, int* right_items, int* n_left, int* n_right);
 int best_split_axis(BVHNode* node, double* positions, double* radii, int axis, int* left_items, int* right_items, int* n_left, int* n_right);
+void update_bbox(BVH* bvh, BVHNode* node);
 void update(BVH* bvh, BVHNode* current);
 void update_positions(BVH* bvh, double* new_positions);
 
