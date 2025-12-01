@@ -9,9 +9,8 @@ class Nodes:
         self.right = right
         self.parent = None
         self.bbox = bbox #[[x_min, y_min, z_min], [x_max, y_max, z_max]]
-        self.index = index
+        self.index = index # each node of the bvh has an index (used for flat representation)
         self.item = item #contain the index of the item if leaf
-        self.state = False #updated or not
         
     def is_leaf(self):
         return self.left is None and self.right is None
@@ -30,6 +29,7 @@ class BVH:
         self.indexes = np.arange(len(positions))
         self.NperLeaf = NperLeaf
         self.root = Nodes(item=self.indexes)
+        self.nNode = 1
 
     def compute_bbox(self, items):
         x_min = np.min(self.positions[items, 0] - self.radii[items])
@@ -98,8 +98,10 @@ class BVH:
         #     left_indexes = items[:mid]
         #     right_indexes = items[mid:]
 
-        node.left = Nodes(item=left_items)
-        node.right = Nodes(item=right_items)
+        node.left = Nodes(item=left_items,index=self.nNode)
+        self.nNode+=1
+        node.right = Nodes(item=right_items,index=self.nNode)
+        self.nNode+=1
         node.left.parent = node
         node.right.parent = node
         node.bbox = self.compute_bbox(items)
@@ -142,6 +144,28 @@ class BVH:
         current.update_bbox()
         return
 
+    def flat_bvh(self):
+        """Return a flat array representation of the BVH for GPU usage."""
+        # each node is stored as:
+        # [left_index, right_index, min_x, min_y, min_z, max_x, max_y, max_z, item_index]
+        flat_bvh = np.zeros((self.nNode, 9), dtype=np.float32) 
+        def traverse(node):
+            i = node.index
+            if node.is_leaf():
+                flat_bvh[i] = [-1, -1,
+                                 node.bbox[0][0], node.bbox[0][1], node.bbox[0][2],
+                                 node.bbox[1][0], node.bbox[1][1], node.bbox[1][2],
+                                 node.item[0]]
+                return
+            flat_bvh[i] = [node.left.index, node.right.index,
+                          node.bbox[0][0], node.bbox[0][1], node.bbox[0][2],
+                          node.bbox[1][0], node.bbox[1][1], node.bbox[1][2],
+                          -1]
+            traverse(node.left)
+            traverse(node.right)
+
+        traverse(self.root)
+        return flat_bvh
 
         
 
@@ -164,6 +188,7 @@ if __name__ == "__main__":
     bvh.build()
     
     print_bvh(bvh.root)
+    print(bvh.flat_bvh())
 
     #plot points and bounding boxes
     def plot_bbox(ax, bbox, color='r'):

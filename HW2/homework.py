@@ -27,7 +27,7 @@ class Homework:
 
         You may use all of these attributes throughout the homework.
         """
-
+        self.bvh_tree = None
         self.data_structure_staging = None
         self.data_structure_gpu = None
 
@@ -38,12 +38,12 @@ class Homework:
         significantly when new objects are added to the simulation.
         """
         if len(simulator.positions)==0:
-            self.data_structure_staging = None
+            self.bvh_tree = None
             return
         bvh_tree = bvh.BVH(simulator.positions, simulator.radii)
         bvh_tree.build()
         # bvh.print_bvh(bvh_tree.root)
-        self.data_structure_staging = bvh_tree
+        self.bvh_tree = bvh_tree
         global i
         i=0
         return
@@ -52,7 +52,7 @@ class Homework:
         """Return all contacts using the BVH."""
         global i
         i+=1
-        bvh_tree = self.data_structure_staging
+        bvh_tree = self.bvh_tree
         if bvh_tree is None:
             return []
         bvh_tree.positions = simulator.positions
@@ -121,7 +121,6 @@ class Homework:
         The first binding group returned will have correspond to descriptor set
         2 in your GPU code, the second to descriptor set 3, and so on.
         """
-        return []
 
         # This example code lets you access one buffer (at descriptor set 2, binding 0) in your GPU code
         self.example_layout = device.create_bind_group_layout(
@@ -143,7 +142,6 @@ class Homework:
         If the number of accumulation frames is greater than 1, this is only called
         when the simulation has actually being updated.
         """
-        return
 
         # 0. Make sure to do nothing if the simulation is empty, otherwise you
         #    will get errors due to the empty buffers.
@@ -153,7 +151,14 @@ class Homework:
         # 1. For the purposes of the example, an array of random numbers (This
         # could be a numpy array containing the data structure you used for the
         # first part).
-        data_structure_cpu = np.random.rand(len(simulator.radii), 2).astype(np.float32)
+
+            # give the BVH flat representation
+        bvh_tree = self.bvh_tree
+        flat_bvh = self.bvh_tree.flat_bvh().flatten().astype(np.float32)
+        data_structure_cpu = np.concatenate(([bvh_tree.nNode], flat_bvh))
+
+            # exemple given in the template
+        # data_structure_cpu = np.random.rand(len(simulator.radii)).astype(np.float32)
 
         # 2. Make sure we have a GPUBuffer to send the data from the CPU to the
         #    GPU We use a buffer that's double the size that we need, so that
@@ -201,11 +206,8 @@ class Homework:
 
     def gpu_bind_groups(self, simulation, device: wgpu.GPUDevice) -> list[wgpu.GPUBindGroup]:
         """Return the list of data that you want to access during the Ray Tracing computation.
-
         The array returned should match the one returned by gpu_bind_group_layouts.
         """
-        return []
-
         # Return the bind group created when we created the GPU buffer
         return [self.data_structure_binding]
 
