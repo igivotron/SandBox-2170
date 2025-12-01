@@ -13,23 +13,20 @@ BVH* create_bvh(double* positions, double* radii, int n_points, int NperLeaf) {
     // Initialize root node
     int * all_items = malloc(sizeof(int) * n_points);
     for (int i = 0; i < n_points; i++) all_items[i] = i;
-    BVHNode root_node = create_node(0, NULL, all_items, n_points, -1);
-    root_node.bbox = compute_bbox(&root_node, positions, radii);
+    BVHNode root_node = create_node(0, all_items, n_points, -1);
+    compute_bbox(&root_node, positions, radii);
     bvh->nodes[bvh->n_nodes++] = root_node;
     bvh->root = root_node.index;
     free(all_items);
 
-
-
-    // BVH construction logic would go here
-
     return bvh; 
 }
 
-BVHNode create_node(int index, double* bbox, int* items, int n_items, int parent) {
+BVHNode create_node(int index, int* items, int n_items, int parent) {
     BVHNode node;
     node.index = index;
-    node.bbox = bbox;
+    // node.bbox = bbox;
+    node.bbox = (double*)malloc(sizeof(double) * 6);
     node.n_items = n_items;
     node.parent = parent;
     node.left = -1;
@@ -60,7 +57,8 @@ double* compute_bbox(BVHNode* node, double* positions, double* radii) {
     if (node->n_items <= 0) return NULL;
     int* items = node->items;
     int n_items = node->n_items;
-    double* bbox = (double*)malloc(6 * sizeof(double)); // [min_x, min_y, min_z, max_x, max_y, max_z]
+    // double* bbox = (double*)malloc(6 * sizeof(double)); // [min_x, min_y, min_z, max_x, max_y, max_z]
+    double* bbox = node->bbox;
     double min_x, min_y, min_z;
     double max_x, max_y, max_z;
 
@@ -87,17 +85,6 @@ double* compute_bbox(BVHNode* node, double* positions, double* radii) {
     bbox[0] = min_x; bbox[1] = min_y; bbox[2] = min_z;
     bbox[3] = max_x; bbox[4] = max_y; bbox[5] = max_z;
     return bbox;
-}
-
-double* combine_bboxes(double* bbox1, double* bbox2) {
-    double* combined = (double*)malloc(6 * sizeof(double));
-    combined[0] = fmin(bbox1[0], bbox2[0]);
-    combined[1] = fmin(bbox1[1], bbox2[1]);
-    combined[2] = fmin(bbox1[2], bbox2[2]);
-    combined[3] = fmax(bbox1[3], bbox2[3]);
-    combined[4] = fmax(bbox1[4], bbox2[4]);
-    combined[5] = fmax(bbox1[5], bbox2[5]);
-    return combined;
 }
 
 double surface_area(double* bbox) {
@@ -136,15 +123,25 @@ int best_split_axis(BVHNode* node, double* positions, double* radii, int axis,
 
     int* temp_left = (int*)malloc(sizeof(int) * n_items);
     int* temp_right = (int*)malloc(sizeof(int) * n_items);
+    BVHNode temp_node_left = create_node(-1, NULL, 0, -1);
+    BVHNode temp_node_right = create_node(-1, NULL, 0, -1);
+
     if (!temp_left || !temp_right) return -1;
 
     for (int i = 0; i < n_items; i++) {
         int l = 0, r = 0;
         split_items(node, positions, radii, axis, i, temp_left, temp_right, &l, &r);
         if (l == 0 || r == 0) continue;
-
-        double* left_bbox = compute_bbox(&(BVHNode){.items = temp_left, .n_items = l}, positions, radii);
-        double* right_bbox = compute_bbox(&(BVHNode){.items = temp_right, .n_items = r}, positions, radii);
+        temp_node_left.items = temp_left;
+        temp_node_left.n_items = l;
+        temp_node_right.items = temp_right;
+        temp_node_right.n_items = r;
+        compute_bbox(&temp_node_left, positions, radii);
+        compute_bbox(&temp_node_right, positions, radii);
+        double* left_bbox = temp_node_left.bbox;
+        double* right_bbox = temp_node_right.bbox;
+        // double* left_bbox = compute_bbox(&(BVHNode){.items = temp_left, .n_items = l}, positions, radii);
+        // double* right_bbox = compute_bbox(&(BVHNode){.items = temp_right, .n_items = r}, positions, radii);
 
         double cost = surface_area(left_bbox) * l + surface_area(right_bbox) * r;
         if (cost < best_cost) {
@@ -156,12 +153,14 @@ int best_split_axis(BVHNode* node, double* positions, double* radii, int axis,
             memcpy(right_items, temp_right, sizeof(int) * r);
         }
 
-        free(left_bbox);
-        free(right_bbox);
+        // free(left_bbox);
+        // free(right_bbox);
     }
 
-    free(temp_left);
-    free(temp_right);
+    free_node(&temp_node_left);
+    free_node(&temp_node_right);
+    // free(temp_left);
+    // free(temp_right);
     return best_index;
 }
 
@@ -169,7 +168,8 @@ void build_recursion(BVH* bvh, int node_index, int k){
     int axis = k % 3;
     BVHNode* node = &bvh->nodes[node_index];
     if (is_leaf(node, bvh->NperLeaf)){
-        node->bbox = compute_bbox(node, bvh->positions, bvh->radii);
+        compute_bbox(node, bvh->positions, bvh->radii);
+        // node->bbox = compute_bbox(node, bvh->positions, bvh->radii);
         return;
     }
 
@@ -187,12 +187,19 @@ void build_recursion(BVH* bvh, int node_index, int k){
         free(right_items);
         return; // Cannot split further
     }
-    double* left_bbox = compute_bbox(&(BVHNode){.items = left_items, .n_items = n_left}, positions, radii);
-    double* right_bbox = compute_bbox(&(BVHNode){.items = right_items, .n_items = n_right}, positions, radii);
+
+    // double* left_bbox = compute_bbox(&(BVHNode){.items = left_items, .n_items = n_left}, positions, radii);
+    // double* right_bbox = compute_bbox(&(BVHNode){.items = right_items, .n_items = n_right}, positions, radii);
+    // int left_index = bvh->n_nodes++;
+    // int right_index = bvh->n_nodes++;
+    // BVHNode left_node = create_node(left_index, left_bbox, left_items, n_left, node_index);
+    // BVHNode right_node = create_node(right_index, right_bbox, right_items, n_right, node_index);
     int left_index = bvh->n_nodes++;
     int right_index = bvh->n_nodes++;
-    BVHNode left_node = create_node(left_index, left_bbox, left_items, n_left, node_index);
-    BVHNode right_node = create_node(right_index, right_bbox, right_items, n_right, node_index);
+    BVHNode left_node = create_node(left_index, left_items, n_left, node_index);
+    BVHNode right_node = create_node(right_index, right_items, n_right, node_index);
+    compute_bbox(&left_node, positions, radii);
+    compute_bbox(&right_node, positions, radii);
     bvh->nodes[left_index] = left_node;
     bvh->nodes[right_index] = right_node;
     node->left = left_index;

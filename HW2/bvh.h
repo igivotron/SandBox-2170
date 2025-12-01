@@ -29,10 +29,9 @@ typedef struct BVH {
 } BVH;
 
 BVH* create_bvh(double* positions, double* radii, int n_points, int NperLeaf);
-BVHNode create_node(int index, double* bbox, int* items, int n_items, int parent);
+BVHNode create_node(int index, int* items, int n_items, int parent);
 int is_leaf(BVHNode* node, int NperLeaf);
 double* compute_bbox(BVHNode* node, double* positions, double* radii);
-double* combine_bboxes(double* bbox1, double* bbox2);
 double surface_area(double* bbox);
 void build_bvh(BVH* bvh);
 void build_recursion(BVH* bvh, int node_index, int k);

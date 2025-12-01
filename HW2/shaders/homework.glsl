@@ -1,4 +1,24 @@
 Intersection trace_ray(Ray ray) {
+  const Plane planes[6] = Plane[](
+    Plane(vec3(0.0, +10.0, 0.0), vec3(0.0, -1.0, 0.0),
+          Material(vec3(1.0, 1.0, 1.0), ROUGHNESS,
+                   vec3(BRIGHTNESS), 0.0)),
+    Plane(vec3(0.0, -10.0, 0.0), vec3(0.0, +1.0, 0.0),
+          Material(vec3(1.0, 1.0, 1.0), ROUGHNESS,
+                   vec3(0.0), 0.0)),
+    Plane(vec3(+10.0, 0.0, 0.0), vec3(-1.0, 0.0, 0.0),
+          Material(vec3(0.0, 1.0, 0.0), ROUGHNESS,
+                   vec3(0.0), 0.0)),
+    Plane(vec3(-10.0, 0.0, 0.0), vec3(+1.0, 0.0, 0.0),
+          Material(vec3(0.0, 0.0, 1.0), ROUGHNESS,
+                   vec3(0.0), 0.0)),
+    Plane(vec3(0.0, 0.0, +10.0), vec3(0.0, 0.0, -1.0),
+          Material(vec3(1.0, 0.0, 0.0), ROUGHNESS,
+                   vec3(0.0), 0.0)), // back
+    Plane(vec3(0.0, 0.0, -10.0), vec3(0.0, 0.0, +1.0),
+          Material(vec3(1.0, 1.0, 1.0), 0.05,
+                   vec3(0.0), 1.0)));
+
   Intersection result = EMPTY_INTERSECTION;
   Intersection new_result = EMPTY_INTERSECTION;
   for (uint i = 0u; i < 6u; i++) {

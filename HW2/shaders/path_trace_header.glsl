@@ -1,8 +1,5 @@
-#version 450
-
 #define WORK_GROUP_SIZE 32
 #define NUM_BOUNCES 4
-#define NUM_SAMPLES 1
 #define BRIGHTNESS 6.0
 #define ROUGHNESS 0.5
 /* #define SQUARE_LIGHT */
@@ -11,8 +8,6 @@
 #define MAX_DISTANCE 1000.0
 
 #define M_PI 3.14159265358979323846
-
-#extension GL_EXT_scalar_block_layout : enable
 
 layout(local_size_x = WORK_GROUP_SIZE, local_size_y = 1, local_size_z = 1) in;
 
@@ -132,17 +127,18 @@ void setup_rotation(uint sample_id) {
   vec2 p = vec2(32*float(gl_WorkGroupID.x) + float(gl_LocalInvocationIndex),
                 float(gl_WorkGroupID.y));
   sobol_rotation = rand_value(p)*2*M_PI;
-  uint i = sample_id * (32*imageSize(result).x*gl_WorkGroupID.y +
+  uint i = sample_id * (8*imageSize(result).x*gl_WorkGroupID.y +
                         32*gl_WorkGroupID.x + gl_LocalInvocationIndex);
   sobol_rotation = 2*M_PI*sobol(512, i);
 }
 
+#ifdef HAS_BARRIER
 shared uint sobol_current_dir[32*3];
 
 void sobol_setup(uint bounce_id) {
   for (uint i = 0; i < 3; i++) {
     for (uint j = 0; j < 32; j += WORK_GROUP_SIZE) {
-      uint offset = j * WORK_GROUP_SIZE + gl_LocalInvocationIndex;
+      uint offset = j + gl_LocalInvocationIndex;
       if (offset < 32)
         sobol_current_dir[32*i + offset] = SOBOL_DIRECTIONS[32*(5*bounce_id + i) + offset];
     }
@@ -151,6 +147,17 @@ void sobol_setup(uint bounce_id) {
   /* No memoryBarrierShared instruction in WGPU :( */
   barrier();
 }
+#else
+uint sobol_current_dir[32*3];
+
+void sobol_setup(uint bounce_id) {
+  for (uint i = 0; i < 3; i++) {
+    for (uint j = 0; j < 32; j++) {
+      sobol_current_dir[32 * i + j] = SOBOL_DIRECTIONS[32*(5*bounce_id + i) + j];
+    }
+  }
+}
+#endif
 
 float sobol_next(uint dim, uint i) {
   uint result = 0u;
@@ -164,9 +171,7 @@ float sobol_next(uint dim, uint i) {
   return float(result) * (1.0/float(0xFFFFFFFFu));
 }
 
-const Intersection EMPTY_INTERSECTION =
-  Intersection(MAX_DISTANCE, vec3(0.0), vec3(0.0),
-               Material(vec3(0.0), 0.0, vec3(0.0), 0.0));
+#define EMPTY_INTERSECTION Intersection(MAX_DISTANCE, vec3(0.0), vec3(0.0), Material(vec3(0.0), 0.0, vec3(0.0), 0.0))
 
 void merge_intersection(inout Intersection a, Intersection b) {
   if (a.distance > b.distance) a = b;
@@ -230,24 +235,3 @@ bool ray_plane_intersection(Ray ray, Plane plane,
 
   return false;
 }
-
-const Plane planes[6] = Plane[](
-  Plane(vec3(0.0, +10.0, 0.0), vec3(0.0, -1.0, 0.0),
-        Material(vec3(1.0, 1.0, 1.0), ROUGHNESS,
-                 vec3(BRIGHTNESS), 0.0)),
-  Plane(vec3(0.0, -10.0, 0.0), vec3(0.0, +1.0, 0.0),
-        Material(vec3(1.0, 1.0, 1.0), ROUGHNESS,
-                 vec3(0.0), 0.0)),
-  Plane(vec3(+10.0, 0.0, 0.0), vec3(-1.0, 0.0, 0.0),
-        Material(vec3(0.0, 1.0, 0.0), ROUGHNESS,
-                 vec3(0.0), 0.0)),
-  Plane(vec3(-10.0, 0.0, 0.0), vec3(+1.0, 0.0, 0.0),
-        Material(vec3(0.0, 0.0, 1.0), ROUGHNESS,
-                 vec3(0.0), 0.0)),
-  Plane(vec3(0.0, 0.0, +10.0), vec3(0.0, 0.0, -1.0),
-        Material(vec3(1.0, 0.0, 0.0), ROUGHNESS,
-                 vec3(0.0), 0.0)), // back
-  Plane(vec3(0.0, 0.0, -10.0), vec3(0.0, 0.0, +1.0),
-        Material(vec3(1.0, 1.0, 1.0), 0.05,
-                 vec3(0.0), 1.0))
-);
