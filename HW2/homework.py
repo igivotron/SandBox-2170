@@ -155,10 +155,10 @@ class Homework:
             # give the BVH flat representation
         bvh_tree = self.bvh_tree
         flat_bvh = self.bvh_tree.flat_bvh().flatten().astype(np.float32)
-        data_structure_cpu = np.concatenate(([bvh_tree.nNode], flat_bvh))
+        data_structure_cpu = np.concatenate(([bvh_tree.nNode], flat_bvh)).astype(np.float32)
 
             # exemple given in the template
-        # data_structure_cpu = np.random.rand(len(simulator.radii)).astype(np.float32)
+        # data_structure_cpu = np.random.rand(len(simulator.radii),2).astype(np.float32)
 
         # 2. Make sure we have a GPUBuffer to send the data from the CPU to the
         #    GPU We use a buffer that's double the size that we need, so that
@@ -218,6 +218,6 @@ if __name__ == "__main__":
         size=(1920, 1080),
         update_mode="continuous",
         max_fps=240,
-        vsync=False)
+        vsync=True)
     simulator = Simulator(canvas, loop, Homework())
     loop.run()

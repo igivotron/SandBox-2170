@@ -1,8 +1,9 @@
-#define get(A,i,j) A[ 1 + (i)*9 + (j) ] 
+#define get(A,i,j) A[ 1 + (i)*9u + (j) ] 
+#define STACK_MAX 32u
 
-// import data
+/* import data */
 layout(set = 2, binding = 0, std430) buffer DataStructure {
-float bvh[];
+  float bvh[];
 };
 
 bool ray_bbox_intersection(Ray ray, float x_min, float y_min, float z_min,
@@ -22,6 +23,18 @@ bool ray_bbox_intersection(Ray ray, float x_min, float y_min, float z_min,
   return tmax >= max(tmin, 0.0);
 }
 
+// bool ray_bbox_intersection(Ray ray, float x_min, float y_min, float z_min,
+//                            float x_max, float y_max, float z_max) {
+//   //rayon de la sqphere antourant la bbox
+//   float radius = length(vec3(x_max - x_min, y_max - y_min, z_max - z_min)) * 0.5;
+//   vec3 center = vec3((x_min + x_max) * 0.5, (y_min + y_max) * 0.5, (z_min + z_max) * 0.5);
+//   vec3 oc = ray.origin - center;
+//   float b = dot(oc, ray.direction);
+//   float c = dot(oc, oc) - radius * radius;
+//   float discriminant = b * b - c;
+//   return (discriminant > 0.0);
+// }
+
 Intersection trace_ray(Ray ray) {
   Intersection result = EMPTY_INTERSECTION;
   Intersection new_result = EMPTY_INTERSECTION;
@@ -35,7 +48,7 @@ Intersection trace_ray(Ray ray) {
    * that uses an acceleration data structure.
    */
 
-  uint stack[uint(bvh[0])];
+  uint stack[STACK_MAX];
 
   uint sp = 0u;
 
@@ -43,39 +56,38 @@ Intersection trace_ray(Ray ray) {
 
   while (sp > 0u) {
     uint node = stack[--sp];
-    int item = int(get(bvh, node, 8));
+    int item = int(get(bvh, node, 8u));
 
     // leaf
     if (item != -1) {
-        ray_ball_intersection(ray, item, result);
-        continue;
+      ray_ball_intersection(ray, item, result);
+      continue;
     }
 
-    uint left  = uint(get(bvh, node, 0));
-    uint right = uint(get(bvh, node, 1));
+    uint left  = uint(get(bvh, node, 0u));
+    uint right = uint(get(bvh, node, 1u));
 
-    float x0 = get(bvh, node, 2);
-    float y0 = get(bvh, node, 3);
-    float z0 = get(bvh, node, 4);
+    float x0 = get(bvh, node, 2u);
+    float y0 = get(bvh, node, 3u);
+    float z0 = get(bvh, node, 4u);
 
-    float x1 = get(bvh, node, 5);
-    float y1 = get(bvh, node, 6);
-    float z1 = get(bvh, node, 7);
+    float x1 = get(bvh, node, 5u);
+    float y1 = get(bvh, node, 6u);
+    float z1 = get(bvh, node, 7u);
 
     // internal → test bbox
-    if (!ray_bbox_intersection(ray, x0, y0, z0, x1, y1, z1))
-        continue;
+    if (!ray_bbox_intersection(ray, x0, y0, z0, x1, y1, z1))continue;
 
     // push children on the stack
     stack[sp++] = left;
     stack[sp++] = right;
 
-    // if (sp >= STACK_MAX)
-    //     break; // avoid overflow
+    if (sp >= STACK_MAX)
+      break; // avoid overflow
   }
 
-  // for (uint i = 0u; i < materials.length(); i++) {
-  //   ray_ball_intersection(ray, int(i), result);
+  // for (int i = 0; i < 4; i++) {
+  //   ray_ball_intersection(ray, i, result);
   // }
 
   return result;

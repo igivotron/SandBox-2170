@@ -111,6 +111,7 @@ class BVH:
        
        
     def build(self):
+        self.nNode = 1
         self.build_recursive(self.root, 0)
 
     def surface_area(self, bbox):
@@ -172,7 +173,7 @@ class BVH:
 def print_bvh(node, depth=0):
         if node is None:
             return
-        print("  " * depth + f"Node(depth={depth}, bbox=[[{node.bbox[0][0]:.2f}, {node.bbox[0][1]:.2f}, {node.bbox[0][2]:.2f}], [{node.bbox[1][0]:.2f}, {node.bbox[1][1]:.2f}, {node.bbox[1][2]:.2f}]], item={node.item})")
+        print("  " * depth + f"Node(index={node.index}, bbox=[[{node.bbox[0][0]:.2f}, {node.bbox[0][1]:.2f}, {node.bbox[0][2]:.2f}], [{node.bbox[1][0]:.2f}, {node.bbox[1][1]:.2f}, {node.bbox[1][2]:.2f}]], item={node.item})")
         print_bvh(node.left, depth + 1)
         print_bvh(node.right, depth + 1)
 
@@ -182,8 +183,9 @@ def print_bvh(node, depth=0):
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     ### pts ###
-    pts = np.random.rand(10, 3) * 10
-    radii = np.random.rand(100) * 0.5 + 0.1
+    n=3
+    pts = np.random.rand(n, 3) * 10
+    radii = np.random.rand(n) * 0.5 + 0.1
     bvh = BVH(pts, radii, NperLeaf=1)
     bvh.build()
     
@@ -233,7 +235,7 @@ if __name__ == "__main__":
         plot_sphere(ax, pts[i], radii[i], color='b')
 
 
-
+    print(bvh.nNode)
     plot_bvh(bvh.root)
     plt.savefig('BVH')
     plt.show()
