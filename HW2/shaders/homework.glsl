@@ -23,18 +23,6 @@ bool ray_bbox_intersection(Ray ray, float x_min, float y_min, float z_min,
   return tmax >= max(tmin, 0.0);
 }
 
-// bool ray_bbox_intersection(Ray ray, float x_min, float y_min, float z_min,
-//                            float x_max, float y_max, float z_max) {
-//   //rayon de la sqphere antourant la bbox
-//   float radius = length(vec3(x_max - x_min, y_max - y_min, z_max - z_min)) * 0.5;
-//   vec3 center = vec3((x_min + x_max) * 0.5, (y_min + y_max) * 0.5, (z_min + z_max) * 0.5);
-//   vec3 oc = ray.origin - center;
-//   float b = dot(oc, ray.direction);
-//   float c = dot(oc, oc) - radius * radius;
-//   float discriminant = b * b - c;
-//   return (discriminant > 0.0);
-// }
-
 Intersection trace_ray(Ray ray) {
   Intersection result = EMPTY_INTERSECTION;
   Intersection new_result = EMPTY_INTERSECTION;

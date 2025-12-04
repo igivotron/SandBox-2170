@@ -42,7 +42,6 @@ class Homework:
             return
         bvh_tree = bvh.BVH(simulator.positions, simulator.radii)
         bvh_tree.build()
-        # bvh.print_bvh(bvh_tree.root)
         self.bvh_tree = bvh_tree
         global i
         i=0
@@ -57,13 +56,19 @@ class Homework:
             return []
         bvh_tree.positions = simulator.positions
 
-        if i==100:
-            #every 100 frames, rebuild the BVH
+        if i==10000:
+            #every 10000 frames, rebuild the BVH
             bvh_tree.build()
             i=0
+
         else:
-            #otherwise, just update the positions
+            #otherwise, update the positions and optimize with rotations
             bvh_tree.update()
+            N = len(bvh_tree.positions)
+            max_depth=np.log2((N+1)/2)
+            # print("cost before:",bvh_tree.root.update_cost())
+            bvh_tree.optimize_w_rotation(bvh_tree.root,max_depth)
+            # print("cost after:",bvh_tree.root.cost,"\n")
         
         contacts = []
 
@@ -111,8 +116,6 @@ class Homework:
                     stack.append((A.left,  B.right))
                     stack.append((A.right, B.left))
                     stack.append((A.right, B.right))
-        # time.sleep(0.05)
-        # print(contacts)
         return contacts
 
     def gpu_bind_group_layouts(self, device: wgpu.GPUDevice) -> list[wgpu.GPUBindGroupLayout]:
