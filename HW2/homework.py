@@ -41,7 +41,7 @@ class Homework:
             self.bvh_tree = None
             return
         bvh_tree = bvh.BVH(simulator.positions, simulator.radii)
-        bvh_tree.build()
+        bvh_tree.build_quick(splits=4)
         self.bvh_tree = bvh_tree
         global i
         i=0
@@ -56,19 +56,18 @@ class Homework:
             return []
         bvh_tree.positions = simulator.positions
 
-        if i==10000:
-            #every 10000 frames, rebuild the BVH
-            bvh_tree.build()
-            i=0
+        # if i==100:
+        #     #every 10000 frames, rebuild the BVH
+        #     bvh_tree.build_quick(splits=4)
+        #     # print("cost after rebuild:",bvh_tree.root.update_cost())
+        #     i=0
 
-        else:
-            #otherwise, update the positions and optimize with rotations
-            bvh_tree.update()
-            N = len(bvh_tree.positions)
-            max_depth=np.log2((N+1)/2)
-            # print("cost before:",bvh_tree.root.update_cost())
-            bvh_tree.optimize_w_rotation(bvh_tree.root,max_depth)
-            # print("cost after:",bvh_tree.root.cost,"\n")
+        # update the positions and optimize with rotations
+        bvh_tree.update()
+        N = len(bvh_tree.positions)
+        # print("cost before:",bvh_tree.root.update_cost())
+        bvh_tree.optimize_w_rotation(bvh_tree.root, N)
+        # print("cost after:",bvh_tree.root.cost,"\n")
         
         contacts = []
 

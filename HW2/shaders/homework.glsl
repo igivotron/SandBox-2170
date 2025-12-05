@@ -31,11 +31,6 @@ Intersection trace_ray(Ray ray) {
       merge_intersection(result, new_result);
   }
 
-  /*
-   * TODO: For the GPU part of the homework: Replace this code with a function
-   * that uses an acceleration data structure.
-   */
-
   uint stack[STACK_MAX];
 
   uint sp = 0u;

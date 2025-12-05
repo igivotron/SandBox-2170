@@ -51,7 +51,6 @@ class Nodes:
         S_R = self.right.surface_area()
         S = self.surface_area()
         return C_t + (S_L * C_L + S_R * C_R)/S
-        return self.cost
 
     def get_cost_recursive(self):
         if self.is_leaf() :
@@ -89,7 +88,6 @@ class BVH:
         return np.array([bbox_min, bbox_max])
 
     def build_recursive(self, node, k):
-        axis = k % 3
         items = node.item
         pts = self.positions[items]
 
@@ -149,10 +147,69 @@ class BVH:
 
         self.build_recursive(node.left, k + 1)
         self.build_recursive(node.right, k + 1)
+
+    def build_recursive_quick(self, node, k, splits=4):
+        axis = k % 3
+        items = node.item
+        pts = self.positions[items]
+
+        if len(node.item) <= self.NperLeaf:
+            node.bbox = self.compute_bbox(items)
+            return
+        
+        # Find the best split using SAH
+        best_cost = float('inf')
+        best_split = None
+        splits_values = np.linspace(min(pts[:, axis]), max(pts[:, axis]), num=splits)
+        for split in splits_values[1:-1]:
+            left_items = items[pts[:, axis] <= split]
+            right_items = items[pts[:, axis] > split]
+
+            if len(left_items) == 0 or len(right_items) == 0:
+                continue
+
+            left_bbox = self.compute_bbox(left_items)
+            right_bbox = self.compute_bbox(right_items)
+
+            left_area = self.surface_area(left_bbox)
+            right_area = self.surface_area(right_bbox)
+
+            cost = len(left_items) * left_area + len(right_items) * right_area
+
+            if cost < best_cost:
+                best_cost = cost
+                best_split = split
+
+        if best_split is None:
+            mid = len(items) // 2
+            left_items = items[:mid]
+            right_items = items[mid:]
+        else:
+            left_items = items[pts[:, axis] <= best_split]
+            right_items = items[pts[:, axis] > best_split]
+
+        node.left = Nodes(item=left_items,index=self.nNode)
+        self.nNode+=1
+        node.right = Nodes(item=right_items,index=self.nNode)
+        self.nNode+=1
+        node.left.parent = node
+        node.right.parent = node
+        node.bbox = self.compute_bbox(items)
+
+        if len(left_items) <= splits:
+            self.build_recursive(node.left, k + 1)
+        self.build_recursive_quick(node.left, k + 1, splits)
+        if len(right_items) <= splits:
+            self.build_recursive(node.right, k + 1)
+        self.build_recursive_quick(node.right, k + 1, splits)
            
     def build(self):
         self.nNode = 1
         self.build_recursive(self.root, 0)
+
+    def build_quick(self,splits=4):
+        self.nNode = 1
+        self.build_recursive_quick(self.root, 0, splits)
 
     def surface_area(self, bbox):
         d = bbox[1] - bbox[0]
@@ -269,7 +326,6 @@ class BVH:
 
         C_min =[C0, C_rot1, C_rot2, C_rot3, C_rot4]
         best = int(np.argmin(C_min))
-        # print("rotation costs:",[C0, C_rot1, C_rot2, C_rot3, C_rot4])
 
         if best == 1 :
             node.left = node6
@@ -277,7 +333,8 @@ class BVH:
             node.right.left = node2
             node2.parent = node.right
             node.right.update_bbox()
-            # print('rotation 1')
+            node.right.cost=node.right.get_cost_quick()
+
 
         if best == 2 : 
             node.left = node7
@@ -285,7 +342,7 @@ class BVH:
             node.right.right = node2
             node2.parent = node.right
             node.right.update_bbox()
-            # print('rotation 2')
+            node.right.cost=node.right.get_cost_quick()
 
         if best == 3 : 
             node.right = node4
@@ -293,7 +350,7 @@ class BVH:
             node.left.left = node3 
             node3.parent = node.left
             node.left.update_bbox()
-            # print('rotation 3')
+            node.left.cost=node.left.get_cost_quick()
 
         if best == 4 :
             node.right = node5
@@ -301,13 +358,10 @@ class BVH:
             node.left.right = node3 
             node3.parent = node.left
             node.left.update_bbox()
-            # print('rotation 4')
-        # print("Cost before:", C0)
-        # print("Cost after :", C_min[best])
+            node.left.cost=node.left.get_cost_quick()
         node.cost=C_min[best]
         return node.cost
         
-    
     def optimize_w_rotation(self, node, max_depth, depth=0):
         '''
         For a stable BVH=> height of the tree h = log_2(f)
