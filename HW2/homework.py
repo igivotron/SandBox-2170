@@ -64,11 +64,13 @@ class Homework:
 
         # update the positions and optimize with rotations
         bvh_tree.update()
-        N = len(bvh_tree.positions)
-        # print("cost before:",bvh_tree.root.update_cost())
-        bvh_tree.optimize_w_rotation(bvh_tree.root, N)
-        # print("cost after:",bvh_tree.root.cost,"\n")
-        
+        if i%6==0:
+            N = len(bvh_tree.positions)
+            # print("cost before:",bvh_tree.root.update_cost())
+            bvh_tree.optimize_w_rotation(bvh_tree.root, N)
+            # print("cost after:",bvh_tree.root.cost,"\n")
+        # print("cost :",bvh_tree.root.update_cost())
+
         contacts = []
 
         # Stack of node pairs to test
