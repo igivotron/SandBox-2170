@@ -7,6 +7,7 @@ import bvh
 import time
 
 i=0
+ray=False
 
 class Homework:
     def __init__(self):
@@ -49,27 +50,30 @@ class Homework:
 
     def find_intersections(self, simulator) -> list[Contact]:
         """Return all contacts using the BVH."""
-        global i
-        i+=1
         bvh_tree = self.bvh_tree
         if bvh_tree is None:
             return []
-        bvh_tree.positions = simulator.positions
+        global i, ray
+        if ray:
+            ray=False
+        else:
+            i+=1
+            # update the positions and optimize with rotations
+            bvh_tree.positions = simulator.positions
+            bvh_tree.update()
+            if i%6==0:
+                N = len(bvh_tree.positions)
+                # print("cost before:",bvh_tree.root.update_cost())
+                bvh_tree.optimize_w_rotation(bvh_tree.root, N)
+                # print("cost after:",bvh_tree.root.cost,"\n")
+            # print("cost :",bvh_tree.root.update_cost())
+            
 
         # if i==100:
         #     #every 10000 frames, rebuild the BVH
         #     bvh_tree.build_quick(splits=4)
         #     # print("cost after rebuild:",bvh_tree.root.update_cost())
         #     i=0
-
-        # update the positions and optimize with rotations
-        bvh_tree.update()
-        if i%6==0:
-            N = len(bvh_tree.positions)
-            # print("cost before:",bvh_tree.root.update_cost())
-            bvh_tree.optimize_w_rotation(bvh_tree.root, N)
-            # print("cost after:",bvh_tree.root.cost,"\n")
-        # print("cost :",bvh_tree.root.update_cost())
 
         contacts = []
 
@@ -151,6 +155,20 @@ class Homework:
         #    will get errors due to the empty buffers.
         if len(simulator.radii) == 0:
             return
+
+        # update the positions and optimize with rotations
+        global i, ray
+        i+=1
+        ray=True
+        bvh_tree = self.bvh_tree
+        bvh_tree.positions = simulator.positions
+        bvh_tree.update()
+        if i%6==0:
+            N = len(bvh_tree.positions)
+            # print("cost before:",bvh_tree.root.update_cost())
+            bvh_tree.optimize_w_rotation(bvh_tree.root, N)
+            # print("cost after:",bvh_tree.root.cost,"\n")
+        # print("cost :",bvh_tree.root.update_cost())
 
         # 1. For the purposes of the example, an array of random numbers (This
         # could be a numpy array containing the data structure you used for the
