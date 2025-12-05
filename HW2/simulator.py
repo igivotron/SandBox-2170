@@ -16,6 +16,9 @@ TIMESTEP = 1.0 / 240.0
 PERFORMANCE_NUM_STEPS = 128
 MAX_GPU_PERFORMANCE_QUERIES = 32
 
+frame_count = 0
+fps_start_time = time.time()
+
 class PerformanceCounter:
     """Convenient interface to measure the time it takes to run a piece of code on the CPU."""
 
@@ -840,6 +843,25 @@ class Simulator:
 
     def update(self, dt):
         """Simulate rigidbody objects for dt seconds. Actual updates only occur at fixed interval."""
+
+
+        global frame_count, fps_start_time
+
+        # === Mesure des FPS ===
+        frame_count += 1
+        now = time.time()
+        elapsed = now - fps_start_time
+        if elapsed >= 1.0:  # chaque seconde
+            fps = frame_count / elapsed
+            print(f"FPS: {fps:.2f}")
+            # Optionnel : enregistrer dans un fichier CSV
+            with open("./logs/fps_log.txt", "a") as f:
+                f.write(f"{now},{fps:.2f}\n")
+            frame_count = 0
+            fps_start_time = now
+
+
+
         self.elapsed_time += dt
         i = 0
 

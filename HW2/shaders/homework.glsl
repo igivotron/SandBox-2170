@@ -1,64 +1,55 @@
-struct BVHNode{
-  int left;      // index of left child (-1 if leaf)
-  int right;     // index of right child (-1 if leaf)
-  int parent;    // index of parent node (-1 if root)
-  int pad0;      // unused (for memory alignment)
-  vec4 bbox_min; // xyz: min coords bbox, w: unused
-  vec4 bbox_max; // xyz: max coords bbox, w: unused
-  int n_items;   // number of items in the node (1 if leaf, 0 otherwise)
-  int item;      // index of the ball if leaf, -1 otherwise
-  int index;     // index of this node in the array
-  int pad1;      // unused (for memory alignment)
+#define get(A,i,j) A[ 1 + (i)*9u + (j) ] 
+#define STACK_MAX 32u
 
+/* import data */
+layout(set = 2, binding = 0, std430) buffer DataStructure {
+    vec4 bvh_nodes[]; // bvh_nodes[0] contient nNode
 };
 
-layout(set = 2, binding = 0, std430) buffer DataStructure {
-  BVHNode bvh_nodes[];
-}; 
-
-bool intersect_aabb(Ray ray, vec4 bbox_min, vec4 bbox_max) {
-    vec3 inv_dir = 1.0 / ray.direction;
-    vec3 t0s = (bbox_min.xyz - ray.origin) * inv_dir;
-    vec3 t1s = (bbox_max.xyz - ray.origin) * inv_dir;
-
+bool ray_bbox_intersection(vec3 inv_dir, vec3 origin, vec3 bbox_min, vec3 bbox_max) {
+    vec3 t0s = (bbox_min - origin) * inv_dir;
+    vec3 t1s = (bbox_max - origin) * inv_dir;
     vec3 tmin = min(t0s, t1s);
     vec3 tmax = max(t0s, t1s);
-
     float t_enter = max(max(tmin.x, tmin.y), tmin.z);
     float t_exit  = min(min(tmax.x, tmax.y), tmax.z);
-
     return t_exit >= max(t_enter, 0.0);
 }
 
 Intersection trace_ray_bvh(Ray ray) {
     Intersection result = EMPTY_INTERSECTION;
+    vec3 inv_dir = 1.0 / ray.direction;
 
-    int stack[64]; // assuming a maximum depth of 64
-    int sp = 0;
+    uint nNode = uint(bvh_nodes[0].x); // nombre total de nodes
+    uint stack[STACK_MAX];
+    uint sp = 0u;
+    stack[sp++] = 0u; // root node index (relative to 0-based nodes, not including nNode vec4)
 
-    // On empile le root node
-    stack[sp++] = 0; 
+    while (sp > 0u) {
+        uint node_idx = stack[--sp];
+        uint base = 1u + node_idx*3u;
 
-    while (sp > 0) {
-        int node_idx = stack[--sp];
-        BVHNode node = bvh_nodes[node_idx];
+        vec4 v0 = bvh_nodes[base + 0u];
+        vec4 v1 = bvh_nodes[base + 1u];
+        vec4 v2 = bvh_nodes[base + 2u];
 
-        // Test AABB
-        if (!intersect_aabb(ray, node.bbox_min, node.bbox_max))
-          continue;
-
-        if (node.n_items == 1) {
-          // feuille : tester la sphère
-          ray_ball_intersection(ray, node.item, result);
-        } else {
-          BVHNode l = bvh_nodes[node.left];
-          BVHNode r = bvh_nodes[node.right];
-          r = node.right;
-          if (intersect_aabb(ray, l.bbox_min, l.bbox_max))
-            stack[sp++] = l.index;
-          else if (intersect_aabb(ray, r.bbox_min, r.bbox_max))
-            stack[sp++] = r.index;
+        int item = int(v0.z);
+        if (item != -1) {
+            ray_ball_intersection(ray, item, result);
+            continue;
         }
+
+        uint left  = uint(v0.x);
+        uint right = uint(v0.y);
+
+        vec3 bbox_min = v1.xyz;
+        vec3 bbox_max = v2.xyz;
+
+        if (!ray_bbox_intersection(inv_dir, ray.origin, bbox_min, bbox_max)) continue;
+
+        if (sp + 2u >= STACK_MAX) break;
+        stack[sp++] = left;
+        stack[sp++] = right;
     }
 
     return result;

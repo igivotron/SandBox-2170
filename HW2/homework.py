@@ -150,37 +150,76 @@ class Homework:
                 contacts.append(contact)
         return contacts
     
+
+    # def flatten_bvh(self):
+    #     # each node is stored as:
+    #     # [left_index, right_index, min_x, min_y, min_z, max_x, max_y, max_z, item_index]
+    #     bvh_tree = self.bvh_tree
+    #     flat_bvh = np.zeros((bvh_tree.contents.n_nodes, 9), dtype=np.float32)
+    #     def traverse(node):
+    #         i = node.index
+    #         isLeaf = lib.is_leaf(node, bvh_tree.contents.NperLeaf)
+    #         flat_bvh[i,0:2] = [-1, -1] if isLeaf else [node.left, node.right]
+    #         flat_bvh[i,2:5] = node.bbox[0:3]
+    #         flat_bvh[i,5:8] = node.bbox[3:6]
+    #         flat_bvh[i,8] = node.items[0] if isLeaf and node.n_items>0 else -1
+
+    #         if isLeaf:
+    #             return
+            
+    #         traverse(bvh_tree.contents.nodes[node.left])
+    #         traverse(bvh_tree.contents.nodes[node.right])
+
+    #     traverse(bvh_tree.contents.nodes[bvh_tree.contents.root])
+    #     nNode = bvh_tree.contents.n_nodes
+    #     flat_bvh = flat_bvh.flatten().astype(np.float32)
+    #     return np.concatenate(([nNode], flat_bvh)).astype(np.float32)
+
     def flatten_bvh(self):
+        """
+        Flatten BVH tree into an array of vec4-compatible floats.
+        First vec4 stores the number of nodes: [nNode, 0, 0, 0]
+        Each node will occupy 3 vec4:
+        - v0: left_index, right_index, item_index, padding
+        - v1: bbox_min.x, bbox_min.y, bbox_min.z, padding
+        - v2: bbox_max.x, bbox_max.y, bbox_max.z, padding
+        """
         bvh_tree = self.bvh_tree
         n_nodes = bvh_tree.contents.n_nodes
 
-        bvh_flatten = np.zeros((n_nodes, 16), dtype=np.float32)
+        # total size = 1 vec4 for nNode + 3 vec4 per node
+        flat_bvh = np.zeros((1 + 3 * n_nodes, 4), dtype=np.float32)
 
-        for i in range(n_nodes):
-            node = bvh_tree.contents.nodes[i]
+        # store nNode in the first vec4
+        flat_bvh[0, 0] = n_nodes
 
-            # 0-3: left, right, parent, pad0
-            bvh_flatten[i, 0] = float(node.left)
-            bvh_flatten[i, 1] = float(node.right)
-            bvh_flatten[i, 2] = float(node.parent)
-            bvh_flatten[i, 3] = 0.0  # pad0
+        def traverse(node):
+            i = node.index
+            isLeaf = lib.is_leaf(node, bvh_tree.contents.NperLeaf)
 
-            # 4-7: bbox_min
-            bvh_flatten[i, 4:7] = node.bbox[:3]
-            bvh_flatten[i, 7] = 0.0  # unused
+            base = 1 + i*3  # first vec4 of this node
 
-            # 8-11: bbox_max
-            bvh_flatten[i, 8:11] = node.bbox[3:6]
-            bvh_flatten[i, 11] = 0.0  # unused
+            # v0
+            flat_bvh[base, 0] = -1 if isLeaf else node.left
+            flat_bvh[base, 1] = -1 if isLeaf else node.right
+            flat_bvh[base, 2] = node.items[0] if isLeaf and node.n_items>0 else -1
+            flat_bvh[base, 3] = 0.0  # padding
 
-            # 12-15: n_items, item, index, pad1
-            bvh_flatten[i, 12] = float(node.n_items)
-            bvh_flatten[i, 13] = float(node.items[0] if node.n_items == 1 else -1)
-            bvh_flatten[i, 14] = float(node.index)
-            bvh_flatten[i, 15] = 0.0  # pad1
+            # v1: bbox min
+            flat_bvh[base+1, 0:3] = node.bbox[0:3]
+            flat_bvh[base+1, 3] = 0.0  # padding
 
-        # Flatten to 1D array for GPU
-        return bvh_flatten.flatten().astype(np.float32)
+            # v2: bbox max
+            flat_bvh[base+2, 0:3] = node.bbox[3:6]
+            flat_bvh[base+2, 3] = 0.0  # padding
+
+            if not isLeaf:
+                traverse(bvh_tree.contents.nodes[node.left])
+                traverse(bvh_tree.contents.nodes[node.right])
+
+        traverse(bvh_tree.contents.nodes[bvh_tree.contents.root])
+
+        return flat_bvh.flatten().astype(np.float32)
 
     def gpu_bind_group_layouts(self, device: wgpu.GPUDevice) -> list[wgpu.GPUBindGroupLayout]:
         """For the GPU part of the project. This allows you to describe the memory resources you'll access from your GPU implementation.
@@ -188,7 +227,6 @@ class Homework:
         The first binding group returned will have correspond to descriptor set
         2 in your GPU code, the second to descriptor set 3, and so on.
         """
-        # return []
 
         # This example code lets you access one buffer (at descriptor set 2, binding 0) in your GPU code
         self.example_layout = device.create_bind_group_layout(
@@ -210,7 +248,6 @@ class Homework:
         If the number of accumulation frames is greater than 1, this is only called
         when the simulation has actually being updated.
         """
-        # return
 
         # 0. Make sure to do nothing if the simulation is empty, otherwise you
         #    will get errors due to the empty buffers.
@@ -220,9 +257,13 @@ class Homework:
         # 1. For the purposes of the example, an array of random numbers (This
         # could be a numpy array containing the data structure you used for the
         # first part).
-        # data_structure_cpu = np.random.rand(len(simulator.radii), 2).astype(np.float32)
-        bvh_flatten = self.flatten_bvh()
-        data_structure_cpu = bvh_flatten
+
+        # give the BVH flat representation
+        flat_bvh = self.flatten_bvh()
+        data_structure_cpu = flat_bvh
+
+            # exemple given in the template
+        # data_structure_cpu = np.random.rand(len(simulator.radii),2).astype(np.float32)
 
         # 2. Make sure we have a GPUBuffer to send the data from the CPU to the
         #    GPU We use a buffer that's double the size that we need, so that
@@ -270,19 +311,17 @@ class Homework:
 
     def gpu_bind_groups(self, simulation, device: wgpu.GPUDevice) -> list[wgpu.GPUBindGroup]:
         """Return the list of data that you want to access during the Ray Tracing computation.
-
         The array returned should match the one returned by gpu_bind_group_layouts.
         """
-        # return []
-
         # Return the bind group created when we created the GPU buffer
         return [self.data_structure_binding]
+
 
 if __name__ == "__main__":
     from rendercanvas.auto import RenderCanvas, loop
     canvas = RenderCanvas(
         title="LMECA2170 — Homework 2",
-        size=(1920, 1080),
+        size=(512, 512),
         update_mode="continuous",
         max_fps=240,
         vsync=False)
