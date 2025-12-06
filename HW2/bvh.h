@@ -15,7 +15,6 @@ typedef struct BVHNode {
     int * items; // Indices of points contained in this node
     int n_items; // Number of items in this node
     int index;   // Index of this node
-    int state; // State of the node: 0 = not updated, 1 = updated
 } BVHNode;
 
 
@@ -42,8 +41,10 @@ void update(BVH* bvh, BVHNode* current);
 void update_positions(BVH* bvh, double* new_positions);
 int bbox_intersect(double *bb1, double *bb2);
 int find_pot_inter(BVH* bvh, int* pot_cont);
+void flat_bvh(BVH* bvh, float* flat_bvh);
 
 void printBVH(BVH* bvh, BVHNode* node, int depth);
+void printBVH2(BVH* bvh);
 void free_bvh(BVH* bvh);
 void free_node(BVHNode* node);
 

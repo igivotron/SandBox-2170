@@ -853,7 +853,7 @@ class Simulator:
         elapsed = now - fps_start_time
         if elapsed >= 1.0:  # chaque seconde
             fps = frame_count / elapsed
-            print(f"FPS: {fps:.2f}")
+            # print(f"FPS: {fps:.2f}")
             # Optionnel : enregistrer dans un fichier CSV
             with open("./logs/fps_log.txt", "a") as f:
                 f.write(f"{now},{fps:.2f}\n")

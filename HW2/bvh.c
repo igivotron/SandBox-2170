@@ -1,10 +1,14 @@
 
 #include "bvh.h"
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
 
 BVH* create_bvh(double* positions, double* radii, int n_points, int NperLeaf) {
     BVH* bvh = (BVH*)malloc(sizeof(BVH));
-    bvh->positions = positions;
-    bvh->radii = radii;
+    bvh->positions = malloc(sizeof(double) * n_points * 3);
+    memcpy(bvh->positions, positions, sizeof(double) * n_points * 3);
+    bvh->radii = malloc(sizeof(double) * n_points);
+    memcpy(bvh->radii, radii, sizeof(double) * n_points);
     bvh->NperLeaf = NperLeaf;
     bvh->n_nodes = 0;
     bvh->nodes = malloc(sizeof(BVHNode) * (2 * n_points - 1)); // Max nodes in a binary tree
@@ -25,13 +29,11 @@ BVH* create_bvh(double* positions, double* radii, int n_points, int NperLeaf) {
 BVHNode create_node(int index, int* items, int n_items, int parent) {
     BVHNode node;
     node.index = index;
-    // node.bbox = bbox;
     node.bbox = (double*)malloc(sizeof(double) * 6);
     node.n_items = n_items;
     node.parent = parent;
     node.left = -1;
     node.right = -1;
-    node.state = 0;
 
     if (n_items > 0) {
         node.items = (int*)malloc(sizeof(int) * n_items);
@@ -168,7 +170,6 @@ void build_recursion(BVH* bvh, int node_index, int k){
     int axis = k % 3;
     BVHNode* node = &bvh->nodes[node_index];
     if (is_leaf(node, bvh->NperLeaf)){
-        compute_bbox(node, bvh->positions, bvh->radii);
         // node->bbox = compute_bbox(node, bvh->positions, bvh->radii);
         return;
     }
@@ -218,26 +219,26 @@ void update_bbox(BVH* bvh, BVHNode* node){
     double* left_bbox = bvh->nodes[node->left].bbox;
     double* right_bbox = bvh->nodes[node->right].bbox;
     double* bbox = node->bbox;
-    bbox[0] = fmin(left_bbox[0], right_bbox[0]);
-    bbox[1] = fmin(left_bbox[1], right_bbox[1]);
-    bbox[2] = fmin(left_bbox[2], right_bbox[2]);
-    bbox[3] = fmax(left_bbox[3], right_bbox[3]);
-    bbox[4] = fmax(left_bbox[4], right_bbox[4]);
-    bbox[5] = fmax(left_bbox[5], right_bbox[5]);
+    bbox[0] = MIN(left_bbox[0], right_bbox[0]);
+    bbox[1] = MIN(left_bbox[1], right_bbox[1]);
+    bbox[2] = MIN(left_bbox[2], right_bbox[2]);
+    bbox[3] = MAX(left_bbox[3], right_bbox[3]);
+    bbox[4] = MAX(left_bbox[4], right_bbox[4]);
+    bbox[5] = MAX(left_bbox[5], right_bbox[5]);
 }
 
 void update(BVH* bvh, BVHNode* current) {
     if (current == NULL) current = &bvh->nodes[bvh->root];
-
     // 1. If current is a leaf → compute its bbox
     if (is_leaf(current, bvh->NperLeaf)) {
         int idx = current->items[0];
-        current->bbox[0] = bvh->positions[3 * idx] - bvh->radii[idx];
-        current->bbox[1] = bvh->positions[3 * idx + 1] - bvh->radii[idx];
-        current->bbox[2] = bvh->positions[3 * idx + 2] - bvh->radii[idx];
-        current->bbox[3] = bvh->positions[3 * idx] + bvh->radii[idx];
-        current->bbox[4] = bvh->positions[3 * idx + 1] + bvh->radii[idx];
-        current->bbox[5] = bvh->positions[3 * idx + 2] + bvh->radii[idx];
+        double radius = bvh->radii[idx];
+        current->bbox[0] = bvh->positions[3 * idx] - radius;
+        current->bbox[1] = bvh->positions[3 * idx + 1] - radius;
+        current->bbox[2] = bvh->positions[3 * idx + 2] - radius;
+        current->bbox[3] = bvh->positions[3 * idx] + radius;
+        current->bbox[4] = bvh->positions[3 * idx + 1] + radius;
+        current->bbox[5] = bvh->positions[3 * idx + 2] + radius;
         return;
     }
 
@@ -257,7 +258,7 @@ int find_pot_inter(BVH* bvh, int* pot_cont){
     int pcs = 0; // potential contact size
     int* stack; // Ce sont des indices par pair
     int stack_size = 0;
-    stack = (int*)malloc(sizeof(int) * bvh->n_nodes * bvh->n_nodes);
+    stack = (int*)malloc(sizeof(int) * 200);
     stack[stack_size++] = bvh->root;
     stack[stack_size++] = bvh->root;
     while (stack_size > 0) {
@@ -314,8 +315,43 @@ int find_pot_inter(BVH* bvh, int* pot_cont){
     return pcs;
 }
 
+void flat_bvh(BVH* bvh, float* flat_bvh){
+    // Flatten the BVH into a linear array for GPU usage
+    // Each node takes 3 vec4 (12 floats)
+    // vec4 0: left index, right index, item + padding
+    // vec4 1: bbox min (x,y,z) + padding
+    // vec4 2: bbox max (x,y,z) + n_items
+    int n_nodes = bvh->n_nodes;
+    for (int i = 0; i < n_nodes; i++) {
+        BVHNode* node = &bvh->nodes[i];
+        int base = i * 12; // 3 vec4 per node
+
+        flat_bvh[base + 0] = (float)node->left;
+        flat_bvh[base + 1] = (float)node->right;
+        if (is_leaf(node, bvh->NperLeaf)) {
+            flat_bvh[base + 2] = (float)node->items[0];
+        } else {
+            flat_bvh[base + 2] = -1.0f; // Not a leaf
+        }
+        flat_bvh[base + 3] = 0.0f; // padding
+
+        flat_bvh[base + 4] = node->bbox[0];
+        flat_bvh[base + 5] = node->bbox[1];
+        flat_bvh[base + 6] = node->bbox[2];
+        flat_bvh[base + 7] = 0.0f; // padding
+
+        flat_bvh[base + 8] = node->bbox[3];
+        flat_bvh[base + 9] = node->bbox[4];
+        flat_bvh[base + 10] = node->bbox[5];
+        flat_bvh[base + 11] = 0.0f; // padding
+    }
+    return;
+}
+
 void free_bvh(BVH* bvh) {
     if (bvh) {
+        if (bvh->positions) free(bvh->positions);
+        if (bvh->radii) free(bvh->radii);
         if (bvh->nodes) {
             for (int i = 0; i < bvh->n_nodes; i++) {
                 if (bvh->nodes[i].bbox) free(bvh->nodes[i].bbox);
@@ -332,6 +368,7 @@ void free_node(BVHNode* node) {
     if (node) {
         free(node->bbox);
         free(node->items);
+        // free(node->index);
     }
 }
 
@@ -344,6 +381,20 @@ void printBVH(BVH* bvh, BVHNode* node, int depth) {
     if (node->left != -1) {printBVH(bvh, &bvh->nodes[node->left], depth + 1);}
     if (node->right != -1) {printBVH(bvh, &bvh->nodes[node->right], depth + 1);}
 
+}
+
+void printBVH2(BVH* bvh) {
+    for (int i = 0; i < bvh->n_nodes; i++) {
+        BVHNode* node = &bvh->nodes[i];
+        printf("Node %d: bbox=[[%.2f, %.2f, %.2f], [%.2f, %.2f, %.2f]], n_items=%d, left=%d, right=%d, parent=%d\n",
+               node->index,
+               node->bbox[0], node->bbox[1], node->bbox[2],
+               node->bbox[3], node->bbox[4], node->bbox[5],
+               node->n_items,
+               node->left,
+               node->right,
+               node->parent);
+    }
 }
 
 int main() {

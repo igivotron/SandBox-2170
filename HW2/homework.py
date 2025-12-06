@@ -9,11 +9,12 @@ import ctypes
 import os
 
 i=0
+ray=False
 
 # Machin qui fait le lien entre python et C
-lib = ctypes.CDLL(os.path.abspath("bvh_C.so"))
+# lib = ctypes.CDLL(os.path.abspath("bvh_C.so"))
 
-# lib = ctypes.CDLL(os.path.abspath("bvh_C.dll"))
+lib = ctypes.CDLL(os.path.abspath("bvh_C.dll"))
 
 class BVHNode(ctypes.Structure):
     _fields_ = [
@@ -52,8 +53,12 @@ lib.is_leaf.argtypes = [ctypes.POINTER(BVHNode), ctypes.c_int]
 lib.is_leaf.restype = ctypes.c_bool
 lib.find_pot_inter.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(ctypes.c_int)]
 lib.find_pot_inter.restype = ctypes.c_int
-
-
+lib.printBVH.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(BVHNode), ctypes.c_int]
+lib.printBVH.restype = None
+lib.printBVH2.argtypes = [ctypes.POINTER(bvh_C)]
+lib.printBVH2.restype = None
+lib.flat_bvh.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(ctypes.c_float)]    
+lib.flat_bvh.restype = None
 
 class Homework:
     def __init__(self):
@@ -110,20 +115,38 @@ class Homework:
         i=0
         return
 
-    def find_intersections(self, simulator) -> list[Contact]:
-        """Return all contacts using the BVH."""
+    def update_bvh(self, simulator):
         global i
         i+=1
         bvh_tree = self.bvh_tree
-        if bvh_tree is None:
-            return []
+
         # bvh_tree.positions = simulator.positions
         pos = simulator.positions.astype(np.float64).flatten()
         pos_c = pos.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
         lib.update_positions(bvh_tree, pos_c)
 
+        # bvh_tree.update()
+        current = ctypes.pointer(bvh_tree.contents.nodes[bvh_tree.contents.root])
+        lib.update(bvh_tree, current)
+
+        if i%6==0:
+            pass #put here the rotation
+
+    def find_intersections(self, simulator) -> list[Contact]:
+        """Return all contacts using the BVH."""
+        bvh_tree = self.bvh_tree
+        if bvh_tree is None:
+            return []
+        global i, ray
+        if ray: #if ray is True then the tree has already been updated this frame
+            ray=False
+        else:
+            self.update_bvh(simulator)
+
         if i==100:
             #every 100 frames, rebuild the BVH
+            pos = simulator.positions.astype(np.float64).flatten()
+            pos_c = pos.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
             lib.free_bvh(bvh_tree)
             radii = simulator.radii.astype(np.float64).flatten()
             radii_c = radii.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
@@ -132,11 +155,6 @@ class Homework:
             lib.build_bvh(bvh_tree)
             # bvh_tree.build()
             i=0
-        else:
-            #otherwise, just update the positions
-            # bvh_tree.update()
-            current = ctypes.pointer(bvh_tree.contents.nodes[bvh_tree.contents.root])
-            lib.update(bvh_tree, current)
         
         potential_intersections = np.zeros((len(simulator.positions)**2), dtype=np.int32)
         potential_intersections_c = potential_intersections.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
@@ -149,77 +167,6 @@ class Homework:
             if contact:
                 contacts.append(contact)
         return contacts
-    
-
-    # def flatten_bvh(self):
-    #     # each node is stored as:
-    #     # [left_index, right_index, min_x, min_y, min_z, max_x, max_y, max_z, item_index]
-    #     bvh_tree = self.bvh_tree
-    #     flat_bvh = np.zeros((bvh_tree.contents.n_nodes, 9), dtype=np.float32)
-    #     def traverse(node):
-    #         i = node.index
-    #         isLeaf = lib.is_leaf(node, bvh_tree.contents.NperLeaf)
-    #         flat_bvh[i,0:2] = [-1, -1] if isLeaf else [node.left, node.right]
-    #         flat_bvh[i,2:5] = node.bbox[0:3]
-    #         flat_bvh[i,5:8] = node.bbox[3:6]
-    #         flat_bvh[i,8] = node.items[0] if isLeaf and node.n_items>0 else -1
-
-    #         if isLeaf:
-    #             return
-            
-    #         traverse(bvh_tree.contents.nodes[node.left])
-    #         traverse(bvh_tree.contents.nodes[node.right])
-
-    #     traverse(bvh_tree.contents.nodes[bvh_tree.contents.root])
-    #     nNode = bvh_tree.contents.n_nodes
-    #     flat_bvh = flat_bvh.flatten().astype(np.float32)
-    #     return np.concatenate(([nNode], flat_bvh)).astype(np.float32)
-
-    def flatten_bvh(self):
-        """
-        Flatten BVH tree into an array of vec4-compatible floats.
-        First vec4 stores the number of nodes: [nNode, 0, 0, 0]
-        Each node will occupy 3 vec4:
-        - v0: left_index, right_index, item_index, padding
-        - v1: bbox_min.x, bbox_min.y, bbox_min.z, padding
-        - v2: bbox_max.x, bbox_max.y, bbox_max.z, padding
-        """
-        bvh_tree = self.bvh_tree
-        n_nodes = bvh_tree.contents.n_nodes
-
-        # total size = 1 vec4 for nNode + 3 vec4 per node
-        flat_bvh = np.zeros((1 + 3 * n_nodes, 4), dtype=np.float32)
-
-        # store nNode in the first vec4
-        flat_bvh[0, 0] = n_nodes
-
-        def traverse(node):
-            i = node.index
-            isLeaf = lib.is_leaf(node, bvh_tree.contents.NperLeaf)
-
-            base = 1 + i*3  # first vec4 of this node
-
-            # v0
-            flat_bvh[base, 0] = -1 if isLeaf else node.left
-            flat_bvh[base, 1] = -1 if isLeaf else node.right
-            flat_bvh[base, 2] = node.items[0] if isLeaf and node.n_items>0 else -1
-            flat_bvh[base, 3] = 0.0  # padding
-
-            # v1: bbox min
-            flat_bvh[base+1, 0:3] = node.bbox[0:3]
-            flat_bvh[base+1, 3] = 0.0  # padding
-
-            # v2: bbox max
-            flat_bvh[base+2, 0:3] = node.bbox[3:6]
-            flat_bvh[base+2, 3] = 0.0  # padding
-
-            if not isLeaf:
-                traverse(bvh_tree.contents.nodes[node.left])
-                traverse(bvh_tree.contents.nodes[node.right])
-
-        traverse(bvh_tree.contents.nodes[bvh_tree.contents.root])
-
-        return flat_bvh.flatten().astype(np.float32)
 
     def gpu_bind_group_layouts(self, device: wgpu.GPUDevice) -> list[wgpu.GPUBindGroupLayout]:
         """For the GPU part of the project. This allows you to describe the memory resources you'll access from your GPU implementation.
@@ -253,14 +200,22 @@ class Homework:
         #    will get errors due to the empty buffers.
         if len(simulator.radii) == 0:
             return
+        
+        # update the positions and optimize with rotations
+        global i, ray
+        ray=True
+        self.update_bvh(simulator)
 
         # 1. For the purposes of the example, an array of random numbers (This
         # could be a numpy array containing the data structure you used for the
         # first part).
 
         # give the BVH flat representation
-        flat_bvh = self.flatten_bvh()
+        bvh_tree = self.bvh_tree
+        flat_bvh = np.zeros((bvh_tree.contents.n_nodes * 12), dtype=np.float32)
+        lib.flat_bvh(bvh_tree, flat_bvh.ctypes.data_as(ctypes.POINTER(ctypes.c_float)))
         data_structure_cpu = flat_bvh
+        # print(flat_bvh.reshape((-1,4)))
 
             # exemple given in the template
         # data_structure_cpu = np.random.rand(len(simulator.radii),2).astype(np.float32)

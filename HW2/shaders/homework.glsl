@@ -1,9 +1,8 @@
-#define get(A,i,j) A[ 1 + (i)*9u + (j) ] 
 #define STACK_MAX 32u
 
 /* import data */
 layout(set = 2, binding = 0, std430) buffer DataStructure {
-    vec4 bvh_nodes[]; // bvh_nodes[0] contient nNode
+    vec4 bvh_nodes[];
 };
 
 bool ray_bbox_intersection(vec3 inv_dir, vec3 origin, vec3 bbox_min, vec3 bbox_max) {
@@ -20,14 +19,13 @@ Intersection trace_ray_bvh(Ray ray) {
     Intersection result = EMPTY_INTERSECTION;
     vec3 inv_dir = 1.0 / ray.direction;
 
-    uint nNode = uint(bvh_nodes[0].x); // nombre total de nodes
     uint stack[STACK_MAX];
     uint sp = 0u;
-    stack[sp++] = 0u; // root node index (relative to 0-based nodes, not including nNode vec4)
+    stack[sp++] = 0u; // root node index 
 
     while (sp > 0u) {
         uint node_idx = stack[--sp];
-        uint base = 1u + node_idx*3u;
+        uint base = node_idx*3u;
 
         vec4 v0 = bvh_nodes[base + 0u];
         vec4 v1 = bvh_nodes[base + 1u];
