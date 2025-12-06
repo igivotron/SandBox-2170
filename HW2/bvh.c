@@ -49,8 +49,9 @@ int is_leaf(BVHNode* node, int NperLeaf) {
     return node->n_items <= NperLeaf;
 }
 
-void update_positions(BVH* bvh, double* new_positions) {
-    bvh->positions = new_positions;
+void update_positions(BVH* bvh, double* new_positions, int n_points) {
+    memcpy(new_positions, bvh->positions, sizeof(double) * 3 * n_points);
+    // bvh->positions = new_positions;
 }
 
 double* compute_bbox(BVHNode* node, double* positions, double* radii) {
