@@ -45,7 +45,7 @@ lib.update.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(BVHNode)]
 lib.update.restype = None
 lib.free_bvh.argtypes = [ctypes.POINTER(bvh_C)]
 lib.free_bvh.restype = None
-lib.update_positions.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(ctypes.c_double)]
+lib.update_positions.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(ctypes.c_double), ctypes.c_int]
 lib.update_positions.restype = None
 lib.build_bvh.argtypes = [ctypes.POINTER(bvh_C)]
 lib.build_bvh.restype = None
@@ -123,7 +123,7 @@ class Homework:
         # bvh_tree.positions = simulator.positions
         pos = simulator.positions.astype(np.float64).flatten()
         pos_c = pos.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-        lib.update_positions(bvh_tree, pos_c)
+        lib.update_positions(bvh_tree, pos_c, len(simulator.positions))
 
         # bvh_tree.update()
         current = ctypes.pointer(bvh_tree.contents.nodes[bvh_tree.contents.root])
