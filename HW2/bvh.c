@@ -50,7 +50,8 @@ int is_leaf(BVHNode* node, int NperLeaf) {
 }
 
 void update_positions(BVH* bvh, double* new_positions, int n_points) {
-    memcpy(new_positions, bvh->positions, sizeof(double) * 3 * n_points);
+    memcpy(bvh->positions, new_positions, sizeof(double) * 3 * n_points);
+    
     // bvh->positions = new_positions;
 }
 
