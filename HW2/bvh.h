@@ -5,11 +5,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdint.h>
 
 typedef struct {
     int index;
     uint32_t morton;
-} Morton_code 
+} Morton_code;
 
 typedef struct BVHNode {
     int left;   // Index of the left child node
@@ -29,12 +30,13 @@ typedef struct BVH {
     double* radii;    // Array of point radii n_points
     int NperLeaf;    // Maximum number of points per leaf node
     int root;        // Index of the root node
+    Morton_code* morton_codes; // Morton codes of the items
 } BVH;
 
 
-static inline uint32_t expandBits(uint32_t v)
-uint32_t morton3D(double* positions, int i)
-void Comparaison_Morton(const void *a, const void *b)
+static inline uint32_t expandBits(uint32_t v);
+uint32_t morton3D(double* positions, int i);
+int Comparaison_Morton(const void *a, const void *b);
 BVH* create_bvh(double* positions, double* radii, int n_points, int NperLeaf);
 BVHNode create_node(int index, int* items, int n_items, int parent);
 int is_leaf(BVHNode* node, int NperLeaf);

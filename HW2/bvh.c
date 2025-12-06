@@ -17,13 +17,13 @@ static inline uint32_t expandBits(uint32_t v) {
 // Morton code 3D
 uint32_t morton3D(double* positions, int i) {
     // returns x0 y0 z0 x1 y1 z1 ... in bits
-    uint32_t x =(uint32_t) positions[3*i] * (1023.0);
-    uint32_t y =(uint32_t) positions[3*i + 1] * (1023.0);
-    uint32_t z =(uint32_t) positions[3*i + 2] * (1023.0);
+    uint32_t x =(uint32_t) (positions[3*i] * (1023.0));
+    uint32_t y =(uint32_t) (positions[3*i + 1] * (1023.0));
+    uint32_t z =(uint32_t) (positions[3*i + 2] * (1023.0));
     return (expandBits(x) << 2) | (expandBits(y) << 1) | expandBits(z);
 }
 
-void Comparaison_Morton(const void *a, const void *b) {
+int Comparaison_Morton(const void *a, const void *b) {
     const Morton_code *Mort_a = (const Morton_code*)a;
     const Morton_code *Mort_b = (const Morton_code*)b;
     if (Mort_a->morton < Mort_b->morton) return -1;
@@ -36,28 +36,25 @@ BVH* create_bvh(double* positions, double* radii, int n_points, int NperLeaf) {
     BVH* bvh = (BVH*)malloc(sizeof(BVH));
 
     //Morton Code 
-    Morton_code mortonIndices[3*n_points];
+    Morton_code* mortonIndices = (Morton_code*)malloc(sizeof(Morton_code) * n_points);
+    bvh->morton_codes = mortonIndices;
     for (int i=0; i<n_points; i++){
         mortonIndices[i].index = i;
         mortonIndices[i].morton = morton3D(positions, i); 
     }
-    qsort(mortonIndices, N, sizeof(Morton_code), Comparaison_Morton );
+    qsort(mortonIndices, n_points, sizeof(Morton_code), Comparaison_Morton );
     //Sorted positions and radii
     double* sorted_positions = (double*) malloc(3*n_points*sizeof(double));
-    double* sorted_radii  = (double*) malloc(3*n_points*sizeof(double));
-    for (int i = 0; i < N; i++) {
+    double* sorted_radii  = (double*) malloc(n_points*sizeof(double));
+    for (int i = 0; i < n_points; i++) {
         int orig = mortonIndices[i].index;
         sorted_positions[3*i] = positions[3*orig];
         sorted_positions[3*i + 1] = positions[3*orig + 1];
         sorted_positions[3*i + 2] = positions[3*orig + 2];
-        sorted_radii[3*i] = radii[3*orig];
-        sorted_radii[3*i+1] = radii[3*orig+1];
-        sorted_radii[3*i+2] = radii[3*orig+2];
+        sorted_radii[i] = radii[orig];
     }
-    free(positions);
-    free(radii);
 
-    bvh->positions = malloc(sizeof(double)*n_points)
+    bvh->positions = malloc(sizeof(double)*n_points*3);
     memcpy(bvh->positions, sorted_positions, sizeof(double) * n_points * 3);
     bvh->radii = malloc(sizeof(double) * n_points);
     memcpy(bvh->radii, sorted_radii, sizeof(double) * n_points);
@@ -70,10 +67,12 @@ BVH* create_bvh(double* positions, double* radii, int n_points, int NperLeaf) {
     int * all_items = malloc(sizeof(int) * n_points);
     for (int i = 0; i < n_points; i++) all_items[i] = i;
     BVHNode root_node = create_node(0, all_items, n_points, -1);
-    compute_bbox(&root_node, positions, radii);
+    compute_bbox(&root_node, sorted_positions, sorted_radii);
     bvh->nodes[bvh->n_nodes++] = root_node;
     bvh->root = root_node.index;
     free(all_items);
+    free(sorted_positions);
+    free(sorted_radii);
 
     return bvh; 
 }
@@ -102,9 +101,13 @@ int is_leaf(BVHNode* node, int NperLeaf) {
 }
 
 void update_positions(BVH* bvh, double* new_positions, int n_points) {
-    memcpy(bvh->positions, new_positions, sizeof(double) * 3 * n_points);
-    
-    // bvh->positions = new_positions;
+    double* positions = bvh->positions;
+    for (int i = 0; i < n_points; i++) {
+        int orig_index = bvh->morton_codes[i].index;
+        positions[3*i] = new_positions[3*orig_index];
+        positions[3*i + 1] = new_positions[3*orig_index + 1];
+        positions[3*i + 2] = new_positions[3*orig_index + 2];
+    }
 }
 
 double* compute_bbox(BVHNode* node, double* positions, double* radii) {
