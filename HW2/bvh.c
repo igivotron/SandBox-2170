@@ -1,10 +1,61 @@
 
 #include "bvh.h"
 
+static inline uint32_t expandBits(uint32_t v) {
+    //With v written in bits : b2 b1 b0 
+    // expandBits return : (potential zeros here) b2 00 b1 00 b0
+    v = (v * 0x00010001u) & 0xFF0000FFu;
+    v = (v * 0x00000101u) & 0x0F00F00Fu;
+    v = (v * 0x00000011u) & 0xC30C30C3u;
+    v = (v * 0x00000005u) & 0x49249249u;
+    return v;
+}
+
+// Morton code 3D
+uint32_t morton3D(double* positions, int i) {
+    // returns x0 y0 z0 x1 y1 z1 ... in bits
+    uint32_t x =(uint32_t) positions[3*i] * (1023.0);
+    uint32_t y =(uint32_t) positions[3*i + 1] * (1023.0);
+    uint32_t z =(uint32_t) positions[3*i + 2] * (1023.0);
+    return (expandBits(x) << 2) | (expandBits(y) << 1) | expandBits(z);
+}
+
+void Comparaison_Morton(const void *a, const void *b) {
+    const Morton_code *Mort_a = (const Morton_code*)a;
+    const Morton_code *Mort_b = (const Morton_code*)b;
+    if (Mort_a->morton < Mort_b->morton) return -1;
+    if (Mort_a->morton > Mort_b->morton) return 1;
+    return 0;
+}
+
+
 BVH* create_bvh(double* positions, double* radii, int n_points, int NperLeaf) {
     BVH* bvh = (BVH*)malloc(sizeof(BVH));
-    bvh->positions = positions;
-    bvh->radii = radii;
+
+    //Morton Code 
+    Morton_code mortonIndices[3*n_points];
+    for (int i=0; i<n_points; i++){
+        mortonIndices[i].index = i;
+        mortonIndices[i].morton = morton3D(positions, i); 
+    }
+    qsort(mortonIndices, N, sizeof(Morton_code), Comparaison_Morton );
+    //Sorted positions and radii
+    double* sorted_positions = (double*) malloc(3*n_points*sizeof(double));
+    double* sorted_radii  = (double*) malloc(3*n_points*sizeof(double));
+    for (int i = 0; i < N; i++) {
+        int orig = mortonIndices[i].index;
+        sorted_positions[3*i] = positions[3*orig];
+        sorted_positions[3*i + 1] = positions[3*orig + 1];
+        sorted_positions[3*i + 2] = positions[3*orig + 2];
+        sorted_radii[3*i] = radii[3*orig];
+        sorted_radii[3*i+1] = radii[3*orig+1];
+        sorted_radii[3*i+2] = radii[3*orig+2];
+    }
+    free(positions);
+    free(radii);
+
+    bvh->positions = sorted_positions;
+    bvh->radii = sorted_radii;
     bvh->NperLeaf = NperLeaf;
     bvh->n_nodes = 0;
     bvh->nodes = malloc(sizeof(BVHNode) * (2 * n_points - 1)); // Max nodes in a binary tree

@@ -6,6 +6,10 @@
 #include <string.h>
 #include <math.h>
 
+typedef struct {
+    int index;
+    uint32_t morton;
+} Morton_code 
 
 typedef struct BVHNode {
     int left;   // Index of the left child node
@@ -28,6 +32,9 @@ typedef struct BVH {
     int root;        // Index of the root node
 } BVH;
 
+
+static inline uint32_t expandBits(uint32_t v)
+uint32_t morton3D(uint32_t x, uint32_t y, uint32_t z)
 BVH* create_bvh(double* positions, double* radii, int n_points, int NperLeaf);
 BVHNode create_node(int index, int* items, int n_items, int parent);
 int is_leaf(BVHNode* node, int NperLeaf);
