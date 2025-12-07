@@ -118,9 +118,9 @@ All the performance have been retrieved on
     - Flatten bvh
 
 - **Myrine** : 
-    - Node rotation
+    - Node rotation in python
     - Finding intersection
-    - Norton code
+    - LBVH : Morton code in python and C
 
 
 - **Lionel** :
