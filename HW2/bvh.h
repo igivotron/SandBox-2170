@@ -6,6 +6,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdint.h>
+#include <assert.h>
 
 typedef struct {
     int index;
@@ -20,6 +21,8 @@ typedef struct BVHNode {
     int * items; // Indices of points contained in this node
     int n_items; // Number of items in this node
     int index;   // Index of this node
+    int first;
+    int last;
 } BVHNode;
 
 
@@ -36,16 +39,16 @@ typedef struct BVH {
 
 static inline uint32_t expandBits(uint32_t v);
 uint32_t morton3D(double* positions, int i);
-int Comparaison_Morton(const void *a, const void *b);
+static int Comparaison_Morton(const void *a, const void *b);
 BVH* create_bvh(double* positions, double* radii, int n_points, int NperLeaf);
-BVHNode create_node(int index, int* items, int n_items, int parent);
+BVHNode create_node(int index, int* items, int n_items, int parent, int first, int last);
 int is_leaf(BVHNode* node, int NperLeaf);
 double* compute_bbox(BVHNode* node, double* positions, double* radii);
 double surface_area(double* bbox);
-void build_bvh(BVH* bvh);
+static inline int count_prefix(uint32_t a, uint32_t b);
+int best_split(Morton_code* morton_c, int first, int last);
+void build_bvh(BVH* bvh, int N);
 void build_recursion(BVH* bvh, int node_index, int k);
-void split_items(BVHNode* node, double* positions, double* radii, int axis, int split_index, int* left_items, int* right_items, int* n_left, int* n_right);
-int best_split_axis(BVHNode* node, double* positions, double* radii, int axis, int* left_items, int* right_items, int* n_left, int* n_right);
 void update_bbox(BVH* bvh, BVHNode* node);
 void update(BVH* bvh, BVHNode* current);
 void update_positions(BVH* bvh, double* new_positions, int n_points);

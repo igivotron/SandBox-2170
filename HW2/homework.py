@@ -47,7 +47,7 @@ lib.free_bvh.argtypes = [ctypes.POINTER(bvh_C)]
 lib.free_bvh.restype = None
 lib.update_positions.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(ctypes.c_double), ctypes.c_int]
 lib.update_positions.restype = None
-lib.build_bvh.argtypes = [ctypes.POINTER(bvh_C)]
+lib.build_bvh.argtypes = [ctypes.POINTER(bvh_C), ctypes.c_int]
 lib.build_bvh.restype = None
 lib.is_leaf.argtypes = [ctypes.POINTER(BVHNode), ctypes.c_int]
 lib.is_leaf.restype = ctypes.c_bool
@@ -104,7 +104,7 @@ class Homework:
         radii_c = radii.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
         N = len(simulator.positions)
         bvh_tree_c = lib.create_bvh(pos_c, radii_c, N, 1)
-        lib.build_bvh(bvh_tree_c)
+        lib.build_bvh(bvh_tree_c, N)
         self.bvh_tree = bvh_tree_c
 
         # bvh_tree = bvh.BVH(simulator.positions, simulator.radii)
@@ -152,7 +152,8 @@ class Homework:
             radii_c = radii.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
             bvh_tree = lib.create_bvh(pos_c, radii_c, len(simulator.positions), 1)
             self.bvh_tree = bvh_tree
-            lib.build_bvh(bvh_tree)
+            N = len(simulator.positions)
+            lib.build_bvh(bvh_tree, N)
             # bvh_tree.build()
             i=0
         

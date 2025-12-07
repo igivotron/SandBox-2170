@@ -23,7 +23,7 @@ uint32_t morton3D(double* positions, int i) {
     return (expandBits(x) << 2) | (expandBits(y) << 1) | expandBits(z);
 }
 
-int Comparaison_Morton(const void *a, const void *b) {
+static int Comparaison_Morton(const void *a, const void *b) {
     const Morton_code *Mort_a = (const Morton_code*)a;
     const Morton_code *Mort_b = (const Morton_code*)b;
     if (Mort_a->morton < Mort_b->morton) return -1;
@@ -42,22 +42,11 @@ BVH* create_bvh(double* positions, double* radii, int n_points, int NperLeaf) {
         mortonIndices[i].index = i;
         mortonIndices[i].morton = morton3D(positions, i); 
     }
-    qsort(mortonIndices, n_points, sizeof(Morton_code), Comparaison_Morton );
-    //Sorted positions and radii
-    double* sorted_positions = (double*) malloc(3*n_points*sizeof(double));
-    double* sorted_radii  = (double*) malloc(n_points*sizeof(double));
-    for (int i = 0; i < n_points; i++) {
-        int orig = mortonIndices[i].index;
-        sorted_positions[3*i] = positions[3*orig];
-        sorted_positions[3*i + 1] = positions[3*orig + 1];
-        sorted_positions[3*i + 2] = positions[3*orig + 2];
-        sorted_radii[i] = radii[orig];
-    }
 
-    bvh->positions = malloc(sizeof(double)*n_points*3);
-    memcpy(bvh->positions, sorted_positions, sizeof(double) * n_points * 3);
-    bvh->radii = malloc(sizeof(double) * n_points);
-    memcpy(bvh->radii, sorted_radii, sizeof(double) * n_points);
+    bvh->positions = positions;//malloc(sizeof(double)*n_points*3);
+    //memcpy(bvh->positions, sorted_positions, sizeof(double) * n_points * 3);
+    bvh->radii = radii;//malloc(sizeof(double) * n_points);
+    //memcpy(bvh->radii, sorted_radii, sizeof(double) * n_points);
     bvh->NperLeaf = NperLeaf;
     bvh->n_nodes = 0;
     bvh->nodes = malloc(sizeof(BVHNode) * (2 * n_points - 1)); // Max nodes in a binary tree
@@ -66,18 +55,16 @@ BVH* create_bvh(double* positions, double* radii, int n_points, int NperLeaf) {
     // Initialize root node
     int * all_items = malloc(sizeof(int) * n_points);
     for (int i = 0; i < n_points; i++) all_items[i] = i;
-    BVHNode root_node = create_node(0, all_items, n_points, -1);
-    compute_bbox(&root_node, sorted_positions, sorted_radii);
+    BVHNode root_node = create_node(0, all_items, n_points, -1, 0, n_points);
+    compute_bbox(&root_node, positions, radii);
     bvh->nodes[bvh->n_nodes++] = root_node;
     bvh->root = root_node.index;
     free(all_items);
-    free(sorted_positions);
-    free(sorted_radii);
 
     return bvh; 
 }
 
-BVHNode create_node(int index, int* items, int n_items, int parent) {
+BVHNode create_node(int index, int* items, int n_items, int parent, int first, int last) {
     BVHNode node;
     node.index = index;
     node.bbox = (double*)malloc(sizeof(double) * 6);
@@ -85,6 +72,8 @@ BVHNode create_node(int index, int* items, int n_items, int parent) {
     node.parent = parent;
     node.left = -1;
     node.right = -1;
+    node.first = first;
+    node.last = last;
 
     if (n_items > 0) {
         node.items = (int*)malloc(sizeof(int) * n_items);
@@ -153,122 +142,71 @@ double surface_area(double* bbox) {
     return 2.0 * (dx * dy + dy * dz + dz * dx);
 }
 
-void split_items(BVHNode* node, double* positions, double* radii, int axis, int split_index,
-                 int* left_items, int* right_items, int* n_left, int* n_right) {
-    *n_left = 0;
-    *n_right = 0;
-    double threshold = positions[3 * node->items[split_index] + axis];
-
-    for (int i = 0; i < node->n_items; i++) {
-        int idx = node->items[i];
-        double coord = positions[3*idx + axis];
-
-        if (coord < threshold) left_items[(*n_left)++] = idx;
-        else right_items[(*n_right)++] = idx;
-    }
+//returns the number of zero before the highest bit : 
+// exemple : 0100 and 1000 returns 0 
+static inline int count_prefix(uint32_t a, uint32_t b) {
+    uint32_t x = a ^ b; // fonction XOR
+    if (x == 0) return 32;
+    return __builtin_clz(x);  // GCC/Clang builtin
 }
-int best_split_axis(BVHNode* node, double* positions, double* radii, int axis,
-                    int* left_items, int* right_items, int* n_left, int* n_right) {
-    if (node->n_items == 2){
-        left_items[0] = node->items[0];
-        right_items[0] = node->items[1];
-        *n_left = 1;
-        *n_right = 1;
-        return 0;
+
+int best_split(Morton_code* morton_c, int first, int last) {
+    if (last - first == 2) return first + 1;
+
+    uint32_t first_code = morton_c[first].morton;
+    uint32_t last_code  = morton_c[last - 1].morton;
+
+    // if identical codes, fallback to middle split
+    if (first_code == last_code) {
+        return (first + last) >> 1;
     }
-    double best_cost = INFINITY;
-    int best_index = -1;
-    int n_items = node->n_items;
 
-    int* temp_left = (int*)malloc(sizeof(int) * n_items);
-    int* temp_right = (int*)malloc(sizeof(int) * n_items);
-    BVHNode temp_node_left = create_node(-1, NULL, 0, -1);
-    BVHNode temp_node_right = create_node(-1, NULL, 0, -1);
+    int common = count_prefix(first_code, last_code);
 
-    if (!temp_left || !temp_right) return -1;
-
-    for (int i = 0; i < n_items; i++) {
-        int l = 0, r = 0;
-        split_items(node, positions, radii, axis, i, temp_left, temp_right, &l, &r);
-        if (l == 0 || r == 0) continue;
-        temp_node_left.items = temp_left;
-        temp_node_left.n_items = l;
-        temp_node_right.items = temp_right;
-        temp_node_right.n_items = r;
-        compute_bbox(&temp_node_left, positions, radii);
-        compute_bbox(&temp_node_right, positions, radii);
-        double* left_bbox = temp_node_left.bbox;
-        double* right_bbox = temp_node_right.bbox;
-        // double* left_bbox = compute_bbox(&(BVHNode){.items = temp_left, .n_items = l}, positions, radii);
-        // double* right_bbox = compute_bbox(&(BVHNode){.items = temp_right, .n_items = r}, positions, radii);
-
-        double cost = surface_area(left_bbox) * l + surface_area(right_bbox) * r;
-        if (cost < best_cost) {
-            best_cost = cost;
-            best_index = i;
-            *n_left = l;
-            *n_right = r;
-            memcpy(left_items, temp_left, sizeof(int) * l);
-            memcpy(right_items, temp_right, sizeof(int) * r);
+    int lo = first;
+    int hi = last - 1;
+    while (lo + 1 < hi) {
+        int mid = (lo + hi) >> 1;
+        int prefix = count_prefix(first_code, morton_c[mid].morton);
+        if (prefix > common) {
+            lo = mid;
+        } else {
+            hi = mid;
         }
-
-        // free(left_bbox);
-        // free(right_bbox);
     }
-
-    free_node(&temp_node_left);
-    free_node(&temp_node_right);
-    // free(temp_left);
-    // free(temp_right);
-    return best_index;
+    return hi;
 }
+
+
 
 void build_recursion(BVH* bvh, int node_index, int k){
-    int axis = k % 3;
     BVHNode* node = &bvh->nodes[node_index];
-    if (is_leaf(node, bvh->NperLeaf)){
-        // node->bbox = compute_bbox(node, bvh->positions, bvh->radii);
-        return;
-    }
+    int first = node->first;
+    int last  = node->last;
 
-    // int * items = node->items;
-    int n_items = node->n_items;
-    double* positions = bvh->positions;
-    double* radii = bvh->radii;
-    int* left_items = malloc(sizeof(int) * n_items);
-    int* right_items = malloc(sizeof(int) * n_items);
-    int n_left = 0;
-    int n_right = 0;
-    int split_index = best_split_axis(node, positions, radii, axis, left_items, right_items, &n_left, &n_right);
-    if (n_left == 0 || n_right == 0 || split_index == -1) {
-        free(left_items);
-        free(right_items);
+    int best = best_split(bvh->morton_codes, first, last);
+    if (is_leaf(node, bvh->NperLeaf)) {
         return; // Cannot split further
     }
-
-    // double* left_bbox = compute_bbox(&(BVHNode){.items = left_items, .n_items = n_left}, positions, radii);
-    // double* right_bbox = compute_bbox(&(BVHNode){.items = right_items, .n_items = n_right}, positions, radii);
-    // int left_index = bvh->n_nodes++;
-    // int right_index = bvh->n_nodes++;
-    // BVHNode left_node = create_node(left_index, left_bbox, left_items, n_left, node_index);
-    // BVHNode right_node = create_node(right_index, right_bbox, right_items, n_right, node_index);
-    int left_index = bvh->n_nodes++;
+    int left_index  = bvh->n_nodes++;
     int right_index = bvh->n_nodes++;
-    BVHNode left_node = create_node(left_index, left_items, n_left, node_index);
-    BVHNode right_node = create_node(right_index, right_items, n_right, node_index);
-    compute_bbox(&left_node, positions, radii);
-    compute_bbox(&right_node, positions, radii);
-    bvh->nodes[left_index] = left_node;
-    bvh->nodes[right_index] = right_node;
-    node->left = left_index;
+
+    bvh->nodes[left_index]  = create_node(left_index, NULL, 0, node_index, first, best);
+    bvh->nodes[right_index] = create_node(right_index, NULL, 0, node_index, best, last);
+
+    node->left  = left_index;
     node->right = right_index;
-    free(left_items);
-    free(right_items);
+    compute_bbox(&bvh->nodes[left_index], bvh->positions, bvh->radii);
+    compute_bbox(&bvh->nodes[right_index], bvh->positions, bvh->radii);
+    
     build_recursion(bvh, left_index, k + 1);
     build_recursion(bvh, right_index, k + 1);
 }
 
-void build_bvh(BVH* bvh) {
+void build_bvh(BVH* bvh, int N) {
+    qsort(bvh->morton_codes, N, sizeof(Morton_code), Comparaison_Morton);
+    bvh->nodes[bvh->root].first = 0;
+    bvh->nodes[bvh->root].last  = N;
     build_recursion(bvh, bvh->root, 0);
 }
 
@@ -480,7 +418,8 @@ int main() {
 
 
     BVH* bvh = create_bvh(positions, radii, n_points, 1);
-    build_bvh(bvh);
+    int N = sizeof(positions);
+    build_bvh(bvh, N);
     printBVH(bvh, &bvh->nodes[bvh->root], 0);
     update(bvh, NULL);
     // Clean up
