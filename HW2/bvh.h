@@ -15,6 +15,7 @@ typedef struct BVHNode {
     int * items; // Indices of points contained in this node
     int n_items; // Number of items in this node
     int index;   // Index of this node
+    double cost; // Cost associated with this node
 } BVHNode;
 
 
@@ -42,6 +43,11 @@ void update_positions(BVH* bvh, double* new_positions, int n_points);
 int bbox_intersect(double *bb1, double *bb2);
 int find_pot_inter(BVH* bvh, int* pot_cont);
 void flat_bvh(BVH* bvh, float* flat_bvh);
+double update_cost(BVH* bvh, BVHNode* node);
+double* combine_bbox(double* left_box, double* right_box, double* out_bbox);
+double rotation(BVH* bvh, BVHNode* node);
+double optimize_w_rotation(BVH* bvh, BVHNode* node, int max_depth, int depth);
+
 
 void printBVH(BVH* bvh, BVHNode* node, int depth);
 void printBVH2(BVH* bvh);

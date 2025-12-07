@@ -2,6 +2,9 @@
 #include "bvh.h"
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
+#define C_t 1.0
+#define C_i 1.0
+#define N 1.0
 
 BVH* create_bvh(double* positions, double* radii, int n_points, int NperLeaf) {
     BVH* bvh = (BVH*)malloc(sizeof(BVH));
@@ -349,6 +352,150 @@ void flat_bvh(BVH* bvh, float* flat_bvh){
     }
     return;
 }
+
+//Start code rotation
+double update_cost(BVH* bvh, BVHNode* node) {
+    if (is_leaf(node, bvh->NperLeaf)) {
+        node->cost = C_t + C_i * N;
+        return node->cost;
+    }
+    BVHNode* left_child = &bvh->nodes[node->left];
+    BVHNode* right_child = &bvh->nodes[node->right];
+    double C_L = update_cost(bvh, left_child);
+    double C_R = update_cost(bvh, right_child);
+    double S = surface_area(node->bbox);
+    double S_L = surface_area(left_child->bbox);
+    double S_R = surface_area(right_child->bbox);
+    node->cost = C_t + (S_L * C_L + S_R * C_R)/S;
+    return node->cost;
+}
+
+double* combine_bbox(double* left_box, double* right_box, double* out_bbox) {
+    for (int i = 0; i < 3; i++) {
+        out_bbox[i] = fmin(left_box[i], right_box[i]);
+        out_bbox[i + 3] = fmax(left_box[i + 3], right_box[i + 3]);
+    }
+    return out_bbox;
+}
+
+double rotation(BVH* bvh, BVHNode* node){
+    /*///////////////////
+    //        1        //
+    //       / \       //
+    //      /   \      //
+    //     2     3     //
+    //    / \   / \    //
+    //   4   5 6   7   //
+    ///////////////////*/
+    
+    BVHNode* node1 = node;
+    BVHNode* node2 = &bvh->nodes[node->left];
+    BVHNode* node3 = &bvh->nodes[node->right];
+    BVHNode* node4 = node2->left == -1 ? NULL : &bvh->nodes[node2->left];
+    BVHNode* node5 = node2->right == -1 ? NULL : &bvh->nodes[node2->right];
+    BVHNode* node6 = node3->left == -1 ? NULL : &bvh->nodes[node3->left];
+    BVHNode* node7 = node3->right == -1 ? NULL : &bvh->nodes[node3->right];
+
+    double C0 = node->cost;
+    double C_rot1 = INFINITY; 
+    double C_rot2 = INFINITY; 
+    double C_rot3 = INFINITY; 
+    double C_rot4 = INFINITY; 
+
+    double* temp_bbox = (double*)malloc(sizeof(double) * 6);
+
+    //ROTATION 1 (2<->6)
+    if (node6) {
+        double S3_= surface_area(combine_bbox(node2->bbox, node7->bbox, temp_bbox));
+        double C3_ = C_t + (node2->cost*surface_area(node2->bbox)+ node7->cost*surface_area(node7->bbox))/S3_;
+        C_rot1 = C_t + (surface_area(node6->bbox)*node6->cost+S3_*C3_)/surface_area(node1->bbox);
+    }
+
+    //ROTATION 2 (2<->7)
+    if (node7) {
+        double S3__= surface_area(combine_bbox(node2->bbox, node6->bbox, temp_bbox));
+        double C3__ = C_t + (node2->cost*surface_area(node2->bbox)+ node6->cost*surface_area(node6->bbox))/S3__;
+        C_rot2 = C_t + (surface_area(node7->bbox)*node7->cost+S3__*C3__)/surface_area(node1->bbox);
+    }
+
+    //ROTATION 3 (3<->4)
+    if (node4) {
+        double S2_ = surface_area(combine_bbox(node3->bbox, node5->bbox, temp_bbox));
+        double C2_ = C_t + (node3->cost*surface_area(node3->bbox)+ node5->cost*surface_area(node5->bbox))/S2_;
+        C_rot3 = C_t + (surface_area(node4->bbox)*node4->cost+S2_*C2_)/surface_area(node1->bbox);
+    }
+
+    //ROTATION 4 (3<->5)
+    if (node5) {
+        double S2__ = surface_area(combine_bbox(node3->bbox, node4->bbox, temp_bbox));
+        double C2__ = C_t + (node3->cost*surface_area(node3->bbox)+ node4->cost*surface_area(node4->bbox))/S2__;
+        C_rot4 = C_t + (surface_area(node5->bbox)*node5->cost+S2__*C2__)/surface_area(node1->bbox);
+    }
+    free(temp_bbox);
+
+    double C_min[] = {C0, C_rot1, C_rot2, C_rot3, C_rot4};
+    int best = 0;
+    for (int i = 1; i < 5; i++) {
+        if (C_min[i] < C_min[best]) {
+            best = i;
+        }
+    }
+
+    if (best == 1) {
+        node->left = node6->index;
+        node6->parent = node->index;
+        node3->left = node2->index;
+        node2->parent = node3->index;
+        update_bbox(bvh, node3);
+        node3->cost= C_t + (surface_area(node2->bbox) * node2->cost + surface_area(node7->bbox) * node7->cost)/surface_area(node3->bbox);
+    }
+    if (best == 2) {
+        node->left = node7->index;
+        node7->parent = node->index;
+        node3->right = node2->index;
+        node2->parent = node3->index;
+        update_bbox(bvh, node3);
+        node3->cost= C_t + (surface_area(node2->bbox) * node2->cost + surface_area(node6->bbox) * node6->cost)/surface_area(node3->bbox);
+    }
+    if (best == 3) {
+        node->right = node4->index;
+        node4->parent = node->index;
+        node2->left = node3->index;
+        node3->parent = node2->index;
+        update_bbox(bvh, node2);
+        node2->cost= C_t + (surface_area(node3->bbox) * node3->cost + surface_area(node5->bbox) * node5->cost)/surface_area(node2->bbox);
+    }
+    if (best == 4) {
+        node->right = node5->index;
+        node5->parent = node->index;
+        node2->right = node3->index;
+        node3->parent = node2->index;
+        update_bbox(bvh, node2);
+        node2->cost= C_t + (surface_area(node3->bbox) * node3->cost + surface_area(node4->bbox) * node4->cost)/surface_area(node2->bbox);
+    }
+    node->cost=C_min[best];
+    return node->cost;
+}
+
+double optimize_w_rotation(BVH* bvh, BVHNode* node, int max_depth, int depth) {
+    /*
+    For a stable BVH=> height of the tree h = log_2(f)
+    with f the number of leafs (N = 2f -1)
+    */
+    if (depth >= max_depth || is_leaf(node, bvh->NperLeaf)) {
+        update_cost(bvh, node);
+        return node->cost;
+    }
+    // go deeper recursively
+    double C_L=optimize_w_rotation(bvh, &bvh->nodes[node->left], max_depth, depth + 1);
+    double C_R=optimize_w_rotation(bvh, &bvh->nodes[node->right], max_depth, depth + 1);
+    double S_L = surface_area(bvh->nodes[node->left].bbox);
+    double S_R = surface_area(bvh->nodes[node->right].bbox);
+    double S = surface_area(node->bbox);
+    node->cost = C_t + (S_L * C_L + S_R * C_R)/S;
+    return rotation(bvh, node);
+}
+
 
 void free_bvh(BVH* bvh) {
     if (bvh) {

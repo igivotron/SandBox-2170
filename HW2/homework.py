@@ -59,6 +59,10 @@ lib.printBVH2.argtypes = [ctypes.POINTER(bvh_C)]
 lib.printBVH2.restype = None
 lib.flat_bvh.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(ctypes.c_float)]    
 lib.flat_bvh.restype = None
+lib.update_cost.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(BVHNode)]
+lib.update_cost.restype = ctypes.c_double
+lib.optimize_w_rotation.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(BVHNode), ctypes.c_int, ctypes.c_int]
+lib.optimize_w_rotation.restype = ctypes.c_double
 
 class Homework:
     def __init__(self):
@@ -130,7 +134,7 @@ class Homework:
         lib.update(bvh_tree, current)
 
         if i%6==0:
-            pass #put here the rotation
+            lib.optimize_w_rotation(bvh_tree, current, 10, 0)
 
     def find_intersections(self, simulator) -> list[Contact]:
         """Return all contacts using the BVH."""
@@ -143,18 +147,18 @@ class Homework:
         else:
             self.update_bvh(simulator)
 
-        if i==100:
-            #every 100 frames, rebuild the BVH
-            pos = simulator.positions.astype(np.float64).flatten()
-            pos_c = pos.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-            lib.free_bvh(bvh_tree)
-            radii = simulator.radii.astype(np.float64).flatten()
-            radii_c = radii.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-            bvh_tree = lib.create_bvh(pos_c, radii_c, len(simulator.positions), 1)
-            self.bvh_tree = bvh_tree
-            lib.build_bvh(bvh_tree)
-            # bvh_tree.build()
-            i=0
+        # if i==100:
+        #     #every 100 frames, rebuild the BVH
+        #     pos = simulator.positions.astype(np.float64).flatten()
+        #     pos_c = pos.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        #     lib.free_bvh(bvh_tree)
+        #     radii = simulator.radii.astype(np.float64).flatten()
+        #     radii_c = radii.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        #     bvh_tree = lib.create_bvh(pos_c, radii_c, len(simulator.positions), 1)
+        #     self.bvh_tree = bvh_tree
+        #     lib.build_bvh(bvh_tree)
+        #     # bvh_tree.build()
+        #     i=0
         
         potential_intersections = np.zeros((len(simulator.positions)**2), dtype=np.int32)
         potential_intersections_c = potential_intersections.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
