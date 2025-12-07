@@ -79,7 +79,7 @@ We've implemented the algorithm throught a tree.
     - We separate the points into two subnodes with respect to the best cut.
     - We continue iteratively until reaching all the leaves.
 2. Tree update:
-    - Every iterations, we update the hit boxes with wrt the new points positions iteratively from leaves to root.
+    - Every iterations, we update the hit boxes wrt the new points positions iteratively from leaves to root.
     - Every 6 iterations, we do a rotation on the nodes to minimize the heurisitc
 3. Itersection finding:
     - To find intersection between two boxes, we compare their extremities.
@@ -118,7 +118,7 @@ All the performance have been retrieved on
     - Flatten bvh
 
 - **Myrine** : 
-    - Node rotation in python
+    - Tree rotation in python
     - Finding intersection
     - LBVH : Morton code in python and C
 
@@ -127,6 +127,7 @@ All the performance have been retrieved on
     - Raytracing
     - Intersection
     - C implementation
+    - Translation of the rotations in C
 
 
 
