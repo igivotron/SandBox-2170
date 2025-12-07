@@ -43,10 +43,16 @@ BVH* create_bvh(double* positions, double* radii, int n_points, int NperLeaf) {
         mortonIndices[i].morton = morton3D(positions, i); 
     }
 
-    bvh->positions = positions;//malloc(sizeof(double)*n_points*3);
-    //memcpy(bvh->positions, sorted_positions, sizeof(double) * n_points * 3);
-    bvh->radii = radii;//malloc(sizeof(double) * n_points);
-    //memcpy(bvh->radii, sorted_radii, sizeof(double) * n_points);
+    // bvh->positions = positions;//malloc(sizeof(double)*n_points*3);
+    // //memcpy(bvh->positions, sorted_positions, sizeof(double) * n_points * 3);
+    // bvh->radii = radii;//malloc(sizeof(double) * n_points);
+    // //memcpy(bvh->radii, sorted_radii, sizeof(double) * n_points);
+
+    bvh->positions = malloc(sizeof(double)*n_points*3);
+    memcpy(bvh->positions, positions, sizeof(double) * n_points * 3);
+    bvh->radii = malloc(sizeof(double) * n_points);
+    memcpy(bvh->radii, radii, sizeof(double) * n_points);
+
     bvh->NperLeaf = NperLeaf;
     bvh->n_nodes = 0;
     bvh->nodes = malloc(sizeof(BVHNode) * (2 * n_points - 1)); // Max nodes in a binary tree
@@ -226,6 +232,7 @@ void update(BVH* bvh, BVHNode* current) {
     if (current == NULL) current = &bvh->nodes[bvh->root];
     // 1. If current is a leaf → compute its bbox
     if (is_leaf(current, bvh->NperLeaf)) {
+        printf("Updating leaf node %d\n", current->index);
         int idx = current->items[0];
         double radius = bvh->radii[idx];
         current->bbox[0] = bvh->positions[3 * idx] - radius;
@@ -237,10 +244,13 @@ void update(BVH* bvh, BVHNode* current) {
         return;
     }
 
+    printf("Descending to children of node %d\n", current->index);
+
     // // 2. Descend until we reach a leaf
     update(bvh, &bvh->nodes[current->left]);
     update(bvh, &bvh->nodes[current->right]);
     update_bbox(bvh, current);
+    // return;
 }
 
 int bbox_intersect(double *bb1, double *bb2){
@@ -390,41 +400,4 @@ void printBVH2(BVH* bvh) {
                node->right,
                node->parent);
     }
-}
-
-int main() {
-    // Example usage of BVH
-    int n_points = 10;
-    double* positions = (double*)malloc(sizeof(double) * n_points * 3);
-    double* radii = (double*)malloc(sizeof(double) * n_points);
-    for (int i = 0; i < n_points; i++) {
-        positions[3*i] = rand() % 100;
-        positions[3*i + 1] = rand() % 100;
-        positions[3*i + 2] = rand() % 100;
-        radii[i] = (rand() % 10) + 1;
-    }
-
-    // double positions_array[] = {1.0, 1.0, 1.0,
-    //                             2.0, 2.0, 2.0,
-    //                             3.0, 3.0, 3.0,
-    //                             4.0, 4.0, 4.0,
-    //                             5.0, 5.0, 5.0};
-    // double radii_array[] = {0.5, 0.5, 0.5, 0.5, 0.5};
-    // int n_points = 5;
-    // double* positions = (double*)malloc(sizeof(double) * n_points * 3);
-    // double* radii = (double*)malloc(sizeof(double) * n_points);
-    // memcpy(positions, positions_array, sizeof(double) * n_points * 3);
-    // memcpy(radii, radii_array, sizeof(double) * n_points);
-
-
-    BVH* bvh = create_bvh(positions, radii, n_points, 1);
-    int N = sizeof(positions);
-    build_bvh(bvh, N);
-    printBVH(bvh, &bvh->nodes[bvh->root], 0);
-    update(bvh, NULL);
-    // Clean up
-    free_bvh(bvh);
-    free(positions);
-    free(radii);
-    return 0;
 }

@@ -12,9 +12,9 @@ i=0
 ray=False
 
 # Machin qui fait le lien entre python et C
-# lib = ctypes.CDLL(os.path.abspath("bvh_C.so"))
+lib = ctypes.CDLL(os.path.abspath("bvh_C.so"))
 
-lib = ctypes.CDLL(os.path.abspath("bvh_C.dll"))
+# lib = ctypes.CDLL(os.path.abspath("bvh_C.dll"))
 
 class BVHNode(ctypes.Structure):
     _fields_ = [
@@ -103,14 +103,15 @@ class Homework:
         pos_c = pos.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
         radii_c = radii.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
         N = len(simulator.positions)
-        bvh_tree_c = lib.create_bvh(pos_c, radii_c, N, 1)
-        lib.build_bvh(bvh_tree_c, N)
-        self.bvh_tree = bvh_tree_c
 
-        # bvh_tree = bvh.BVH(simulator.positions, simulator.radii)
-        # bvh_tree.build()
-        # # bvh.print_bvh(bvh_tree.root)
-        # self.data_structure_staging = bvh_tree
+
+        # We don't know why the code only works when we don't initialize the bvh_tree
+        #TODO: fix this bug
+
+        # bvh_tree_c = lib.create_bvh(pos_c, radii_c, N, 1)
+        # lib.build_bvh(bvh_tree_c, N)
+        # self.bvh_tree = bvh_tree_c
+
         global i
         i=0
         return
@@ -145,11 +146,13 @@ class Homework:
 
         if i==100:
             #every 100 frames, rebuild the BVH
+
             pos = simulator.positions.astype(np.float64).flatten()
             pos_c = pos.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-            lib.free_bvh(bvh_tree)
             radii = simulator.radii.astype(np.float64).flatten()
             radii_c = radii.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+            
+            lib.free_bvh(bvh_tree)
             bvh_tree = lib.create_bvh(pos_c, radii_c, len(simulator.positions), 1)
             self.bvh_tree = bvh_tree
             N = len(simulator.positions)
