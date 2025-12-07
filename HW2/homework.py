@@ -12,9 +12,9 @@ i=0
 ray=False
 
 # Machin qui fait le lien entre python et C
-# lib = ctypes.CDLL(os.path.abspath("bvh_C.so"))
+lib = ctypes.CDLL(os.path.abspath("bvh_C.so"))
 
-lib = ctypes.CDLL(os.path.abspath("bvh_C.dll"))
+# lib = ctypes.CDLL(os.path.abspath("bvh_C.dll"))
 
 class BVHNode(ctypes.Structure):
     _fields_ = [
