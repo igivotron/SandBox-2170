@@ -39,7 +39,7 @@ normals = normals / np.linalg.norm(normals, axis=1, keepdims=True)
 def weights(Graph, normals):
     raws, cols = Graph.nonzero()
     dots = np.sum(normals[raws] * normals[cols], axis=1)
-    vals = 1 - np.abs(dots)
+    vals = 2 - np.abs(dots)
     W = csr_matrix((vals, (raws, cols)), shape=Graph.shape)
     return W
 
@@ -92,19 +92,12 @@ W = W.tocsr()
 # Minimum Spanning Tree
 MST = minimum_spanning_tree(W)
 MST = MST.maximum(MST.T)
-MST = MST.tocsr()
 # On redresse les normales
-oriented_normals = preorientNormals(W, normals)
+oriented_normals = preorientNormals(MST, normals)
 oriented_normals /= np.linalg.norm(oriented_normals, axis=1, keepdims=True)
-"""
-Pour une raison obscure, l'abre sous tendant MST n'est pas connexe.
-knnGrap et W sont connexes, mais pas MST.
-Peut être un problème de poids nuls dans W? (spoiler oui)
-"""
-
 
 # from scipy.sparse.csgraph import connected_components
-# n_components, labels = connected_components(W)
+# n_components, labels = connected_components(MST)
 # print("Nombre de composantes :", n_components)
 
 
@@ -112,7 +105,7 @@ plt.figure(figsize=(10,10))
 ax = plt.axes(projection='3d')
 ax.quiver(points[:,0], points[:,1], points[:,2],
           oriented_normals[:,0], oriented_normals[:,1], oriented_normals[:,2],
-          length=10, normalize=True, color='b', linewidth=0.5)
+          length=0.001, normalize=True, color='b', linewidth=0.5)
 
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
@@ -124,8 +117,8 @@ plt.show()
 
 """
 TODO:
-- Homogéniser les normales: KNN graph. Il faut que les normales soient cohérentes entre voisines
-- Utiliser igl pour orienter les normales
+- Homogéniser les normales: KNN graph. Il faut que les normales soient cohérentes entre voisines    DONE
+- Utiliser igl pour orienter les normales                                                           IMPOSSIBLE
 - Faire Poisson Surface Reconstruction avec les points et les normales
 - Utiliser Marching Cubes pour extraire la surface
 """
