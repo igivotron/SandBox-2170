@@ -33,6 +33,12 @@ normals = np.array([get_normal(point, points, kdtree, k) for point in points])
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.quiver(points[:, 0], points[:, 1], points[:, 2],
-          normals[:, 0], normals[:, 1], normals[:, 2], length=0.1, normalize=True)
+          normals[:, 0], normals[:, 1], normals[:, 2], length=1e-1, normalize=True)
 ax.set_title('Point Cloud with Normals')
 plt.show()
+
+# plt.figure()
+# ax = plt.axes(projection='3d')
+# ax.scatter3D(points[:, 0], points[:, 1], points[:, 2], s=1)
+# ax.set_title('3D Point Cloud')
+# plt.show()
