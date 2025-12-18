@@ -70,8 +70,8 @@ def write_ply(filename, vertices, faces=None, vertex_colors=None):
 
 # Sphere
 R =1
-num_lat = 20
-num_lon = 40
+num_lat = 10
+num_lon = 20
 vertices = []
 faces = []
 for i in range(num_lat + 1):
