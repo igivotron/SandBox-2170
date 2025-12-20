@@ -8,6 +8,7 @@ import igl
 from sklearn.neighbors import kneighbors_graph
 import time
 from scipy.sparse import csr_matrix
+import poisson
 
 
 parser = ap.ArgumentParser()
@@ -22,6 +23,8 @@ with open(input_file, 'rb') as f:
 
 elements = plydata['vertex'].data
 points = np.array([[elements[i][0], elements[i][1], elements[i][2]] for i in range(len(elements))])
+# remove duplicate points
+points = np.unique(points, axis=0)
 kdtree = KDTree(points)
 
 
@@ -111,6 +114,28 @@ ax.set_xlabel('X')
 ax.set_ylabel('Y')
 ax.set_zlabel('Z')
 plt.title('Oriented Normals using MST on kNN Graph')
+plt.show()
+
+
+# how to choose sigma? density of data points
+sigma = (np.max(points, axis=0) - np.min(points, axis=0)) 
+sigma = np.cbrt(sigma[0]*sigma[1]*sigma[2]/len(points))
+print("Sigma:", sigma)
+
+print("Solving Poisson equation...")
+x,y,z,xhi = poisson.solve_poisson(points, oriented_normals, sigma=sigma, tree=kdtree)
+
+# plot xhi as a grid color points
+grid=np.meshgrid(x,y,z)
+plt.figure()
+ax = plt.axes(projection='3d')
+sc = ax.scatter(grid[0], grid[1], grid[2], c=xhi.flatten(), cmap='Greys', s=0.01)
+plt.colorbar(sc)
+plt.title('Poisson Solution Values at Points')
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+plt.axis('equal')
 plt.show()
 
 
