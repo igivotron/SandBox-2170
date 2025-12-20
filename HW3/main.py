@@ -6,23 +6,25 @@ import plyfile as ply
 import argparse as ap
 import igl
 from sklearn.neighbors import kneighbors_graph
-import time
 from scipy.sparse import csr_matrix
+from RegularFish import RegularFish
 
 
 parser = ap.ArgumentParser()
-parser.add_argument('--input', '-i', type=str, default='data/bunny.ply', help='Path to the input PLY file')
+parser.add_argument('--input', '-i', type=str, default='data/teapot.ply', help='Path to the input PLY file')
 parser.add_argument('--k', '-k', type=int, default=10, help='Number of nearest neighbors to find')
 args = parser.parse_args()
 input_file = args.input
 k = args.k
 
-with open(input_file, 'rb') as f:
-    plydata = ply.PlyData.read(f)
+def load_point_cloud(input_file):
+    with open(input_file, 'rb') as f:
+        plydata = ply.PlyData.read(f)
 
-elements = plydata['vertex'].data
-points = np.array([[elements[i][0], elements[i][1], elements[i][2]] for i in range(len(elements))])
-kdtree = KDTree(points)
+    elements = plydata['vertex'].data
+    points = np.array([[elements[i][0], elements[i][1], elements[i][2]] for i in range(len(elements))])
+    kdtree = KDTree(points)
+    return points, kdtree
 
 
 def get_normal(point, points, tree, k):
@@ -32,9 +34,6 @@ def get_normal(point, points, tree, k):
     cov_matrix = np.cov((neighbors - centroid).T)
     eigenvalues, eigenvectors = np.linalg.eig(cov_matrix)
     return eigenvectors[:, np.argmin(eigenvalues)]
-
-normals = np.array([get_normal(point, points, kdtree, k) for point in points])
-normals = normals / np.linalg.norm(normals, axis=1, keepdims=True)
     
 def weights(Graph, normals):
     raws, cols = Graph.nonzero()
@@ -56,29 +55,14 @@ def preorientNormals(graph, normals):
                 if dot < 0:
                     oriented_normals[neighbor] = -oriented_normals[neighbor]
                 dfs(neighbor)
-    
     dfs(0)
 
-    print("Visited:", np.sum(visited), "out of", Npoints)
+    # print("Visited:", np.sum(visited), "out of", Npoints) Normalement il passe partout (Fort Boyard)
     return oriented_normals
 
-    
-        
-
-# def orientNormals(normals, points, k):
-#     N = len(points)
-#     eps = 1e-3 * np.mean(np.linalg.norm(points - np.mean(points, axis=0), axis=1))
-#     Pplus = points + eps * normals
-#     Pminus = points - eps * normals
-#     Wplus = np.zeros(N)
-#     Wminus = np.zeros(N)
-#     igl.fast_winding_number_for_points(points, points, normals, Pplus, Wplus)
-#     igl.fast_winding_number_for_points(points, points, normals, Pminus, Wminus)
-#     oriented_normals = normals.copy()
-#     for i in range(N):
-#         if Wminus[i] > Wplus[i]:
-#             oriented_normals[i] = -oriented_normals[i]
-#     return oriented_normals
+points, kdtree = load_point_cloud(input_file)
+normals = np.array([get_normal(point, points, kdtree, k) for point in points])
+normals = normals / np.linalg.norm(normals, axis=1, keepdims=True)
 
 # kNN graph
 knnGraph = kneighbors_graph(points, n_neighbors=k, mode='connectivity', include_self=False, n_jobs=-1) # n_jobs=-1 to use all processors
@@ -96,16 +80,26 @@ MST = MST.maximum(MST.T)
 oriented_normals = preorientNormals(MST, normals)
 oriented_normals /= np.linalg.norm(oriented_normals, axis=1, keepdims=True)
 
-# from scipy.sparse.csgraph import connected_components
-# n_components, labels = connected_components(MST)
-# print("Nombre de composantes :", n_components)
+fish = RegularFish(points, kdtree, oriented_normals, h=5)
+centers = fish.getCenters()
+sol = fish.Solve()
+sol /= np.max(np.abs(sol))
 
 
+
+
+# Visualization
 plt.figure(figsize=(10,10))
 ax = plt.axes(projection='3d')
+ax.set_aspect('equal')
+
+# Scatter points
+ax.scatter(points[:,0], points[:,1], points[:,2], color='k', s=1)
+
+# Plot oriented normals
 ax.quiver(points[:,0], points[:,1], points[:,2],
           oriented_normals[:,0], oriented_normals[:,1], oriented_normals[:,2],
-          length=0.001, normalize=True, color='b', linewidth=0.5)
+          length=1, normalize=True, color='b', linewidth=0.5)
 
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
@@ -119,6 +113,10 @@ plt.show()
 TODO:
 - Homogéniser les normales: KNN graph. Il faut que les normales soient cohérentes entre voisines    DONE
 - Utiliser igl pour orienter les normales                                                           IMPOSSIBLE
-- Faire Poisson Surface Reconstruction avec les points et les normales
+- Résoudre Poisson
+    - Construire la grille régulière
+    - Calculer l'approximation finie du Laplacien
+    - Gaussian splatting des normales sur la grille
+    - Résoudre le système linéaire creux (CG)
 - Utiliser Marching Cubes pour extraire la surface
 """
