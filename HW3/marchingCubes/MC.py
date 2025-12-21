@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from triangleTable import TriangleTable
+from .triangleTable import TriangleTable
 
 
 class Cube(object):
@@ -50,15 +50,15 @@ class Cube(object):
                         [2, 6],
                     ]
 
-    def getBinaryIndex(self):
+    def getBinaryIndex(self,threshold):
         index = 0
         for i in range(8):
-            if self.vertices[i] > 0:
+            if self.vertices[i] > threshold:
                 index |= 1 << i
         return index
     
-    def getTriangles(self):
-        index = self.getBinaryIndex()
+    def getTriangles(self, threshold=0.5):
+        index = self.getBinaryIndex(threshold)
         EdgeIndexes = self.table[index]
         triangles = []
         triangle = []
@@ -82,18 +82,24 @@ class Cube(object):
             i += 1
         return triangles
     
+    
 
     def draw(self, ax):
         triangles = self.getTriangles()
-        ax.cla()
-        ax.set_aspect("equal")
 
         for pos in self.positions:
-            color = 'r' if self.vertices[self.positions.index(pos)] > 0 else 'b'
+            color = 'r' if self.vertices[self.positions.index(pos)] > 0.5 else 'b'
             ax.scatter(pos[0], pos[1], pos[2], color=color)
 
         for triangle in triangles:
-            tri = Poly3DCollection([triangle], alpha=0.5, facecolor='r', edgecolor='r')
+            tri = Poly3DCollection([triangle], alpha=0.8, facecolor='r', edgecolor='r')
+            ax.add_collection3d(tri)
+
+    def draw_without_vertices(self, ax, alpha=0.5, threshold=0.5):
+        triangles = self.getTriangles(threshold)
+
+        for triangle in triangles:
+            tri = Poly3DCollection([triangle], alpha=alpha, facecolor='r')
             ax.add_collection3d(tri)
 
     # Partie Interactive
@@ -115,17 +121,43 @@ class Cube(object):
             self.draw(ax)
             fig.canvas.draw_idle()
 
-cube1 = Cube([0,0,0], 1, [1,1,1,1,1,1,1,1])
-triangles = cube1.getTriangles()
+            
+if __name__ == "__main__":
+    #exemple with one cube
+    cube1 = Cube([0,0,0], 1, [0.7,1,0.5,1,0.2,1,0.3,1])
+    triangles = cube1.getTriangles()
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
 
-cube1.draw(ax)
+    cube1.draw(ax)
 
-fig.canvas.mpl_connect(
-    'key_press_event',
-    lambda event: cube1.on_key(event, ax, fig)
-)
+    fig.canvas.mpl_connect(
+        'key_press_event',
+        lambda event: cube1.on_key(event, ax, fig)
+    )
 
-plt.show()
+    plt.show()
+
+    #exemple with multiple cubes
+
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+
+    # points=np.random.randint(0,2,27).reshape((3,3,3))
+    # for i in range(2):
+    #     for j in range(2):
+    #         for k in range(2):
+    #             cube=Cube([i,j,k], 1, [
+    #                 points[i][j][k],
+    #                 points[i+1][j][k],
+    #                 points[i][j+1][k],
+    #                 points[i+1][j+1][k],
+    #                 points[i][j][k+1],
+    #                 points[i+1][j][k+1],
+    #                 points[i][j+1][k+1],
+    #                 points[i+1][j+1][k+1],
+    #             ])
+    #             cube.draw(ax)
+
+    # plt.show()
