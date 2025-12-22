@@ -128,7 +128,7 @@ print("Sigma:", sigma)
 
 start = time.time()
 print("Solving Poisson equation...")
-x,y,z,chi = poisson.solve_poisson(points, oriented_normals, sigma=sigma, tree=kdtree, N=20)
+x,y,z,chi = poisson.solve_poisson(points, oriented_normals, sigma=sigma, tree=kdtree, N=100)
 end = time.time()
 print("Poisson equation solved in", end-start, "seconds")
 #refit between 0 and 1
@@ -190,7 +190,7 @@ def save_triangles_to_ply(x, y, z, chi, name_file, threshold=0):
     faces_ply = np.array(   [(face,) for face in faces]  ,  dtype=[('vertex_indices', 'i4', (3,))]     )
     PlyData([ PlyElement.describe(vertices_ply, 'vertex') , PlyElement.describe(faces_ply, 'face')  ]).write(name_file)
 start = time.time()
-save_triangles_to_ply(x, y, z, chi, "bunny_mesh.ply", threshold)
+save_triangles_to_ply(x, y, z, chi, "triangles.ply", threshold)
 end = time.time()
 print("Saved triangles to ply file in", end-start, "seconds")
 ##################################################
@@ -244,7 +244,7 @@ def plot_isosurface_marching_cubes(x, y, z, chi, threshold):
 
     plt.show()
 
-plot_isosurface_marching_cubes(x, y, z, chi, threshold)
+# plot_isosurface_marching_cubes(x, y, z, chi, threshold)
 
 
 """

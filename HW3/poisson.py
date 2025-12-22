@@ -4,6 +4,25 @@ from scipy.sparse.linalg import LaplacianNd
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import cg
 import time
+import os
+import ctypes
+
+# lib = ctypes.CDLL(os.path.abspath("vector_field.so"))
+lib = ctypes.CDLL(os.path.abspath("vector_field.dll"))
+lib.vector_field.argtypes = [ctypes.c_int, 
+                             ctypes.POINTER(ctypes.c_double), 
+                             ctypes.POINTER(ctypes.c_double), 
+                             ctypes.POINTER(ctypes.c_double), 
+                             ctypes.c_int,
+                             ctypes.POINTER(ctypes.c_double), 
+                             ctypes.c_int,
+                             ctypes.POINTER(ctypes.c_double), 
+                             ctypes.c_int,
+                             ctypes.c_double,
+                             ctypes.POINTER(ctypes.c_float)
+                            ]
+lib.vector_field.restype = None
+
 
 def vector_field(x, y, z, normals, sigma, tree, points):
     """
@@ -33,9 +52,26 @@ def solve_poisson(points, normals, sigma, tree, N=None):
     x = np.linspace(middle[0]-size/2, middle[0]+size/2, N)
     y = np.linspace(middle[1]-size/2, middle[1]+size/2, N)
     z = np.linspace(middle[2]-size/2, middle[2]+size/2, N)
+    x_c=np.ascontiguousarray(x, dtype=np.float64)
+    y_c=np.ascontiguousarray(y, dtype=np.float64)
+    z_c=np.ascontiguousarray(z, dtype=np.float64)
     
     start= time.time()
-    vec_field=vector_field(x,y,z, normals, sigma, tree, points)
+    vec_field = np.zeros((N, N, N, 3), dtype=np.float32, order='C') 
+    points_c = np.ascontiguousarray(points, dtype=np.float64)
+    normals_c = np.ascontiguousarray(normals, dtype=np.float64)   
+    lib.vector_field(ctypes.c_int(len(points)),
+                     points_c.flatten().ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+                     normals_c.flatten().ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+                     x_c.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+                     ctypes.c_int(N),
+                     y_c.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+                     ctypes.c_int(N),
+                     z_c.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+                     ctypes.c_int(N),
+                     ctypes.c_double(sigma),
+                     vec_field.ctypes.data_as(ctypes.POINTER(ctypes.c_float)))
+    # vec_field=vector_field(x,y,z, normals, sigma, tree, points)
     end = time.time()
     print("Vector field computed in", end-start, "seconds")
     
