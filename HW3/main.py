@@ -12,6 +12,7 @@ import poisson
 import marchingCubes.MC as MC
 import skfmm
 from plyfile import PlyData, PlyElement
+import time
 
 
 parser = ap.ArgumentParser()
@@ -125,8 +126,11 @@ sigma = (np.max(points, axis=0) - np.min(points, axis=0))
 sigma = np.cbrt(sigma[0]*sigma[1]*sigma[2]/len(points))
 print("Sigma:", sigma)
 
+start = time.time()
 print("Solving Poisson equation...")
-x,y,z,chi = poisson.solve_poisson(points, oriented_normals, sigma=sigma, tree=kdtree, N=25)
+x,y,z,chi = poisson.solve_poisson(points, oriented_normals, sigma=sigma, tree=kdtree, N=20)
+end = time.time()
+print("Poisson equation solved in", end-start, "seconds")
 #refit between 0 and 1
 chi-=np.max(chi)
 chi/=np.min(chi)
@@ -150,7 +154,7 @@ threshold = 0 #threshold for the isosurface
 
 ##################################################
 # save triangles to PLY file
-def save_triangles_to_ply(x, y, z, chi, threshold=0):
+def save_triangles_to_ply(x, y, z, chi, name_file, threshold=0):
     triangles = []
     threshold = 0
     for i in range(len(x)-1):
@@ -184,7 +188,11 @@ def save_triangles_to_ply(x, y, z, chi, threshold=0):
         faces.append(face)
     vertices_ply = np.array(   [(v[0], v[1], v[2]) for v in vertices]  ,  dtype=[('x','f4'), ('y','f4'), ('z','f4')] )
     faces_ply = np.array(   [(face,) for face in faces]  ,  dtype=[('vertex_indices', 'i4', (3,))]     )
-    PlyData([ PlyElement.describe(vertices_ply, 'vertex') , PlyElement.describe(faces_ply, 'face')  ]).write("triangles.ply")
+    PlyData([ PlyElement.describe(vertices_ply, 'vertex') , PlyElement.describe(faces_ply, 'face')  ]).write(name_file)
+start = time.time()
+save_triangles_to_ply(x, y, z, chi, "bunny_mesh.ply", threshold)
+end = time.time()
+print("Saved triangles to ply file in", end-start, "seconds")
 ##################################################
 
 def plot_isosurface_marching_cubes(x, y, z, chi, threshold):

@@ -3,6 +3,7 @@ import scipy as sp
 from scipy.sparse.linalg import LaplacianNd
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import cg
+import time
 
 def vector_field(x, y, z, normals, sigma, tree, points):
     """
@@ -32,7 +33,12 @@ def solve_poisson(points, normals, sigma, tree, N=None):
     x = np.linspace(middle[0]-size/2, middle[0]+size/2, N)
     y = np.linspace(middle[1]-size/2, middle[1]+size/2, N)
     z = np.linspace(middle[2]-size/2, middle[2]+size/2, N)
+    
+    start= time.time()
     vec_field=vector_field(x,y,z, normals, sigma, tree, points)
+    end = time.time()
+    print("Vector field computed in", end-start, "seconds")
+    
     # create laplacian operator
     A=LaplacianNd((N, N, N), boundary_conditions='dirichlet')
     A = A.tosparse().tocsr()
@@ -43,5 +49,10 @@ def solve_poisson(points, normals, sigma, tree, N=None):
     div_field=dVxdx + dVydy + dVzdz
     b = -div_field.flatten()
     #solve Poisson equation
+    
+    start = time.time()
     phi,exit_code = cg(A, b)
+    end = time.time()
+    print("Poisson equation solved in", end-start, "seconds")
+    
     return x,y,z,phi.reshape((N, N, N))*h*h
