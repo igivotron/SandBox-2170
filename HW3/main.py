@@ -27,8 +27,6 @@ with open(input_file, 'rb') as f:
 
 elements = plydata['vertex'].data
 points = np.array([[elements[i][0], elements[i][1], elements[i][2]] for i in range(len(elements))])
-# remove duplicate points
-points = np.unique(points, axis=0)
 kdtree = KDTree(points)
 
 
@@ -68,9 +66,6 @@ def preorientNormals(graph, normals):
 
     print("Visited:", np.sum(visited), "out of", Npoints)
     return oriented_normals
-
-    
-        
 
 # def orientNormals(normals, points, k):
 #     N = len(points)
@@ -128,7 +123,7 @@ print("Sigma:", sigma)
 
 start = time.time()
 print("Solving Poisson equation...")
-x,y,z,chi = poisson.solve_poisson(points, oriented_normals, sigma=sigma, tree=kdtree, N=150)
+x,y,z,chi = poisson.solve_poisson(points, oriented_normals, sigma=sigma/10, tree=kdtree, N=400)
 end = time.time()
 print("Poisson equation solved in", end-start, "seconds")
 #refit between 0 and 1
@@ -173,16 +168,7 @@ def save_triangles_to_ply(x, y, z, chi, name_file, threshold=0):
                 ]
                 if min(vals) > threshold or max(vals) < threshold:
                     continue
-                cube=MC.Cube([i,j,k], 1, [
-                    chi[i][j][k],
-                    chi[i+1][j][k],
-                    chi[i][j+1][k],
-                    chi[i+1][j+1][k],
-                    chi[i][j][k+1],
-                    chi[i+1][j][k+1],
-                    chi[i][j+1][k+1],
-                    chi[i+1][j+1][k+1],
-                ])
+                cube=MC.Cube([i,j,k], 1, vals)
                 tris = cube.getTriangles(threshold=threshold)
                 for tri in tris:
                     triangles.append(tri)
