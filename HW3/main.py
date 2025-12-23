@@ -128,7 +128,7 @@ print("Sigma:", sigma)
 
 start = time.time()
 print("Solving Poisson equation...")
-x,y,z,chi = poisson.solve_poisson(points, oriented_normals, sigma=sigma, tree=kdtree, N=100)
+x,y,z,chi = poisson.solve_poisson(points, oriented_normals, sigma=sigma, tree=kdtree, N=150)
 end = time.time()
 print("Poisson equation solved in", end-start, "seconds")
 #refit between 0 and 1
@@ -157,40 +157,47 @@ threshold = 0 #threshold for the isosurface
 def save_triangles_to_ply(x, y, z, chi, name_file, threshold=0):
     triangles = []
     threshold = 0
+    start = time.time()
     for i in range(len(x)-1):
-            for j in range(len(y)-1):
-                for k in range(len(z)-1):
-                    cube=MC.Cube([i,j,k], 1, [
-                        chi[i][j][k],
-                        chi[i+1][j][k],
-                        chi[i][j+1][k],
-                        chi[i+1][j+1][k],
-                        chi[i][j][k+1],
-                        chi[i+1][j][k+1],
-                        chi[i][j+1][k+1],
-                        chi[i+1][j+1][k+1],
-                    ])
-                    tris = cube.getTriangles(threshold=threshold)
-                    for tri in tris:
-                        triangles.append(tri)
-    vertices = []
-    vertex_index = {}
-    faces= []
-
-    for tri in triangles:
-        face = []
-        for v in tri:
-            v_tuple = (v[0], v[1], v[2])
-            if v_tuple not in vertex_index:
-                vertex_index[v_tuple] = len(vertices)
-                vertices.append(v)
-            face.append(vertex_index[v_tuple])
-        faces.append(face)
+        for j in range(len(y)-1):
+            for k in range(len(z)-1):
+                vals = [
+                    chi[i][j][k],
+                    chi[i+1][j][k],
+                    chi[i][j+1][k],
+                    chi[i+1][j+1][k],
+                    chi[i][j][k+1],
+                    chi[i+1][j][k+1],
+                    chi[i][j+1][k+1],
+                    chi[i+1][j+1][k+1],
+                ]
+                if min(vals) > threshold or max(vals) < threshold:
+                    continue
+                cube=MC.Cube([i,j,k], 1, [
+                    chi[i][j][k],
+                    chi[i+1][j][k],
+                    chi[i][j+1][k],
+                    chi[i+1][j+1][k],
+                    chi[i][j][k+1],
+                    chi[i+1][j][k+1],
+                    chi[i][j+1][k+1],
+                    chi[i+1][j+1][k+1],
+                ])
+                tris = cube.getTriangles(threshold=threshold)
+                for tri in tris:
+                    triangles.append(tri)
+    stop= time.time()
+    print("Triangles extracted in", stop-start, "seconds")
+    start = time.time()
+    vertices, inverse = np.unique(np.array(triangles).reshape(-1,3), axis=0, return_inverse=True)
+    faces = inverse.reshape((-1,3))
     vertices_ply = np.array(   [(v[0], v[1], v[2]) for v in vertices]  ,  dtype=[('x','f4'), ('y','f4'), ('z','f4')] )
     faces_ply = np.array(   [(face,) for face in faces]  ,  dtype=[('vertex_indices', 'i4', (3,))]     )
     PlyData([ PlyElement.describe(vertices_ply, 'vertex') , PlyElement.describe(faces_ply, 'face')  ]).write(name_file)
+    end = time.time()
+    print("Saved", len(faces), "triangles to", name_file, "in", end-start, "seconds")
 start = time.time()
-save_triangles_to_ply(x, y, z, chi, "triangles.ply", threshold)
+save_triangles_to_ply(x, y, z, chi, "fraude.ply", threshold)
 end = time.time()
 print("Saved triangles to ply file in", end-start, "seconds")
 ##################################################

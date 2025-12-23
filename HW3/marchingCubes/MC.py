@@ -73,10 +73,11 @@ class Cube(object):
 
             # Pas d'interpolation, juste le milieu de l'arête
             v0, v1 = self.edges[edgeIndex]
+            mu = (threshold - self.vertices[v0]) / (self.vertices[v1] - self.vertices[v0])
             mid = [
-                (self.positions[v0][0] + self.positions[v1][0]) / 2,
-                (self.positions[v0][1] + self.positions[v1][1]) / 2,
-                (self.positions[v0][2] + self.positions[v1][2]) / 2,
+                (self.positions[v0][0] + mu * (self.positions[v1][0] - self.positions[v0][0])),
+                (self.positions[v0][1] + mu * (self.positions[v1][1] - self.positions[v0][1])),
+                (self.positions[v0][2] + mu * (self.positions[v1][2] - self.positions[v0][2])),
             ]
             triangle.append(mid)
             i += 1
