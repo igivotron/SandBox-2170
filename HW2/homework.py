@@ -5,9 +5,64 @@ import wgpu
 import numpy as np
 import bvh
 import time
+import ctypes
+import os
 
 i=0
 ray=False
+
+# Machin qui fait le lien entre python et C
+lib = ctypes.CDLL(os.path.abspath("bvh_C.so"))
+
+# lib = ctypes.CDLL(os.path.abspath("bvh_C.dll"))
+
+class BVHNode(ctypes.Structure):
+    _fields_ = [
+        ("left", ctypes.c_int),                         # int
+        ("right", ctypes.c_int),                        # int
+        ("parent", ctypes.c_int),                       # int
+        ("bbox", ctypes.POINTER(ctypes.c_double)),      # double*
+        ("items", ctypes.POINTER(ctypes.c_int)),        # int*
+        ("n_items", ctypes.c_int),                      # int
+        ("index", ctypes.c_int),                        # int
+        ("state", ctypes.c_int),                        # int
+    ]
+
+class bvh_C(ctypes.Structure):
+    _fields_ = [
+        ("nodes", ctypes.POINTER(BVHNode)),     # BVHNode*
+        ("n_nodes", ctypes.c_int),              # int
+        ("positions", ctypes.POINTER(ctypes.c_double)),  # double*
+        ("radii", ctypes.POINTER(ctypes.c_double)),      # double*
+        ("NperLeaf", ctypes.c_int),             # int
+        ("root", ctypes.c_int),                 # int
+    ]
+
+
+lib.create_bvh.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_int]
+lib.create_bvh.restype = ctypes.POINTER(bvh_C)
+lib.update.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(BVHNode)]
+lib.update.restype = None
+lib.free_bvh.argtypes = [ctypes.POINTER(bvh_C)]
+lib.free_bvh.restype = None
+lib.update_positions.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(ctypes.c_double), ctypes.c_int]
+lib.update_positions.restype = None
+lib.build_bvh.argtypes = [ctypes.POINTER(bvh_C)]
+lib.build_bvh.restype = None
+lib.is_leaf.argtypes = [ctypes.POINTER(BVHNode), ctypes.c_int]
+lib.is_leaf.restype = ctypes.c_bool
+lib.find_pot_inter.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(ctypes.c_int)]
+lib.find_pot_inter.restype = ctypes.c_int
+lib.printBVH.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(BVHNode), ctypes.c_int]
+lib.printBVH.restype = None
+lib.printBVH2.argtypes = [ctypes.POINTER(bvh_C)]
+lib.printBVH2.restype = None
+lib.flat_bvh.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(ctypes.c_float)]    
+lib.flat_bvh.restype = None
+lib.update_cost.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(BVHNode)]
+lib.update_cost.restype = ctypes.c_double
+lib.optimize_w_rotation.argtypes = [ctypes.POINTER(bvh_C), ctypes.POINTER(BVHNode), ctypes.c_int, ctypes.c_int]
+lib.optimize_w_rotation.restype = ctypes.c_double
 
 class Homework:
     def __init__(self):
@@ -41,12 +96,45 @@ class Homework:
         if len(simulator.positions)==0:
             self.bvh_tree = None
             return
-        bvh_tree = bvh.BVH(simulator.positions, simulator.radii)
-        bvh_tree.build_quick(splits=4)
-        self.bvh_tree = bvh_tree
+        
+        if self.bvh_tree is not None:
+            lib.free_bvh(self.bvh_tree)
+            self.bvh_tree = None
+        
+        # flatten positions and radii for C compatibility
+        pos = simulator.positions.astype(np.float64).flatten()
+        radii = simulator.radii.astype(np.float64).flatten()
+        pos_c = pos.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        radii_c = radii.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        N = len(simulator.positions)
+        bvh_tree_c = lib.create_bvh(pos_c, radii_c, N, 1)
+        lib.build_bvh(bvh_tree_c)
+        self.bvh_tree = bvh_tree_c
+
+        # bvh_tree = bvh.BVH(simulator.positions, simulator.radii)
+        # bvh_tree.build()
+        # # bvh.print_bvh(bvh_tree.root)
+        # self.data_structure_staging = bvh_tree
         global i
         i=0
         return
+
+    def update_bvh(self, simulator):
+        global i
+        i+=1
+        bvh_tree = self.bvh_tree
+
+        # bvh_tree.positions = simulator.positions
+        pos = simulator.positions.astype(np.float64).flatten()
+        pos_c = pos.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        lib.update_positions(bvh_tree, pos_c, len(simulator.positions))
+
+        # bvh_tree.update()
+        current = ctypes.pointer(bvh_tree.contents.nodes[bvh_tree.contents.root])
+        lib.update(bvh_tree, current)
+
+        if i%6==0:
+            lib.optimize_w_rotation(bvh_tree, current, 10, 0)
 
     def find_intersections(self, simulator) -> list[Contact]:
         """Return all contacts using the BVH."""
@@ -54,73 +142,34 @@ class Homework:
         if bvh_tree is None:
             return []
         global i, ray
-        if ray:
+        if ray: #if ray is True then the tree has already been updated this frame
             ray=False
         else:
-            i+=1
-            # update the positions and optimize with rotations
-            bvh_tree.positions = simulator.positions
-            bvh_tree.update()
-            if i%6==0:
-                N = len(bvh_tree.positions)
-                # print("cost before:",bvh_tree.root.update_cost())
-                bvh_tree.optimize_w_rotation(bvh_tree.root, N)
-                # print("cost after:",bvh_tree.root.cost,"\n")
-            # print("cost :",bvh_tree.root.update_cost())
-            
+            self.update_bvh(simulator)
 
         # if i==100:
-        #     #every 10000 frames, rebuild the BVH
-        #     bvh_tree.build_quick(splits=4)
-        #     # print("cost after rebuild:",bvh_tree.root.update_cost())
+        #     #every 100 frames, rebuild the BVH
+        #     pos = simulator.positions.astype(np.float64).flatten()
+        #     pos_c = pos.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        #     lib.free_bvh(bvh_tree)
+        #     radii = simulator.radii.astype(np.float64).flatten()
+        #     radii_c = radii.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        #     bvh_tree = lib.create_bvh(pos_c, radii_c, len(simulator.positions), 1)
+        #     self.bvh_tree = bvh_tree
+        #     lib.build_bvh(bvh_tree)
+        #     # bvh_tree.build()
         #     i=0
-
+        
+        potential_intersections = np.zeros((len(simulator.positions)**2), dtype=np.int32)
+        potential_intersections_c = potential_intersections.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
+        n=lib.find_pot_inter(bvh_tree, potential_intersections_c)
         contacts = []
-
-        # Stack of node pairs to test
-        stack = [(bvh_tree.root, bvh_tree.root)]
-
-        def bbox_intersect(bb1, bb2):
-            """AABB vs AABB intersection test."""
-            return not (
-                bb1[1][0] < bb2[0][0] or bb1[0][0] > bb2[1][0] or
-                bb1[1][1] < bb2[0][1] or bb1[0][1] > bb2[1][1] or
-                bb1[1][2] < bb2[0][2] or bb1[0][2] > bb2[1][2]
-            )
-
-        while stack:
-            A, B = stack.pop()
-            if A is B:
-                if A.is_leaf():
-                    continue
-                else:
-                    stack.append((A.left, A.right))
-                    stack.append((A.left, A.left))
-                    stack.append((A.right, A.right))
-                    continue
-            #Then A != B
-            if A.is_leaf() and B.is_leaf():
-                contact = simulator.intersect(A.item[0], B.item[0])
-                if contact:
-                    contacts.append(contact)
-                continue
-            
-            if bbox_intersect(A.bbox, B.bbox):
-                # Expand children
-                if A.is_leaf():
-                    # A leaf vs B internal
-                    stack.append((A, B.left))
-                    stack.append((A, B.right))
-                elif B.is_leaf():
-                    # B leaf vs A internal
-                    stack.append((A.left, B))
-                    stack.append((A.right, B))
-                else:
-                    # Both internal → 4 combinations
-                    stack.append((A.left,  B.left))
-                    stack.append((A.left,  B.right))
-                    stack.append((A.right, B.left))
-                    stack.append((A.right, B.right))
+        for i in range(n//2):
+            a = potential_intersections[2*i]
+            b = potential_intersections[2*i+1]
+            contact = simulator.intersect(a, b)
+            if contact:
+                contacts.append(contact)
         return contacts
 
     def gpu_bind_group_layouts(self, device: wgpu.GPUDevice) -> list[wgpu.GPUBindGroupLayout]:
@@ -155,6 +204,11 @@ class Homework:
         #    will get errors due to the empty buffers.
         if len(simulator.radii) == 0:
             return
+        
+        # update the positions and optimize with rotations
+        global i, ray
+        ray=True
+        self.update_bvh(simulator)
 
         # update the positions and optimize with rotations
         global i, ray
@@ -174,10 +228,12 @@ class Homework:
         # could be a numpy array containing the data structure you used for the
         # first part).
 
-            # give the BVH flat representation
+        # give the BVH flat representation
         bvh_tree = self.bvh_tree
-        flat_bvh = self.bvh_tree.flat_bvh().flatten().astype(np.float32)
-        data_structure_cpu = np.concatenate(([bvh_tree.nNode], flat_bvh)).astype(np.float32)
+        flat_bvh = np.zeros((bvh_tree.contents.n_nodes * 12), dtype=np.float32)
+        lib.flat_bvh(bvh_tree, flat_bvh.ctypes.data_as(ctypes.POINTER(ctypes.c_float)))
+        data_structure_cpu = flat_bvh
+        # print(flat_bvh.reshape((-1,4)))
 
             # exemple given in the template
         # data_structure_cpu = np.random.rand(len(simulator.radii),2).astype(np.float32)
@@ -233,11 +289,12 @@ class Homework:
         # Return the bind group created when we created the GPU buffer
         return [self.data_structure_binding]
 
+
 if __name__ == "__main__":
     from rendercanvas.auto import RenderCanvas, loop
     canvas = RenderCanvas(
         title="LMECA2170 — Homework 2",
-        size=(1920, 1080),
+        size=(512, 512),
         update_mode="continuous",
         max_fps=240,
         vsync=True)

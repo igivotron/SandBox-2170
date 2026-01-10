@@ -206,14 +206,27 @@ vec3 path_trace(Ray incident_ray, uint sample_id) {
   return result;
 }
 
+#ifdef HAS_BARRIER
 shared vec4 old;
 shared vec3 data[32];
+#else
+vec4 old;
+#endif
 
 void main() {
-  ivec2 pixel_coords = ivec2(gl_WorkGroupID.xy);
   ivec2 pixel_size = imageSize(result) / ivec2(4, 1);
 
+#if HAS_BARRIER
+  ivec2 pixel_coords = ivec2(gl_WorkGroupID.xy);
+#else
+  ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+  if (pixel_coords.x > pixel_size.x || pixel_coords.y > pixel_size.y)
+    return;
+#endif
+
+#ifdef HAS_BARRIER
   if (gl_LocalInvocationIndex == 0) {
+#endif
     if (reset == 0)
       old = vec4(0.0);
     else {
@@ -222,11 +235,18 @@ void main() {
       old.b = imageLoad(result, ivec2(4, 1) * pixel_coords + ivec2(2, 0)).r;
       old.a = imageLoad(result, ivec2(4, 1) * pixel_coords + ivec2(3, 0)).r;
     }
+#ifdef HAS_BARRIER
   }
 
   barrier();
+#endif
 
+#ifdef HAS_BARRIER
   uint sample_id = 1024 + uint(old.a) + NUM_SAMPLES*gl_LocalInvocationIndex;
+#else
+  uint sample_id = 1024 + uint(old.a);
+#endif
+
   setup_rotation(sample_id);
 
   vec3 new = vec3(0.0);
@@ -248,9 +268,11 @@ void main() {
     new += path_trace(ray, sample_id+i);
   }
 
-  new.r = min(new.r, 10.0);
-  new.g = min(new.g, 10.0);
-  new.b = min(new.b, 10.0);
+  new.r = min(new.r, 10.0 * NUM_SAMPLES);
+  new.g = min(new.g, 10.0 * NUM_SAMPLES);
+  new.b = min(new.b, 10.0 * NUM_SAMPLES);
+
+#ifdef HAS_BARRIER
   data[gl_LocalInvocationIndex] = new;
   int size = WORK_GROUP_SIZE;
   for (int size = WORK_GROUP_SIZE >> 1; size != 0; size >>= 1) {
@@ -265,4 +287,10 @@ void main() {
     imageStore(result, ivec2(4, 1) * pixel_coords + ivec2(2, 0), vec4(old.b + data[0].b));
     imageStore(result, ivec2(4, 1) * pixel_coords + ivec2(3, 0), vec4(old.a + NUM_SAMPLES*WORK_GROUP_SIZE));
   }
+#else
+  imageStore(result, ivec2(4, 1) * pixel_coords + ivec2(0, 0), vec4(old.r + new.r));
+  imageStore(result, ivec2(4, 1) * pixel_coords + ivec2(1, 0), vec4(old.g + new.g));
+  imageStore(result, ivec2(4, 1) * pixel_coords + ivec2(2, 0), vec4(old.b + new.b));
+  imageStore(result, ivec2(4, 1) * pixel_coords + ivec2(3, 0), vec4(old.a + NUM_SAMPLES));
+#endif
 }

@@ -16,6 +16,9 @@ TIMESTEP = 1.0 / 240.0
 PERFORMANCE_NUM_STEPS = 128
 MAX_GPU_PERFORMANCE_QUERIES = 32
 
+frame_count = 0
+fps_start_time = time.time()
+
 class PerformanceCounter:
     """Convenient interface to measure the time it takes to run a piece of code on the CPU."""
 
@@ -490,7 +493,7 @@ class Simulator:
             loop=loop
         ).sync_wait()
 
-        self.supports_ray_tracing = "subgroup-barrier" in self.adapter.features
+        self.supports_barriers = "subgroup-barrier" in self.adapter.features
 
         timestamp_features = [
             'timestamp-query',
@@ -501,7 +504,7 @@ class Simulator:
         self.supports_gpu_time_queries = all(feature in self.adapter.features for feature in timestamp_features)
 
         features = timestamp_features if self.supports_gpu_time_queries else []
-        if self.supports_ray_tracing:
+        if self.supports_barriers:
             features.append("subgroup")
             features.append("subgroup-barrier")
 
@@ -596,8 +599,7 @@ class Simulator:
 
         self._create_box_pipeline()
         self._create_ball_pipeline()
-        if self.supports_ray_tracing:
-            self._create_path_tracing_pipeline()
+        self._create_path_tracing_pipeline()
 
         self.depth_texture: Optional[wgpu.GPUTexture] = None
         self.depth_view: Optional[wgpu.GPUTextureView] = None
@@ -792,16 +794,15 @@ class Simulator:
         if imgui.button("Clear"):
             self.clear()
 
-        if self.supports_ray_tracing:
-            new, value = imgui.checkbox("Ray Tracing", self.ray_tracing)
-            if new and self.ray_tracing != value:
-                self.force_rt_update
-                self.ray_tracing = value
+        new, value = imgui.checkbox("Ray Tracing", self.ray_tracing)
+        if new and self.ray_tracing != value:
+            self.force_rt_update
+            self.ray_tracing = value
 
-            imgui.text("# Accumulation Frames")
-            new, value = imgui.input_int(" ", self.rt_accumulation_frames, 1, 1)
-            if new:
-                self.rt_accumulation_frames = max(value, 1)
+        imgui.text("# Accumulation Frames")
+        new, value = imgui.input_int(" ", self.rt_accumulation_frames, 1, 1)
+        if new:
+            self.rt_accumulation_frames = max(value, 1)
 
         for key in self.measured_times:
             imgui.plot_lines(key, self.measurements_for(key), graph_size=(200, 50), scale_min=0.0)
@@ -842,6 +843,25 @@ class Simulator:
 
     def update(self, dt):
         """Simulate rigidbody objects for dt seconds. Actual updates only occur at fixed interval."""
+
+
+        global frame_count, fps_start_time
+
+        # === Mesure des FPS ===
+        frame_count += 1
+        now = time.time()
+        elapsed = now - fps_start_time
+        if elapsed >= 1.0:  # chaque seconde
+            fps = frame_count / elapsed
+            # print(f"FPS: {fps:.2f}")
+            # Optionnel : enregistrer dans un fichier CSV
+            with open("./logs/fps_log.txt", "a") as f:
+                f.write(f"{now},{fps:.2f}\n")
+            frame_count = 0
+            fps_start_time = now
+
+
+
         self.elapsed_time += dt
         i = 0
 
@@ -927,8 +947,7 @@ class Simulator:
             self.rt_step_id += 1
 
         self._update_depth_texture()
-        if self.supports_ray_tracing:
-            self._update_rt_texture()
+        self._update_rt_texture()
 
         w, h = self.canvas.get_physical_size()
         aspect_ratio = w / h
@@ -943,14 +962,12 @@ class Simulator:
 
         camera = camera_data(view, projection)
 
-
         enc = self.device.create_command_encoder()
 
         copy_buffer(enc, camera, self.camera_staging, self.camera_ubo, slot_id=self.frame_id % 2)
 
-        if self.supports_ray_tracing:
-            inv_camera = camera_data(np.linalg.inv(view), np.linalg.inv(projection))
-            copy_buffer(enc, inv_camera, self.rt_camera_staging, self.rt_camera_ubo, slot_id=self.frame_id % 2)
+        inv_camera = camera_data(np.linalg.inv(view), np.linalg.inv(projection))
+        copy_buffer(enc, inv_camera, self.rt_camera_staging, self.rt_camera_ubo, slot_id=self.frame_id % 2)
 
         if run_update or self.force_rt_update:
             copy_buffer(
@@ -1031,7 +1048,10 @@ class Simulator:
                 compute_pass.set_bind_group(2 + i, group)
 
             w, h, _ = self.rt_texture.size
-            compute_pass.dispatch_workgroups(w // 4, h, 1)
+            if self.supports_barriers:
+                compute_pass.dispatch_workgroups(w // 4, h, 1)
+            else:
+                compute_pass.dispatch_workgroups(((w // 4) + 31) // 32, h, 1)
 
             compute_pass.end()
 
@@ -1291,8 +1311,7 @@ class Simulator:
                 usage=wgpu.BufferUsage.VERTEX | wgpu.BufferUsage.STORAGE
             )
 
-        if self.supports_ray_tracing:
-            self._write_ray_tracing_bindings()
+        self._write_ray_tracing_bindings()
 
     def _load_sobol_directions(self):
         with open("sobol_directions.data", "rb") as sobol_file:
@@ -1302,9 +1321,17 @@ class Simulator:
                 usage=wgpu.BufferUsage.STORAGE)
 
     def _create_path_tracing_pipeline(self):
+        header = "#version 450\n"
+        if self.supports_barriers:
+            header += "#define HAS_BARRIER 1\n"
+            header += "#define NUM_SAMPLES 1\n"
+        else:
+            header += "#define NUM_SAMPLES 8\n"
+
         shader = self.device.create_shader_module(
             label="path_trace_comp",
-            code=Path("shaders/path_trace_header.glsl").read_text() + "\n" + \
+            code=header + "\n" + \
+                 Path("shaders/path_trace_header.glsl").read_text() + "\n" + \
                  Path("shaders/homework.glsl").read_text() + "\n" + \
                  Path("shaders/path_trace.comp").read_text())
 
