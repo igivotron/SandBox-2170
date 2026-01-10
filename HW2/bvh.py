@@ -3,15 +3,21 @@ import numpy as np
 # from homework import *
 
 
+#Global constants for cost calculation
+C_t = 1.0 # cost of traversal
+C_i = 1.0 # cost of intersection
+N = 1     # number of primitives per leaf
+
+
 class Nodes:
     def __init__(self, item, left=None, right=None, bbox=None, index=None):
         self.left = left
         self.right = right
         self.parent = None
         self.bbox = bbox #[[x_min, y_min, z_min], [x_max, y_max, z_max]]
-        self.index = index
+        self.index = index # each node of the bvh has an index (used for flat representation)
         self.item = item #contain the index of the item if leaf
-        self.state = False #updated or not
+        self.cost = None
         
     def is_leaf(self):
         return self.left is None and self.right is None
@@ -21,6 +27,40 @@ class Nodes:
         bbox_max = np.max([self.left.bbox[1], self.right.bbox[1]], axis=0)
         self.bbox = np.array([bbox_min, bbox_max])
         return
+    
+    def surface_area(self):
+        d = self.bbox[1] - self.bbox[0]
+        return 2 * (d[0]*d[1] + d[1]*d[2] + d[2]*d[0])
+    
+    def update_cost(self):
+        if self.is_leaf() :
+            self.cost = C_t + C_i * N
+            return self.cost
+        C_L = self.left.update_cost()
+        C_R = self.right.update_cost()
+        S_L = self.left.surface_area()
+        S_R = self.right.surface_area()
+        S = self.surface_area()
+        self.cost = C_t + (S_L * C_L + S_R * C_R)/S
+        return self.cost
+        
+    def get_cost_quick(self):
+        C_L = self.left.cost
+        C_R = self.right.cost
+        S_L = self.left.surface_area()
+        S_R = self.right.surface_area()
+        S = self.surface_area()
+        return C_t + (S_L * C_L + S_R * C_R)/S
+
+    def get_cost_recursive(self):
+        if self.is_leaf() :
+            return C_t + C_i * N
+        C_L = self.get_cost_recursive(self.left)
+        C_R = self.get_cost_recursive(self.right)
+        S_L = self.surface_area(self.left.bbox)
+        S_R = self.surface_area(self.right.bbox)
+        S = self.surface_area(self.bbox)
+        return C_t + (S_L * C_L + S_R * C_R)/S
 
 class BVH:
     def __init__(self, positions, radii, NperLeaf=1):
@@ -30,6 +70,7 @@ class BVH:
         self.indexes = np.arange(len(positions))
         self.NperLeaf = NperLeaf
         self.root = Nodes(item=self.indexes)
+        self.nNode = 1
 
     def compute_bbox(self, items):
         x_min = np.min(self.positions[items, 0] - self.radii[items])
@@ -40,17 +81,74 @@ class BVH:
         z_max = np.max(self.positions[items, 2] + self.radii[items])
         bbox = np.array([[x_min, y_min, z_min], [x_max, y_max, z_max]])
         return bbox
-    def combine_bbox(left_box, right_box):
-        x_min = np.min(left_box[0][0], right_box[0][0])
-        y_min = np.min(left_box[0][1], right_box[0][1])
-        z_min = np.min(left_box[0][2], right_box[0][2])
-        x_max = np.min(left_box[1][0], right_box[1][0])
-        y_max = np.min(left_box[1][1], right_box[1][1])
-        z_max = np.min(left_box[1][2], right_box[1][2])
-        return np.array([[x_min, y_min, z_min], [x_max, y_max, z_max]])
-
+    
+    def combine_bbox(self, left_box, right_box):
+        bbox_min = np.min([left_box[0], right_box[0]], axis=0)
+        bbox_max = np.max([left_box[1], right_box[1]], axis=0)
+        return np.array([bbox_min, bbox_max])
 
     def build_recursive(self, node, k):
+        items = node.item
+        pts = self.positions[items]
+
+        if len(node.item) <= self.NperLeaf:
+            node.bbox = self.compute_bbox(items)
+            return
+        
+        # Find the best split using SAH
+        best_cost = float('inf')
+        best_split = None
+        best_axis = None
+        for axis in range(3):
+            for i in range(len(pts)):
+                left_items = items[pts[:, axis] <= pts[i, axis]]
+                right_items = items[pts[:, axis] > pts[i, axis]]
+
+                if len(left_items) == 0 or len(right_items) == 0:
+                    continue
+
+                left_bbox = self.compute_bbox(left_items)
+                right_bbox = self.compute_bbox(right_items)
+
+                left_area = self.surface_area(left_bbox)
+                right_area = self.surface_area(right_bbox)
+
+                cost = len(left_items) * left_area + len(right_items) * right_area
+
+                if cost < best_cost:
+                    best_cost = cost
+                    best_split = i
+                    best_axis = axis
+
+        if best_split is None:
+            mid = len(items) // 2
+            left_items = items[:mid]
+            right_items = items[mid:]
+        else:
+            left_items = items[pts[:, best_axis] <= pts[best_split, best_axis]]
+            right_items = items[pts[:, best_axis] > pts[best_split, best_axis]]
+       
+        # median = np.median(pts[:, axis])
+        # left_indexes = items[pts[:, axis] <= median]
+        # right_indexes = items[pts[:, axis] > median]
+
+        # if len(left_indexes) == 0 or len(right_indexes) == 0:
+        #     mid = len(items) // 2
+        #     left_indexes = items[:mid]
+        #     right_indexes = items[mid:]
+
+        node.left = Nodes(item=left_items,index=self.nNode)
+        self.nNode+=1
+        node.right = Nodes(item=right_items,index=self.nNode)
+        self.nNode+=1
+        node.left.parent = node
+        node.right.parent = node
+        node.bbox = self.compute_bbox(items)
+
+        self.build_recursive(node.left, k + 1)
+        self.build_recursive(node.right, k + 1)
+
+    def build_recursive_quick(self, node, k, splits=4):
         axis = k % 3
         items = node.item
         pts = self.positions[items]
@@ -62,9 +160,10 @@ class BVH:
         # Find the best split using SAH
         best_cost = float('inf')
         best_split = None
-        for i in range(len(pts)):
-            left_items = items[pts[:, axis] <= pts[i, axis]]
-            right_items = items[pts[:, axis] > pts[i, axis]]
+        splits_values = np.linspace(min(pts[:, axis]), max(pts[:, axis]), num=splits)
+        for split in splits_values[1:-1]:
+            left_items = items[pts[:, axis] <= split]
+            right_items = items[pts[:, axis] > split]
 
             if len(left_items) == 0 or len(right_items) == 0:
                 continue
@@ -79,37 +178,38 @@ class BVH:
 
             if cost < best_cost:
                 best_cost = cost
-                best_split = i
+                best_split = split
 
         if best_split is None:
             mid = len(items) // 2
             left_items = items[:mid]
             right_items = items[mid:]
         else:
-            left_items = items[pts[:, axis] <= pts[best_split, axis]]
-            right_items = items[pts[:, axis] > pts[best_split, axis]]
-       
-        # median = np.median(pts[:, axis])
-        # left_indexes = items[pts[:, axis] <= median]
-        # right_indexes = items[pts[:, axis] > median]
+            left_items = items[pts[:, axis] <= best_split]
+            right_items = items[pts[:, axis] > best_split]
 
-        # if len(left_indexes) == 0 or len(right_indexes) == 0:
-        #     mid = len(items) // 2
-        #     left_indexes = items[:mid]
-        #     right_indexes = items[mid:]
-
-        node.left = Nodes(item=left_items)
-        node.right = Nodes(item=right_items)
+        node.left = Nodes(item=left_items,index=self.nNode)
+        self.nNode+=1
+        node.right = Nodes(item=right_items,index=self.nNode)
+        self.nNode+=1
         node.left.parent = node
         node.right.parent = node
         node.bbox = self.compute_bbox(items)
 
-        self.build_recursive(node.left, k + 1)
-        self.build_recursive(node.right, k + 1)
-       
-       
+        if len(left_items) <= splits:
+            self.build_recursive(node.left, k + 1)
+        self.build_recursive_quick(node.left, k + 1, splits)
+        if len(right_items) <= splits:
+            self.build_recursive(node.right, k + 1)
+        self.build_recursive_quick(node.right, k + 1, splits)
+           
     def build(self):
+        self.nNode = 1
         self.build_recursive(self.root, 0)
+
+    def build_quick(self,splits=4):
+        self.nNode = 1
+        self.build_recursive_quick(self.root, 0, splits)
 
     def surface_area(self, bbox):
         d = bbox[1] - bbox[0]
@@ -142,13 +242,148 @@ class BVH:
         current.update_bbox()
         return
 
+    def flat_bvh(self):
+        """Return a flat array representation of the BVH for GPU usage."""
+        # each node is stored as:
+        # [left_index, right_index, min_x, min_y, min_z, max_x, max_y, max_z, item_index]
+        flat_bvh = np.zeros((self.nNode, 9), dtype=np.float32) 
+        def traverse(node):
+            i = node.index
+            if node.is_leaf():
+                flat_bvh[i] = [-1, -1,
+                                 node.bbox[0][0], node.bbox[0][1], node.bbox[0][2],
+                                 node.bbox[1][0], node.bbox[1][1], node.bbox[1][2],
+                                 node.item[0]]
+                return
+            flat_bvh[i] = [node.left.index, node.right.index,
+                          node.bbox[0][0], node.bbox[0][1], node.bbox[0][2],
+                          node.bbox[1][0], node.bbox[1][1], node.bbox[1][2],
+                          -1]
+            traverse(node.left)
+            traverse(node.right)
 
+        traverse(self.root)
+        return flat_bvh
+
+    def get_cost(self, node) :
+        '''
+        C_t = relative cost for a traversal step
+        C_i = relative cost for a primitive (sphere) intersection 
+        N = primitive per leaf
+        '''
+        if node.is_leaf() :
+            return C_t + C_i * N
+        C_L = self.get_cost(node.left)
+        C_R = self.get_cost(node.right)
+        S_L = self.surface_area(node.left.bbox)
+        S_R = self.surface_area(node.right.bbox)
+        S = self.surface_area(node.bbox)
+        return C_t + (S_L * C_L + S_R * C_R)/S
+    
+    def rotation(self, node):
+        ####################
+        #        1
+        #       / \
+        #      /   \
+        #     2     3
+        #    / \   / \
+        #   4   5 6   7
         
+        node1 = node
+        node2 = node.left
+        node3 = node.right
+        node4 = node.left.left
+        node5 = node.left.right
+        node6 = node.right.left
+        node7 = node.right.right
+
+        C0 = node.cost
+        C_rot1 = float('inf') ; C_rot2 = float('inf') ; C_rot3= float('inf'); C_rot4= float('inf') 
+
+        #ROTATION 1 (2<->6)
+        if node6 is not None :
+            S3_= self.surface_area(self.combine_bbox(node2.bbox, node7.bbox))
+            C3_ = C_t + (node2.cost*node2.surface_area()+ node7.cost*node7.surface_area())/S3_
+            C_rot1 = C_t + (node6.surface_area()*node6.cost+S3_*C3_)/node1.surface_area()
+
+        #ROTATION 2 (2<->7)
+        if node7 is not None : 
+            S3__= self.surface_area(self.combine_bbox(node2.bbox, node6.bbox))
+            C3__ = C_t + (node2.cost*node2.surface_area()+ node6.cost*node6.surface_area())/S3__
+            C_rot2 = C_t + (node7.surface_area()*node7.cost+S3__*C3__)/node1.surface_area()
+
+        #ROTATION 3 (3<->4)
+        if node4 is not None : 
+            S2_ = self.surface_area( self.combine_bbox(node3.bbox, node5.bbox))
+            C2_ = C_t + (node3.cost*node3.surface_area()+ node5.cost*node5.surface_area())/S2_
+            C_rot3 = C_t + (node4.surface_area()*node4.cost+S2_*C2_)/node1.surface_area()
+
+        #ROTATION 4 (3<->5)
+        if node5 is not None : 
+            S2__ = self.surface_area(self.combine_bbox(node3.bbox, node4.bbox))
+            C2__ = C_t + (node3.cost*node3.surface_area()+ node4.cost*node4.surface_area())/S2__
+            C_rot4 = C_t + (node5.surface_area()*node5.cost+S2__*C2__)/node1.surface_area()
+
+        C_min =[C0, C_rot1, C_rot2, C_rot3, C_rot4]
+        best = int(np.argmin(C_min))
+
+        if best == 1 :
+            node.left = node6
+            node6.parent = node
+            node.right.left = node2
+            node2.parent = node.right
+            node.right.update_bbox()
+            node.right.cost=node.right.get_cost_quick()
+
+
+        if best == 2 : 
+            node.left = node7
+            node7.parent = node
+            node.right.right = node2
+            node2.parent = node.right
+            node.right.update_bbox()
+            node.right.cost=node.right.get_cost_quick()
+
+        if best == 3 : 
+            node.right = node4
+            node4.parent = node
+            node.left.left = node3 
+            node3.parent = node.left
+            node.left.update_bbox()
+            node.left.cost=node.left.get_cost_quick()
+
+        if best == 4 :
+            node.right = node5
+            node5.parent = node 
+            node.left.right = node3 
+            node3.parent = node.left
+            node.left.update_bbox()
+            node.left.cost=node.left.get_cost_quick()
+        node.cost=C_min[best]
+        return node.cost
+        
+    def optimize_w_rotation(self, node, max_depth, depth=0):
+        '''
+        For a stable BVH=> height of the tree h = log_2(f)
+        with f the number of leafs (N = 2f -1)
+        '''
+        if depth >= max_depth or node.is_leaf():
+            node.update_cost()
+            return node.cost
+
+        # go deeper recursively
+        C_L=self.optimize_w_rotation(node.left, max_depth, depth + 1)
+        C_R=self.optimize_w_rotation(node.right, max_depth, depth + 1)
+        S_L = node.left.surface_area()
+        S_R = node.right.surface_area()
+        S = node.surface_area()
+        node.cost = C_t + (S_L * C_L + S_R * C_R)/S
+        return self.rotation(node)
 
 def print_bvh(node, depth=0):
         if node is None:
             return
-        print("  " * depth + f"Node(depth={depth}, bbox=[[{node.bbox[0][0]:.2f}, {node.bbox[0][1]:.2f}, {node.bbox[0][2]:.2f}], [{node.bbox[1][0]:.2f}, {node.bbox[1][1]:.2f}, {node.bbox[1][2]:.2f}]], item={node.item})")
+        print("  " * depth + f"Node(index={node.index}, bbox=[[{node.bbox[0][0]:.2f}, {node.bbox[0][1]:.2f}, {node.bbox[0][2]:.2f}], [{node.bbox[1][0]:.2f}, {node.bbox[1][1]:.2f}, {node.bbox[1][2]:.2f}]], item={node.item})")
         print_bvh(node.left, depth + 1)
         print_bvh(node.right, depth + 1)
 
@@ -157,7 +392,7 @@ def print_bvh(node, depth=0):
     
 if __name__ == "__main__":
     # import matplotlib.pyplot as plt
-    ### pts ###
+    ### 
     # pts = np.random.rand(10, 3) * 10
     pts = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4], [5, 5, 5],])
     radii = np.array([0.5, 0.5, 0.5, 0.5, 0.5])
@@ -166,6 +401,7 @@ if __name__ == "__main__":
     bvh.build()
     
     print_bvh(bvh.root)
+    print(bvh.flat_bvh())
 
     #plot points and bounding boxes
     # def plot_bbox(ax, bbox, color='r'):

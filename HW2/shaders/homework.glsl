@@ -92,6 +92,10 @@ Intersection trace_ray(Ray ray) {
   //   ray_ball_intersection(ray, int(i), result);
   // }
 
+  // for (int i = 0; i < 4; i++) {
+  //   ray_ball_intersection(ray, i, result);
+  // }
+
   return result;
 }
 

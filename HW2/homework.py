@@ -210,6 +210,20 @@ class Homework:
         ray=True
         self.update_bvh(simulator)
 
+        # update the positions and optimize with rotations
+        global i, ray
+        i+=1
+        ray=True
+        bvh_tree = self.bvh_tree
+        bvh_tree.positions = simulator.positions
+        bvh_tree.update()
+        if i%6==0:
+            N = len(bvh_tree.positions)
+            # print("cost before:",bvh_tree.root.update_cost())
+            bvh_tree.optimize_w_rotation(bvh_tree.root, N)
+            # print("cost after:",bvh_tree.root.cost,"\n")
+        # print("cost :",bvh_tree.root.update_cost())
+
         # 1. For the purposes of the example, an array of random numbers (This
         # could be a numpy array containing the data structure you used for the
         # first part).
@@ -283,6 +297,6 @@ if __name__ == "__main__":
         size=(512, 512),
         update_mode="continuous",
         max_fps=240,
-        vsync=False)
+        vsync=True)
     simulator = Simulator(canvas, loop, Homework())
     loop.run()
