@@ -10,7 +10,7 @@ import pyamg
 from scipy.fft import dstn, idstn
 
 # lib = ctypes.CDLL(os.path.abspath("vector_field.so"))
-lib = ctypes.CDLL(os.path.abspath("vector_field.dll"))
+lib = ctypes.CDLL(os.path.abspath("./shared_lib/vector_field.so"))
 lib.vector_field.argtypes = [ctypes.c_int, 
                              ctypes.POINTER(ctypes.c_double), 
                              ctypes.POINTER(ctypes.c_double), 
@@ -43,60 +43,6 @@ def vector_field(x, y, z, normals, sigma, tree, points):
                 vec_field[i, j, k] = np.sum((normals[indices].T * weights), axis=1)
     return vec_field
 
-# def solve_poisson(points, normals, sigma, tree, N=None):
-#     min_point = np.min(points, axis=0)
-#     max_point = np.max(points, axis=0)
-#     size = np.max(max_point - min_point)*1.15
-#     middle = (max_point + min_point)/2
-#     if N is None:
-#         N=10
-#     h=size/(N-1)
-#     x = np.linspace(middle[0]-size/2, middle[0]+size/2, N)
-#     y = np.linspace(middle[1]-size/2, middle[1]+size/2, N)
-#     z = np.linspace(middle[2]-size/2, middle[2]+size/2, N)
-#     x_c=np.ascontiguousarray(x, dtype=np.float64)
-#     y_c=np.ascontiguousarray(y, dtype=np.float64)
-#     z_c=np.ascontiguousarray(z, dtype=np.float64)
-    
-#     start= time.time()
-#     vec_field = np.zeros((N, N, N, 3), dtype=np.float32, order='C') 
-#     points_c = np.ascontiguousarray(points, dtype=np.float64)
-#     normals_c = np.ascontiguousarray(normals, dtype=np.float64)   
-#     lib.vector_field(ctypes.c_int(len(points)),
-#                      points_c.flatten().ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-#                      normals_c.flatten().ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-#                      x_c.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-#                      ctypes.c_int(N),
-#                      y_c.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-#                      ctypes.c_int(N),
-#                      z_c.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-#                      ctypes.c_int(N),
-#                      ctypes.c_double(sigma),
-#                      vec_field.ctypes.data_as(ctypes.POINTER(ctypes.c_float)))
-#     # vec_field=vector_field(x,y,z, normals, sigma, tree, points)
-#     end = time.time()
-#     print("Vector field computed in", end-start, "seconds")
-    
-#     # create laplacian operator
-#     A=LaplacianNd((N, N, N), boundary_conditions='dirichlet', dtype=np.float64)
-#     A = A.tosparse().tocsr()
-#     #create right-hand side
-#     dVxdx=np.gradient(vec_field[:,:,:,0], h, axis=0)
-#     dVydy=np.gradient(vec_field[:,:,:,1], h, axis=1)
-#     dVzdz=np.gradient(vec_field[:,:,:,2], h, axis=2)
-#     div_field=dVxdx + dVydy + dVzdz
-#     b = (-div_field).astype(np.float64).ravel()
-#     #solve Poisson equation
-    
-#     start = time.time()
-#     ml = pyamg.smoothed_aggregation_solver(A)
-#     M = ml.aspreconditioner()
-#     phi, info = cg(A, b, M=M)
-#     end = time.time()
-#     print("Poisson equation solved in", end-start, "seconds")
-    
-#     return x,y,z,phi.reshape((N, N, N))*h*h
-
 def solve_poisson(points, normals, sigma, tree, N=None):
     min_point = np.min(points, axis=0)
     max_point = np.max(points, axis=0)
@@ -112,7 +58,7 @@ def solve_poisson(points, normals, sigma, tree, N=None):
     y_c=np.ascontiguousarray(y, dtype=np.float64)
     z_c=np.ascontiguousarray(z, dtype=np.float64)
     
-    start= time.time()
+    start_field = time.time()
     vec_field = np.zeros((N, N, N, 3), dtype=np.float32, order='C') 
     points_c = np.ascontiguousarray(points, dtype=np.float64)
     normals_c = np.ascontiguousarray(normals, dtype=np.float64)   
@@ -127,9 +73,7 @@ def solve_poisson(points, normals, sigma, tree, N=None):
                      ctypes.c_int(N),
                      ctypes.c_double(sigma),
                      vec_field.ctypes.data_as(ctypes.POINTER(ctypes.c_float)))
-    # vec_field=vector_field(x,y,z, normals, sigma, tree, points)
-    end = time.time()
-    print("Vector field computed in", end-start, "seconds")
+    print("\t Vector field computed in", time.time()-start_field, "seconds")
     
     #create right-hand side
     dVxdx=np.gradient(vec_field[:,:,:,0], h, axis=0)
@@ -139,7 +83,7 @@ def solve_poisson(points, normals, sigma, tree, N=None):
     b = (-div_field).ravel()
     
     #solve Poisson equation
-    start = time.time()
+    start_solve = time.time()
     rhs = b.reshape((N,N,N))
 
     rhs_hat = dstn(rhs, type=1)
@@ -154,7 +98,6 @@ def solve_poisson(points, normals, sigma, tree, N=None):
     ) / h**2
 
     phi = idstn(rhs_hat / denom, type=1)
-    end = time.time()
-    print("Poisson equation solved in", end-start, "seconds")
+    print("\t Poisson equation solved in", time.time()-start_solve, "seconds")
     
     return x,y,z,phi.reshape((N, N, N))*h*h

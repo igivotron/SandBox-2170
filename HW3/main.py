@@ -1,46 +1,68 @@
+### IMPORTS ###
 from scipy.spatial import KDTree
 from scipy.sparse.csgraph import minimum_spanning_tree
 import numpy as np
 import matplotlib.pyplot as plt
 import plyfile as ply
 import argparse as ap
-import igl
-from sklearn.neighbors import kneighbors_graph
+from sklearn.neighbors import kneighbors_graph, NearestNeighbors
 import time
 from scipy.sparse import csr_matrix
 import poisson
-import marchingCubes.MC as MC
+import ctypes
 import skfmm
 from plyfile import PlyData, PlyElement
 import time
 
+start_all = time.time()
 
+#import C library for marching cubes
+lib = ctypes.CDLL("./shared_lib/Mcc.so")
+
+lib.marching_cubes_grid.argtypes = [
+    ctypes.POINTER(ctypes.c_float),
+    ctypes.c_int, ctypes.c_int, ctypes.c_int,
+    ctypes.c_float,
+    ctypes.POINTER(ctypes.c_float),
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.POINTER(ctypes.c_int),
+]
+lib.marching_cubes_grid.restype = ctypes.c_int
+
+
+### INPUTS ###
+# Input Argument 
 parser = ap.ArgumentParser()
 parser.add_argument('--input', '-i', type=str, default='data/bunny.ply', help='Path to the input PLY file')
+parser.add_argument('--output', '-o', type=str, default='output/reconstructed.ply', help='Path to the output PLY file')
 parser.add_argument('--k', '-k', type=int, default=10, help='Number of nearest neighbors to find')
+parser.add_argument('--N', '-N', type=int, default=400, help='Grid size for Poisson reconstruction')
+parser.add_argument('--skfmm','-skfmm', type=bool, default=False, help='Use skfmm for distance computation')
+
 args = parser.parse_args()
 input_file = args.input
 k = args.k
+N = args.N
+UseSkfmm = args.skfmm
 
-with open(input_file, 'rb') as f:
-    plydata = ply.PlyData.read(f)
+with open(input_file, 'rb') as f: plydata = ply.PlyData.read(f)
 
 elements = plydata['vertex'].data
 points = np.array([[elements[i][0], elements[i][1], elements[i][2]] for i in range(len(elements))])
 kdtree = KDTree(points)
 
+### FUNCTIONS ###
 
+# Compute normals using PCA
 def get_normal(point, points, tree, k):
-    distances, indices = tree.query(point, k=k+1)
+    _, indices = tree.query(point, k=k+1)
     neighbors = points[indices]
     centroid = np.mean(neighbors, axis=0)
     cov_matrix = np.cov((neighbors - centroid).T)
     eigenvalues, eigenvectors = np.linalg.eig(cov_matrix)
     return eigenvectors[:, np.argmin(eigenvalues)]
-
-normals = np.array([get_normal(point, points, kdtree, k) for point in points])
-normals = normals / np.linalg.norm(normals, axis=1, keepdims=True)
     
+   
 def weights(Graph, normals):
     raws, cols = Graph.nonzero()
     dots = np.sum(normals[raws] * normals[cols], axis=1)
@@ -48,7 +70,8 @@ def weights(Graph, normals):
     W = csr_matrix((vals, (raws, cols)), shape=Graph.shape)
     return W
 
-def preorientNormals(graph, normals):
+# Consistent orientation of normals 
+def orientNormals(graph, normals):
     Npoints = normals.shape[0]
     visited = np.zeros(Npoints)
     oriented_normals = normals.copy()
@@ -64,186 +87,123 @@ def preorientNormals(graph, normals):
     
     dfs(0)
 
-    print("Visited:", np.sum(visited), "out of", Npoints)
+    if np.sum(visited) != Npoints: print("Warning: The graph is not fully connected. Some normals may remain unoriented.")
     return oriented_normals
 
-# def orientNormals(normals, points, k):
-#     N = len(points)
-#     eps = 1e-3 * np.mean(np.linalg.norm(points - np.mean(points, axis=0), axis=1))
-#     Pplus = points + eps * normals
-#     Pminus = points - eps * normals
-#     Wplus = np.zeros(N)
-#     Wminus = np.zeros(N)
-#     igl.fast_winding_number_for_points(points, points, normals, Pplus, Wplus)
-#     igl.fast_winding_number_for_points(points, points, normals, Pminus, Wminus)
-#     oriented_normals = normals.copy()
-#     for i in range(N):
-#         if Wminus[i] > Wplus[i]:
-#             oriented_normals[i] = -oriented_normals[i]
-#     return oriented_normals
+def estimate_sigma(points, k, c=1.5):
+    """
+    Estime automatiquement σ (à quel point un point influence son voisinage)
+    """
+    # Crée l'objet kNN
+    nbrs = NearestNeighbors(n_neighbors=k+1).fit(points) #k+1 car le point lui-même est inclus
+    # Trouve les k+1 plus proches voisins pour chaque point
+    dists, _ = nbrs.kneighbors(points)
+    # distance au k-ième voisin réel
+    dk = dists[:, -1]
+    # valeur médiane sur tous les points
+    d_median = np.median(dk)
+    return c * d_median
 
+start_normal = time.time()
+print("Computing normals and orienting them...")
 # kNN graph
 knnGraph = kneighbors_graph(points, n_neighbors=k, mode='connectivity', include_self=False, n_jobs=-1) # n_jobs=-1 to use all processors
-# Symmetrize the graph
 knnGraph = knnGraph.maximum(knnGraph.T)
 knnGraph = knnGraph.tocsr()
-# Poids entre les normales
+
+# Normals
+normals = np.array([get_normal(point, points, kdtree, k) for point in points])
+normals = normals / np.linalg.norm(normals, axis=1, keepdims=True) 
 W = weights(knnGraph, normals)
 W = W.maximum(W.T)
 W = W.tocsr()
+
 # Minimum Spanning Tree
 MST = minimum_spanning_tree(W)
 MST = MST.maximum(MST.T)
-# On redresse les normales
-oriented_normals = preorientNormals(MST, normals)
+
+# Normal orientation
+oriented_normals = orientNormals(MST, normals)
 oriented_normals /= np.linalg.norm(oriented_normals, axis=1, keepdims=True)
+tnorm = time.time() - start_normal
+print("Normals computed and oriented in", time.time()-start_normal, "seconds.", "Total time:", time.time()-start_all, "seconds")
 
-# from scipy.sparse.csgraph import connected_components
-# n_components, labels = connected_components(MST)
-# print("Nombre de composantes :", n_components)
+# Sigma estimation
+sigma = estimate_sigma(points, k)
+# print("Sigma:", sigma)
 
-def plot_normals(points, normals):
-    plt.figure(figsize=(10,10))
-    ax = plt.axes(projection='3d')
-    ax.quiver(points[:,0], points[:,1], points[:,2],
-            oriented_normals[:,0], oriented_normals[:,1], oriented_normals[:,2],
-            length=10, normalize=True, color='b', linewidth=0.5)
-
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    plt.title('Oriented Normals using MST on kNN Graph')
-    plt.show()
-
-
-# how to choose sigma? density of data points
-sigma = (np.max(points, axis=0) - np.min(points, axis=0)) 
-sigma = np.cbrt(sigma[0]*sigma[1]*sigma[2]/len(points))
-print("Sigma:", sigma)
-
-start = time.time()
-print("Solving Poisson equation...")
-x,y,z,chi = poisson.solve_poisson(points, oriented_normals, sigma=sigma/10, tree=kdtree, N=400)
-end = time.time()
-print("Poisson equation solved in", end-start, "seconds")
+### POISSON SURFACE RECONSTRUCTION ###
+print("Starting Poisson surface reconstruction...")
+start_poisson = time.time()
+x,y,z,chi = poisson.solve_poisson(points, oriented_normals, sigma=sigma, tree=kdtree, N=N)
 #refit between 0 and 1
 chi-=np.max(chi)
 chi/=np.min(chi)
-chi=skfmm.distance(chi-0.5, dx=(x[1]-x[0], y[1]-y[0], z[1]-z[0]))
 
-#plot chi as a grid color points
-def plot_chi_grid(x, y, z, chi):
-    grid=np.meshgrid(x,y,z)
-    plt.figure()
-    ax = plt.axes(projection='3d')
-    sc = ax.scatter(grid[0], grid[1], grid[2], c=chi.flatten(), cmap='Greys', s=0.01)
-    plt.colorbar(sc)
-    plt.title('Poisson Solution Values at Points')
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    plt.axis('equal')
-    plt.show()
+threshold = 0.5 #threshold for the isosurface
 
-threshold = 0 #threshold for the isosurface
+if UseSkfmm:
+    start_skfmm = time.time()
+    chi=skfmm.distance(chi-0.5, dx=(x[1]-x[0], y[1]-y[0], z[1]-z[0]))
+    print("\t Distance function computed in", time.time()-start_skfmm, "seconds", "Total time:", time.time()-start_all, "seconds")
+    treshold = 0.0
+tpoisson = time.time() - start_poisson
+print("Poisson surface reconstruction completed in", time.time()-start_poisson, "seconds", "Total time:", time.time()-start_all, "seconds")
+
 
 ##################################################
 # save triangles to PLY file
 def save_triangles_to_ply(x, y, z, chi, name_file, threshold=0):
-    triangles = []
-    threshold = 0
-    start = time.time()
-    for i in range(len(x)-1):
-        for j in range(len(y)-1):
-            for k in range(len(z)-1):
-                vals = [
-                    chi[i][j][k],
-                    chi[i+1][j][k],
-                    chi[i][j+1][k],
-                    chi[i+1][j+1][k],
-                    chi[i][j][k+1],
-                    chi[i+1][j][k+1],
-                    chi[i][j+1][k+1],
-                    chi[i+1][j+1][k+1],
-                ]
-                if min(vals) > threshold or max(vals) < threshold:
-                    continue
-                cube=MC.Cube([i,j,k], 1, vals)
-                tris = cube.getTriangles(threshold=threshold)
-                for tri in tris:
-                    triangles.append(tri)
-    stop= time.time()
-    print("Triangles extracted in", stop-start, "seconds")
-    start = time.time()
-    vertices, inverse = np.unique(np.array(triangles).reshape(-1,3), axis=0, return_inverse=True)
-    faces = inverse.reshape((-1,3))
-    vertices_ply = np.array(   [(v[0], v[1], v[2]) for v in vertices]  ,  dtype=[('x','f4'), ('y','f4'), ('z','f4')] )
-    faces_ply = np.array(   [(face,) for face in faces]  ,  dtype=[('vertex_indices', 'i4', (3,))]     )
-    PlyData([ PlyElement.describe(vertices_ply, 'vertex') , PlyElement.describe(faces_ply, 'face')  ]).write(name_file)
-    end = time.time()
-    print("Saved", len(faces), "triangles to", name_file, "in", end-start, "seconds")
-start = time.time()
-save_triangles_to_ply(x, y, z, chi, "fraude.ply", threshold)
-end = time.time()
-print("Saved triangles to ply file in", end-start, "seconds")
-##################################################
+    # dimensions
+    nx, ny, nz = chi.shape
 
-def plot_isosurface_marching_cubes(x, y, z, chi, threshold):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    # allocation max (5 triangles par cube)
+    max_tris = (nx-1)*(ny-1)*(nz-1)*5
 
-    def draw_cubes(ax, x, y, z, chi, threshold):
-        for i in range(len(x)-1):
-            for j in range(len(y)-1):
-                for k in range(len(z)-1):
-                    cube=MC.Cube([i,j,k], 1, [
-                        chi[i][j][k],
-                        chi[i+1][j][k],
-                        chi[i][j+1][k],
-                        chi[i+1][j+1][k],
-                        chi[i][j][k+1],
-                        chi[i+1][j][k+1],
-                        chi[i][j+1][k+1],
-                        chi[i+1][j+1][k+1],
-                    ])
-                    cube.draw_without_vertices(ax,alpha=0.3, threshold=threshold)
-    draw_cubes(ax, x, y, z, chi, threshold)
-    plt.axis('equal')
+    vertices = np.zeros((max_tris*3, 3), dtype=np.float32)
+    faces = np.zeros((max_tris, 3), dtype=np.int32)
+    ntri = ctypes.c_int()
 
-    # interactive threshold adjustment
-    threshold_text = ax.text2D( #afficher le threshold
-        0.02, 0.95,
-        f"Threshold = {threshold:.2f}",
-        transform=ax.transAxes,
-        fontsize=12
+    # appel C (REMPLACE TOUTE LA BOUCLE PYTHON)
+    nverts = lib.marching_cubes_grid(
+        chi.astype(np.float32).ravel().ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        nx, ny, nz,
+        threshold,
+        vertices.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+        faces.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+        ctypes.byref(ntri)
     )
-    scroll_step = (np.max(chi) - np.min(chi)) / 100
-    def on_key(event, ax, fig):
-        ax.cla()
-        global threshold
-        threshold += event.step * scroll_step
-        threshold = max(-1, min(1, threshold))
-        ax.text2D(
-            0.02, 0.95,
-            f"Threshold = {threshold:.2f}",
-            transform=ax.transAxes,
-            fontsize=12
-        )
-        draw_cubes(ax, x, y, z, chi, threshold)
-        fig.canvas.draw_idle()
-    fig.canvas.mpl_connect(
-        'scroll_event',
-        lambda event: on_key(event, ax, fig))
 
-    plt.show()
+    # découpe au bon nombre
+    V = vertices[:nverts]
+    F = faces[:ntri.value]
+
+    # écriture PLY
+    vertices_ply = np.array(
+        [(v[0], v[1], v[2]) for v in V],
+        dtype=[('x','f4'), ('y','f4'), ('z','f4')]
+    )
+    faces_ply = np.array(
+        [(tuple(face),) for face in F],
+        dtype=[('vertex_indices', 'i4', (3,))]
+    )
+
+    PlyData([
+        PlyElement.describe(vertices_ply, 'vertex'),
+        PlyElement.describe(faces_ply, 'face')
+    ]).write(name_file)
+
+    print("Saved", len(F), "triangles to", name_file)
+
+
+start_save = time.time()
+print("Saving triangles to ply file...")
+save_triangles_to_ply(x, y, z, chi, args.output, threshold)
+print("Saved triangles to ply file in", time.time()-start_save, "seconds", "Total time:", time.time()-start_all, "seconds")
+tsave = time.time() - start_save
+
+with open("plots/timings.txt", "a") as f:
+    f.write(f"{N};{tnorm:.6f};{tpoisson:.6f};{tsave:.6f};{time.time()-start_all:.26f}\n")
 
 # plot_isosurface_marching_cubes(x, y, z, chi, threshold)
 
-
-"""
-TODO:
-- Homogéniser les normales: KNN graph. Il faut que les normales soient cohérentes entre voisines    DONE
-- Utiliser igl pour orienter les normales                                                           IMPOSSIBLE
-- Faire Poisson Surface Reconstruction avec les points et les normales
-- Utiliser Marching Cubes pour extraire la surface
-"""

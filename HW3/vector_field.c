@@ -13,24 +13,6 @@ void vector_field(
     float *V
 )
 {
-    //print all inputs for debugging
-    // printf("P: %d\n", P);
-    // printf("sigma: %f\n", sigma);
-    // for (int i = 0; i < nx; ++i) {
-    //     printf("x[%d]: %f\n", i, x[i]);
-    // }
-    // for (int j = 0; j < ny; ++j) {
-    //     printf("y[%d]: %f\n", j, y[j]);
-    // }
-    // for (int k = 0; k < nz; ++k) {
-    //     printf("z[%d]: %f\n", k, z[k]);
-    // }
-    // for (int p = 0; p < P; ++p) {
-    //     printf("point[%d]: (%f, %f, %f)\n", p, points[3*p], points[3*p + 1], points[3*p + 2]);
-    //     printf("normal[%d]: (%f, %f, %f)\n", p, normals[3*p], normals[3*p + 1], normals[3*p + 2]);
-    // }
-
-
     double h = x[1] - x[0];
 
     int r = (int)(3.0 * sigma / h);
