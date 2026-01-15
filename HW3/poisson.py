@@ -6,10 +6,9 @@ from scipy.sparse.linalg import cg
 import time
 import os
 import ctypes
-import pyamg
 from scipy.fft import dstn, idstn
 
-lib = ctypes.CDLL(os.path.abspath("./shared_lib/vector_field.dll"))
+lib = ctypes.CDLL(os.path.abspath("./shared_lib/vector_field.so"))
 lib.vector_field.argtypes = [ctypes.c_int, 
                              ctypes.POINTER(ctypes.c_double), 
                              ctypes.POINTER(ctypes.c_double), 

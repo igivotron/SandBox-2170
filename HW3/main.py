@@ -17,7 +17,7 @@ import time
 start_all = time.time()
 
 #import C library for marching cubes
-lib = ctypes.CDLL("./shared_lib/Mcc.dll")
+lib = ctypes.CDLL("./shared_lib/Mcc.so")
 
 lib.marching_cubes_grid.argtypes = [
     ctypes.POINTER(ctypes.c_float),

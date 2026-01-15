@@ -10,6 +10,27 @@ poisson_times = data[:, 2]
 save_times = data[:, 3]
 total_times = data[:, 4]
 
+
+# Average the data that has been collected multiple times for each N
+unique_Ns = np.unique(Ns)
+avg_normal_times = []
+avg_poisson_times = []
+avg_save_times = []
+avg_total_times = []
+
+for N in unique_Ns:
+    indices = np.where(Ns == N)
+    avg_normal_times.append(np.mean(normal_times[indices]))
+    avg_poisson_times.append(np.mean(poisson_times[indices]))
+    avg_save_times.append(np.mean(save_times[indices]))
+    avg_total_times.append(np.mean(total_times[indices]))
+
+Ns = unique_Ns
+normal_times = np.array(avg_normal_times)
+poisson_times = np.array(avg_poisson_times)
+save_times = np.array(avg_save_times)
+total_times = np.array(avg_total_times)
+
 plt.figure(figsize=(10, 6))
 plt.plot(Ns, normal_times, marker='o', label='Normal Computation Time')
 plt.plot(Ns, poisson_times, marker='o', label='Poisson Reconstruction Time')

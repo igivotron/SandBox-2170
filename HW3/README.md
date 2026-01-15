@@ -25,10 +25,14 @@ of an oriented point cloud.
 │   └── triangleTable.py   # [NOT USED] Triangles table for the python implementation
 │   ├── Mcc.c              # C implementation of marching cubes algorithm
 │   └── Mcc.h              # Headers for the C implementation
+├── plots/         
+│   ├── plotTimes.py       # Python code to plot the averaged execution times
+│   └── [plots].svg        # Plots
 ├── output/                # Output folder for the surface
 ├── shared_lib/            # Python-C binding files
 ├── main.py                # [MAIN] File to execute
 ├── poisson.py             # Python file containing the vector field construction and the resolution of Poisson
+├── time.zsh               # ZSH code file used to retrieve execution times
 └── vector_field.c         # C file containing the vector field construction
 ```
 
