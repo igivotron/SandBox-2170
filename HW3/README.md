@@ -30,8 +30,8 @@ of an oriented point cloud.
 │   └── [plots].svg        # Plots
 ├── output/                # Output folder for the surface
 ├── shared_lib/            # Python-C binding files
-├── poisson.py                # [MAIN] File to execute
-├── poisson_solver.py             # Python file containing the vector field construction and the resolution of Poisson
+├── poisson.py             # [MAIN] File to execute
+├── poisson_solver.py      # Python file containing the vector field construction and the resolution of Poisson
 ├── time.zsh               # ZSH code file used to retrieve execution times
 └── vector_field.c         # C file containing the vector field construction
 ```
@@ -65,7 +65,7 @@ gcc -shared -o shared_lib/Mcc.dll -fPIC ./marchingCubes/Mcc.c -O3
 ### Running Surface reconstruction
 
 ```python
-python main.py -i <input_file> -o <output_file> -N <int> -k <int> -skfmm <0 or 1>
+python main.py -i <input_file> -o <output_file> -N <int> -M <int> -skfmm <0 or 1>
 ```
 - `-i`: Input file path
 - `-o`: Output file path
