@@ -1,7 +1,7 @@
 
 
 
-# POISSON RECONSTRUCTION
+# POISSON SURFACE RECONSTRUCTION
 
 **Authors:** Lionel Peduzzi, Myrine Msallem, Igor Grégoire
 
@@ -35,7 +35,7 @@ of an oriented point cloud.
 ## Usage
 ### ⚠️ Important Note for Cross-Platform Usage
 
-**<span style="color: red;">If you use different Operating Systems, you need to change line 13 in `poisson.py` and line 21 in `main.py`</span>**
+**<span style="color: red;">If you use different Operating Systems, you need to change line 12 in `poisson.py` and line 20 in `main.py`</span>**
 
 ### Binding the C-files
 Bind the C-files with python to execute the code.
@@ -55,7 +55,7 @@ gcc -shared -o shared_lib/Mcc.so -fPIC ./marchingCubes/Mcc.c -O3
 - For Windows:
 ```gcc
 gcc -shared -o shared_lib/vector_field.dll -fPIC -O3 vector_field.c
-gcc -shared -o shared_lib/Mcc.so -fPIC ./marchingCubes/Mcc.c -O3  
+gcc -shared -o shared_lib/Mcc.dll -fPIC ./marchingCubes/Mcc.c -O3  
 ```
 
 ### Running Surface reconstruction
@@ -73,17 +73,21 @@ python main.py -i <input_file> -o <output_file> -N <int> -k <int> -skfmm <0 or 1
 
 ### Computing the normals
 1. Build a knn-graph with the points
-2. Compute the PCA for each points using the k closest neighbours
+2. Compute the PCA for each point using the k closest neighbours
 3. Compute the normal by taking the eigenvector associated with the smallest eigenvalue
 4. Weight the graph edges:  $W_{i,j} = n_{i} \cdot n_{j}$
 5. Compute the minimum spanning tree
-6. Orient the normals by propaging a normal chosen arbitrarily to his neighbours
+6. Orient the normals by propagating a normal chosen arbitrarily to its neighbours
 
 ### Solve the Poisson equation
-![Go look wikipedia](explications/part1.png)
-![Go look wikipedia](explications/part2.png)
+1. Compute parameter sigma that will be used in the Gaussian splatting of the normals (Sometime, a more suitable surface can be achieved by manually adjusting this parameter)
+1. Propagate the normals by using Gaussian splatting on a regular grid to get a continuous vector field
+2. Compute the divergence of this vector field using  finite-difference approximation
+3. Solve the Poisson equation $\Delta^2\chi=\nabla \cdot V$ using spectral method, FFT (for more details see [Spectral method](https://en.wikipedia.org/wiki/Spectral_method))
 
 ### Marching Cubes
+1. Refit chi between 0 and 1
+2. recover the isosurface $\chi=0.5$ with the marching cubes algorithm (Sometime, a more suitable surface can be achieved by manually adjusting the threshold of 0.5)
 
 
 
@@ -102,10 +106,15 @@ python main.py -i <input_file> -o <output_file> -N <int> -k <int> -skfmm <0 or 1
 
 ## Task's done by members
 - **Igor** :
-    - Normals
+    - Compute and orient the normals
+    - Helped on solving poisson equation
+    - Helped on implementing marching cubes
+    - Time complexity analysis
 
 - **Myrine** : 
-    - Marching cubes
+    - Computation of the sigma used in the gaussian splatting
+    - Implementation of marching cubes algorithm
 
 - **Lionel** : 
-    - Vector field
+    - Compute the vector field
+    - Solve the Poisson equation

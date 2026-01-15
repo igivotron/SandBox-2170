@@ -17,7 +17,7 @@ import time
 start_all = time.time()
 
 #import C library for marching cubes
-lib = ctypes.CDLL("./shared_lib/Mcc.so")
+lib = ctypes.CDLL("./shared_lib/Mcc.dll")
 
 lib.marching_cubes_grid.argtypes = [
     ctypes.POINTER(ctypes.c_float),
@@ -144,9 +144,9 @@ threshold = 0.5 #threshold for the isosurface
 
 if UseSkfmm:
     start_skfmm = time.time()
-    chi=skfmm.distance(chi-0.5, dx=(x[1]-x[0], y[1]-y[0], z[1]-z[0]))
+    chi=skfmm.distance(chi-threshold, dx=(x[1]-x[0], y[1]-y[0], z[1]-z[0]))
     print("\t Distance function computed in", time.time()-start_skfmm, "seconds", "Total time:", time.time()-start_all, "seconds")
-    treshold = 0.0
+    threshold = 0.0
 tpoisson = time.time() - start_poisson
 print("Poisson surface reconstruction completed in", time.time()-start_poisson, "seconds", "Total time:", time.time()-start_all, "seconds")
 

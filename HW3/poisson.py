@@ -9,8 +9,7 @@ import ctypes
 import pyamg
 from scipy.fft import dstn, idstn
 
-# lib = ctypes.CDLL(os.path.abspath("vector_field.so"))
-lib = ctypes.CDLL(os.path.abspath("./shared_lib/vector_field.so"))
+lib = ctypes.CDLL(os.path.abspath("./shared_lib/vector_field.dll"))
 lib.vector_field.argtypes = [ctypes.c_int, 
                              ctypes.POINTER(ctypes.c_double), 
                              ctypes.POINTER(ctypes.c_double), 
