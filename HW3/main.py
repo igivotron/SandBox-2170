@@ -2,7 +2,6 @@
 from scipy.spatial import KDTree
 from scipy.sparse.csgraph import minimum_spanning_tree
 import numpy as np
-import matplotlib.pyplot as plt
 import plyfile as ply
 import argparse as ap
 from sklearn.neighbors import kneighbors_graph, NearestNeighbors
@@ -17,7 +16,7 @@ import time
 start_all = time.time()
 
 #import C library for marching cubes
-lib = ctypes.CDLL("./shared_lib/Mcc.so")
+lib = ctypes.CDLL("./shared_lib/Mcc.dll")
 
 lib.marching_cubes_grid.argtypes = [
     ctypes.POINTER(ctypes.c_float),
@@ -90,20 +89,6 @@ def orientNormals(graph, normals):
     if np.sum(visited) != Npoints: print("Warning: The graph is not fully connected. Some normals may remain unoriented.")
     return oriented_normals
 
-def estimate_sigma(points, k, c=1.5):
-    """
-    Estime automatiquement σ (à quel point un point influence son voisinage)
-    """
-    # Crée l'objet kNN
-    nbrs = NearestNeighbors(n_neighbors=k+1).fit(points) #k+1 car le point lui-même est inclus
-    # Trouve les k+1 plus proches voisins pour chaque point
-    dists, _ = nbrs.kneighbors(points)
-    # distance au k-ième voisin réel
-    dk = dists[:, -1]
-    # valeur médiane sur tous les points
-    d_median = np.median(dk)
-    return c * d_median
-
 start_normal = time.time()
 print("Computing normals and orienting them...")
 # kNN graph
@@ -128,14 +113,27 @@ oriented_normals /= np.linalg.norm(oriented_normals, axis=1, keepdims=True)
 tnorm = time.time() - start_normal
 print("Normals computed and oriented in", time.time()-start_normal, "seconds.", "Total time:", time.time()-start_all, "seconds")
 
-# Sigma estimation
-sigma = estimate_sigma(points, k)
-# print("Sigma:", sigma)
 
 ### POISSON SURFACE RECONSTRUCTION ###
+# Sigma estimation
+def estimate_sigma(points, k, c=0.7):
+    """
+    Estime σ (à quel point un point influence son voisinage)
+    """
+    nbrs = NearestNeighbors(n_neighbors=k+1).fit(points) #k+1 car le point lui-même est inclus
+    # Trouve les k+1 plus proches voisins pour chaque point
+    dists, _ = nbrs.kneighbors(points)
+    # distance au k-ième voisin réel
+    dk = dists[:, -1]
+    # valeur médiane sur tous les points
+    d_median = np.median(dk)
+    return c * d_median
+
+sigma = estimate_sigma(points, k)
+
 print("Starting Poisson surface reconstruction...")
 start_poisson = time.time()
-x,y,z,chi = poisson.solve_poisson(points, oriented_normals, sigma=sigma, tree=kdtree, N=N)
+x,y,z,chi = poisson.solve_poisson(points, oriented_normals, sigma=sigma, N=N)
 #refit between 0 and 1
 chi-=np.max(chi)
 chi/=np.min(chi)
@@ -164,7 +162,6 @@ def save_triangles_to_ply(x, y, z, chi, name_file, threshold=0):
     faces = np.zeros((max_tris, 3), dtype=np.int32)
     ntri = ctypes.c_int()
 
-    # appel C (REMPLACE TOUTE LA BOUCLE PYTHON)
     nverts = lib.marching_cubes_grid(
         chi.astype(np.float32).ravel().ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
         nx, ny, nz,
@@ -204,6 +201,3 @@ tsave = time.time() - start_save
 
 with open("plots/timings.txt", "a") as f:
     f.write(f"{N};{tnorm:.6f};{tpoisson:.6f};{tsave:.6f};{time.time()-start_all:.26f}\n")
-
-# plot_isosurface_marching_cubes(x, y, z, chi, threshold)
-

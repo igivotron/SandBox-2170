@@ -1,14 +1,10 @@
 import numpy as np
-import scipy as sp
-from scipy.sparse.linalg import LaplacianNd
-from scipy.sparse import csr_matrix
-from scipy.sparse.linalg import cg
 import time
 import os
 import ctypes
 from scipy.fft import dstn, idstn
 
-lib = ctypes.CDLL(os.path.abspath("./shared_lib/vector_field.so"))
+lib = ctypes.CDLL(os.path.abspath("./shared_lib/vector_field.dll"))
 lib.vector_field.argtypes = [ctypes.c_int, 
                              ctypes.POINTER(ctypes.c_double), 
                              ctypes.POINTER(ctypes.c_double), 
@@ -23,25 +19,7 @@ lib.vector_field.argtypes = [ctypes.c_int,
                             ]
 lib.vector_field.restype = None
 
-
-def vector_field(x, y, z, normals, sigma, tree, points):
-    """
-    x,y,z : 1D arrays defining the grid points
-    normals : Nx3 array of normal vectors at data points
-    tree : KDTree built from data points
-    """
-    vec_field=np.zeros((len(x),len(y),len(z), 3))
-    for i in range(len(x)):
-        for j in range(len(y)):
-            for k in range(len(z)):
-                p = np.array([x[i], y[j], z[k]])
-                indices = tree.query_ball_point(p, r=sigma*3)
-                distances = np.linalg.norm(points[indices] - p, axis=1)
-                weights = np.exp(- (distances ** 2) / (2 * sigma ** 2))
-                vec_field[i, j, k] = np.sum((normals[indices].T * weights), axis=1)
-    return vec_field
-
-def solve_poisson(points, normals, sigma, tree, N=None):
+def solve_poisson(points, normals, sigma, N=None):
     min_point = np.min(points, axis=0)
     max_point = np.max(points, axis=0)
     size = np.max(max_point - min_point)*1.15
