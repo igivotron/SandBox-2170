@@ -30,8 +30,8 @@ of an oriented point cloud.
 │   └── [plots].svg        # Plots
 ├── output/                # Output folder for the surface
 ├── shared_lib/            # Python-C binding files
-├── main.py                # [MAIN] File to execute
-├── poisson.py             # Python file containing the vector field construction and the resolution of Poisson
+├── poisson.py                # [MAIN] File to execute
+├── poisson_solver.py             # Python file containing the vector field construction and the resolution of Poisson
 ├── time.zsh               # ZSH code file used to retrieve execution times
 └── vector_field.c         # C file containing the vector field construction
 ```
@@ -39,7 +39,7 @@ of an oriented point cloud.
 ## Usage
 ### ⚠️ Important Note for Cross-Platform Usage
 
-**<span style="color: red;">If you use different Operating Systems, you need to change line 12 in `poisson.py` and line 20 in `main.py`</span>**
+**<span style="color: red;">If you use different Operating Systems, you need to change line 12 in `poisson_solver.py` and line 20 in `poisson.py`</span>**
 
 ### Binding the C-files
 Bind the C-files with python to execute the code.
@@ -69,8 +69,8 @@ python main.py -i <input_file> -o <output_file> -N <int> -k <int> -skfmm <0 or 1
 ```
 - `-i`: Input file path
 - `-o`: Output file path
-- `-N`: Grid size (NxNxN)
-- `-k`: Number of closest neighbours to take account for the spatial research knn-tree
+- `-M`: Grid size (MxMxM)
+- `-N`: Number of closest neighbours to take account for the spatial research knn-tree
 - `-skfmm`: Boolean, utilisation of skfmm for the construction of the iso-surface. Might have negative impact on the execution time.
 
 ## Algorithm
