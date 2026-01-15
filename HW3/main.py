@@ -37,7 +37,7 @@ parser.add_argument('--input', '-i', type=str, default='data/bunny.ply', help='P
 parser.add_argument('--output', '-o', type=str, default='output/reconstructed.ply', help='Path to the output PLY file')
 parser.add_argument('--k', '-k', type=int, default=10, help='Number of nearest neighbors to find')
 parser.add_argument('--N', '-N', type=int, default=400, help='Grid size for Poisson reconstruction')
-parser.add_argument('--skfmm','-skfmm', type=bool, default=False, help='Use skfmm for distance computation')
+parser.add_argument('--skfmm','-skfmm', type=int, default=0, help='Use skfmm for distance computation')
 
 args = parser.parse_args()
 input_file = args.input
